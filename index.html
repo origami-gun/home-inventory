@@ -318,7 +318,7 @@
     filter:drop-shadow(0 0 3px rgba(206,66,54,0.3));
   }
   .location-pattern{pointer-events:none; stroke:rgba(28,24,20,0.28); stroke-width:1; stroke-linejoin:round;}
-  #floorPlanInk{pointer-events:none;}
+  #floorPlanInk,#floorPlanLines{pointer-events:none;}
 
   /* Map labels: rooms = white plate, bold sans; storage = amber tag, monospace. */
   .map-label{opacity:0; transition:opacity .16s ease; pointer-events:none;}
@@ -807,6 +807,7 @@
         <image id="floorPlanImage" x="-40" y="-40" width="1229" height="992" preserveAspectRatio="none" style="display:none"></image>
         <g id="patternsGroup"></g>
         <image id="floorPlanInk" x="-40" y="-40" width="1229" height="992" preserveAspectRatio="none" style="display:none"></image>
+        <image id="floorPlanLines" x="10" y="-7" width="1180" height="936" preserveAspectRatio="none" style="display:none"></image>
         <g id="roomsGroup"></g>
         <g id="labelsGroup"></g>
       </g>
@@ -937,6 +938,7 @@
       </div>
       <div class="modal-body" id="syncBody"></div>
       <input type="file" id="floorPlanInput" accept="image/*" hidden />
+      <input type="file" id="lineOverlayInput" accept="image/*" hidden />
     </div>
   </div>
 
@@ -1225,7 +1227,8 @@
     activePanel: null,
     tombstones: {},        /* itemId -> deletion time, so deletions sync */
     rulesUpdatedAt: 0,
-    floorPlan: null        /* {dataUrl, updatedAt, fileId, needsUpload} */
+    floorPlan: null,       /* {dataUrl, updatedAt, fileId, needsUpload} */
+    lineOverlay: null      /* same shape: a transparent line drawing laid over the patterns */
   };
 
   var workingLocation = null;
@@ -1267,7 +1270,7 @@
       'confirmMessage','confirmBtn','toastContainer','notifyBtn','bellDot','notifyModalOverlay',
       'notifyPermissionSection','ruleRows','addRuleBtn','rulesSaveBtn',
       'syncChip','syncLabel','syncModalOverlay','syncBody','floorPlanInput','floorPlanImage','floorPlanPlaceholder',
-      'labelsGroup','patternDefs','patternsGroup','floorPlanInk','invOpenBtn','invView','invSummary','invCloseBtn','invSearch','invRoom','invCategory','invSort','invExpiring','invList',
+      'labelsGroup','patternDefs','patternsGroup','floorPlanInk','floorPlanLines','lineOverlayInput','invOpenBtn','invView','invSummary','invCloseBtn','invSearch','invRoom','invCategory','invSort','invExpiring','invList',
       'patternPicker','patternStrength','patternStrengthOut','patternStrengthRow'];
     ids.forEach(function(id){ els[id] = document.getElementById(id); });
   }
@@ -3289,6 +3292,7 @@
   var DRIVE_FOLDER_NAME = 'Home Inventory';
   var DRIVE_DATA_NAME = 'home-inventory-data.json';
   var DRIVE_PLAN_NAME = 'floor-plan';
+  var DRIVE_LINES_NAME = 'line-overlay';
   var LS = {clientId:'hi.clientId', token:'hi.token', connected:'hi.connected', fileId:'hi.fileId',
             folderId:'hi.folderId', version:'hi.version', dirty:'hi.dirty', lastSync:'hi.lastSync'};
   var sync = {status:'off', tokenClient:null, gisPromise:null, busy:false, queued:false, timer:null,
@@ -3379,9 +3383,10 @@
     d = d || {};
     var tomb = {}, t = d.tombstones || {}, yearAgo = Date.now() - 365*86400000;
     Object.keys(t).sort().forEach(function(k){ if (t[k] > yearAgo) tomb[k] = t[k]; });
-    var fp = d.floorPlan && d.floorPlan.fileId ? {fileId: d.floorPlan.fileId, updatedAt: d.floorPlan.updatedAt || 0} : null;
+    var asset = function(a){ return a && a.fileId ? {fileId: a.fileId, updatedAt: a.updatedAt || 0} : null; };
+    var fp = asset(d.floorPlan), lo = asset(d.lineOverlay);
     return {schema:1, locations: sortById(d.locations || []), items: sortById(d.items || []), tombstones: tomb,
-            rules: sortById(d.rules || []), rulesUpdatedAt: d.rulesUpdatedAt || 0, floorPlan: fp};
+            rules: sortById(d.rules || []), rulesUpdatedAt: d.rulesUpdatedAt || 0, floorPlan: fp, lineOverlay: lo};
   }
   function canonical(d){ return stableStringify(normalizeDoc(d)); }
   function mergeDocs(local, remote){
@@ -3400,17 +3405,17 @@
     } else {
       rules = stableStringify(L.rules) >= stableStringify(R.rules) ? L.rules : R.rules; rulesAt = L.rulesUpdatedAt;
     }
-    var lf = L.floorPlan, rf = R.floorPlan;
-    var floorPlan = !lf ? rf : (!rf ? lf : (rf.updatedAt > lf.updatedAt ? rf : lf));
+    var newerAsset = function(a, b){ return !a ? b : (!b ? a : (b.updatedAt > a.updatedAt ? b : a)); };
+    var floorPlan = newerAsset(L.floorPlan, R.floorPlan), lineOverlay = newerAsset(L.lineOverlay, R.lineOverlay);
     return normalizeDoc({locations: mergeById(L.locations.concat(R.locations)), items: items, tombstones: tomb,
-                         rules: rules, rulesUpdatedAt: rulesAt, floorPlan: floorPlan});
+                         rules: rules, rulesUpdatedAt: rulesAt, floorPlan: floorPlan, lineOverlay: lineOverlay});
   }
   function buildLocalDoc(){
     return Promise.all([idbGetAll('locations'), idbGetAll('items')]).then(function(r){
-      var fp = state.floorPlan;
+      var ref = function(a){ return a && a.fileId ? {fileId: a.fileId, updatedAt: a.updatedAt} : null; };
       return normalizeDoc({locations: r[0], items: r[1], tombstones: state.tombstones, rules: state.rules,
                            rulesUpdatedAt: state.rulesUpdatedAt,
-                           floorPlan: fp && fp.fileId ? {fileId: fp.fileId, updatedAt: fp.updatedAt} : null});
+                           floorPlan: ref(state.floorPlan), lineOverlay: ref(state.lineOverlay)});
     });
   }
   function applyDocToLocal(doc){
@@ -3557,6 +3562,18 @@
       els.floorPlanImage.setAttribute('href', fp.dataUrl);
       els.floorPlanImage.style.display = '';
       els.floorPlanPlaceholder.style.display = 'none';
+      var lines = state.lineOverlay;
+      if (lines && lines.dataUrl){
+        /* A supplied transparent line drawing is sharper than anything we can extract, so prefer it. */
+        els.floorPlanLines.setAttribute('href', lines.dataUrl);
+        els.floorPlanLines.style.display = '';
+        els.floorPlanInk.removeAttribute('href');
+        els.floorPlanInk.style.display = 'none';
+        inkBuiltFor = null;
+        return;
+      }
+      els.floorPlanLines.removeAttribute('href');
+      els.floorPlanLines.style.display = 'none';
       if (inkBuiltFor !== fp.dataUrl){
         inkBuiltFor = fp.dataUrl;
         els.floorPlanInk.removeAttribute('href'); els.floorPlanInk.style.display = 'none';
@@ -3572,39 +3589,48 @@
       els.floorPlanImage.style.display = 'none';
       els.floorPlanInk.removeAttribute('href');
       els.floorPlanInk.style.display = 'none';
+      els.floorPlanLines.removeAttribute('href');
+      els.floorPlanLines.style.display = 'none';
       els.floorPlanPlaceholder.style.display = '';
     }
   }
-  function saveFloorPlanLocal(fp){
-    state.floorPlan = fp; showFloorPlan();
-    return idbPutRaw('meta', {key:'floorPlan', value: fp});
+  function saveFloorPlanLocal(fp){ return saveImageAssetLocal('floorPlan', fp); }
+  function saveImageAssetLocal(key, asset){
+    state[key] = asset; showFloorPlan();
+    return idbPutRaw('meta', {key: key, value: asset});
   }
-  function chooseFloorPlan(file){
+  function chooseImageAsset(key, file){
     if (!/^image\//.test(file.type || '')){ toast('Choose an image file', 'error'); return; }
     blobToDataUrl(file).then(function(dataUrl){
-      var prev = state.floorPlan || {};
-      return saveFloorPlanLocal({dataUrl: dataUrl, updatedAt: Date.now(), fileId: prev.fileId || null, needsUpload: true});
+      var prev = state[key] || {};
+      return saveImageAssetLocal(key, {dataUrl: dataUrl, updatedAt: Date.now(), fileId: prev.fileId || null, needsUpload: true});
     }).then(function(){
-      toast('Floor plan loaded'); noteLocalChange(); renderSyncDialog();
+      toast(key === 'floorPlan' ? 'Floor plan loaded' : 'Line overlay loaded');
+      noteLocalChange(); renderSyncDialog();
     }).catch(function(err){ console.error(err); toast('Could not load that image', 'error'); });
   }
+  function chooseFloorPlan(file){ chooseImageAsset('floorPlan', file); }
   function syncFloorPlan(merged){
-    var local = state.floorPlan, remote = merged.floorPlan;
+    return syncImageAsset(merged, 'floorPlan', DRIVE_PLAN_NAME).then(function(){
+      return syncImageAsset(merged, 'lineOverlay', DRIVE_LINES_NAME);
+    });
+  }
+  function syncImageAsset(merged, key, driveBase){
+    var local = state[key], remote = merged[key];
     if (local && local.dataUrl && local.needsUpload && (!remote || local.updatedAt >= remote.updatedAt)){
       return dataUrlToBlob(local.dataUrl).then(function(blob){
         var mime = blob.type || 'image/webp';
-        var create = function(){ return driveCreate(DRIVE_PLAN_NAME + (/png/.test(mime) ? '.png' : /jpe?g/.test(mime) ? '.jpg' : '.webp'), mime, blob); };
+        var create = function(){ return driveCreate(driveBase + (/png/.test(mime) ? '.png' : /jpe?g/.test(mime) ? '.jpg' : '.webp'), mime, blob); };
         if (!local.fileId) return create();
         return driveUpdate(local.fileId, mime, blob).catch(function(e){ if (e && e.code === 'notfound') return create(); throw e; });
       }).then(function(meta){
-        var fp = {dataUrl: local.dataUrl, updatedAt: local.updatedAt, fileId: meta.id, needsUpload: false};
-        merged.floorPlan = {fileId: meta.id, updatedAt: local.updatedAt};
-        return saveFloorPlanLocal(fp);
+        merged[key] = {fileId: meta.id, updatedAt: local.updatedAt};
+        return saveImageAssetLocal(key, {dataUrl: local.dataUrl, updatedAt: local.updatedAt, fileId: meta.id, needsUpload: false});
       });
     }
     if (remote && remote.fileId && (!local || !local.dataUrl || remote.updatedAt > (local.updatedAt || 0))){
       return driveDownload(remote.fileId).then(function(r){ return r.blob(); }).then(blobToDataUrl).then(function(dataUrl){
-        return saveFloorPlanLocal({dataUrl: dataUrl, updatedAt: remote.updatedAt, fileId: remote.fileId, needsUpload: false});
+        return saveImageAssetLocal(key, {dataUrl: dataUrl, updatedAt: remote.updatedAt, fileId: remote.fileId, needsUpload: false});
       }).catch(function(e){ if (e && e.code === 'notfound') return; throw e; });
     }
     return Promise.resolve();
@@ -3828,6 +3854,14 @@
       : 'Not loaded yet. Choose the floor-plan image file' + (syncConfigured() ? ', or connect Drive if another device already added it.' : '.');
     html += '<div class="sync-section"><h3>Floor plan image</h3><p>' + fpText + '</p>' +
             '<button type="button" class="btn btn-ghost btn-sm" data-sync-action="choose-plan">' + (fp && fp.dataUrl ? 'Replace image\u2026' : 'Choose image\u2026') + '</button></div>';
+    var lo = state.lineOverlay;
+    var loText = (lo && lo.dataUrl)
+      ? (lo.needsUpload && syncConfigured() ? 'Loaded on this device \u2014 it will be saved to your Drive on the next sync.'
+         : (lo.fileId ? 'Loaded and saved in your Google Drive.' : 'Loaded on this device.'))
+      : 'Not loaded. Without it, the app traces the lines out of your floor plan image instead.';
+    html += '<div class="sync-section"><h3>Line overlay</h3><p>A transparent wall-and-cabinet drawing laid over your surface patterns, so the layout stays sharp. ' + loText + '</p>' +
+            '<button type="button" class="btn btn-ghost btn-sm" data-sync-action="choose-lines">' + (lo && lo.dataUrl ? 'Replace overlay\u2026' : 'Choose overlay\u2026') + '</button>' +
+            '</div>';
     if (syncConfigured() && !sync.editingClient && !GOOGLE_CLIENT_ID){
       html += '<div class="sync-section"><button type="button" class="sync-small-link" data-sync-action="change-client">Change Client ID</button></div>';
     }
@@ -3861,6 +3895,7 @@
     else if (action === 'disconnect'){ disconnectDrive(); }
     else if (action === 'sync-now'){ syncNow('manual').then(renderSyncDialog); }
     else if (action === 'choose-plan'){ els.floorPlanInput.click(); }
+    else if (action === 'choose-lines'){ els.lineOverlayInput.click(); }
     else if (action === 'copy-link'){
       var link = setupLink();
       var done = function(){ toast('Link copied \u2014 open it on your other device'); };
@@ -3886,7 +3921,11 @@
     els.syncBody.addEventListener('click', onSyncBodyClick);
     els.floorPlanInput.addEventListener('change', function(e){
       var f = e.target.files[0]; e.target.value = '';
-      if (f) chooseFloorPlan(f);
+      if (f) chooseImageAsset('floorPlan', f);
+    });
+    els.lineOverlayInput.addEventListener('change', function(e){
+      var f = e.target.files[0]; e.target.value = '';
+      if (f) chooseImageAsset('lineOverlay', f);
     });
     setSyncStatus(currentSyncStatus());
     if (syncConfigured() && location.protocol !== 'file:') loadGis().catch(function(){});
@@ -4278,9 +4317,11 @@
       var tombRec = meta.find(function(m){ return m.key === 'tombstones'; });
       var rulesAtRec = meta.find(function(m){ return m.key === 'rulesUpdatedAt'; });
       var planRec = meta.find(function(m){ return m.key === 'floorPlan'; });
+      var linesRec = meta.find(function(m){ return m.key === 'lineOverlay'; });
       state.tombstones = (tombRec && tombRec.value) || {};
       state.rulesUpdatedAt = (rulesAtRec && rulesAtRec.value) || 0;
       state.floorPlan = (planRec && planRec.value) || null;
+      state.lineOverlay = (linesRec && linesRec.value) || null;
       if (!state.rules.some(function(r){ return r.category == null; })){
         var def = {id:newRuleId(), category:null, warnDays:DEFAULT_WARN_DAYS};
         state.rules.push(def);
