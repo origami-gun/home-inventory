@@ -317,7 +317,8 @@
     fill:rgba(214,72,60,0.12); stroke:rgba(206,66,54,0.62);
     filter:drop-shadow(0 0 3px rgba(206,66,54,0.3));
   }
-  .location-pattern{pointer-events:none; stroke:rgba(28,24,20,0.55); stroke-width:1.4; stroke-linejoin:round;}
+  .location-pattern{pointer-events:none; stroke:rgba(28,24,20,0.28); stroke-width:1; stroke-linejoin:round;}
+  #floorPlanInk{pointer-events:none;}
 
   /* Map labels: rooms = white plate, bold sans; storage = amber tag, monospace. */
   .map-label{opacity:0; transition:opacity .16s ease; pointer-events:none;}
@@ -804,6 +805,8 @@
           <text x="574" y="444" text-anchor="middle" class="fp-ph-sub">Open Sync (top right) to connect Google Drive, or choose the floor-plan image file</text>
         </g>
         <image id="floorPlanImage" x="-40" y="-40" width="1229" height="992" preserveAspectRatio="none" style="display:none"></image>
+        <g id="patternsGroup"></g>
+        <image id="floorPlanInk" x="-40" y="-40" width="1229" height="992" preserveAspectRatio="none" style="display:none"></image>
         <g id="roomsGroup"></g>
         <g id="labelsGroup"></g>
       </g>
@@ -1264,7 +1267,7 @@
       'confirmMessage','confirmBtn','toastContainer','notifyBtn','bellDot','notifyModalOverlay',
       'notifyPermissionSection','ruleRows','addRuleBtn','rulesSaveBtn',
       'syncChip','syncLabel','syncModalOverlay','syncBody','floorPlanInput','floorPlanImage','floorPlanPlaceholder',
-      'labelsGroup','patternDefs','invOpenBtn','invView','invSummary','invCloseBtn','invSearch','invRoom','invCategory','invSort','invExpiring','invList',
+      'labelsGroup','patternDefs','patternsGroup','floorPlanInk','invOpenBtn','invView','invSummary','invCloseBtn','invSearch','invRoom','invCategory','invSort','invExpiring','invList',
       'patternPicker','patternStrength','patternStrengthOut','patternStrengthRow'];
     ids.forEach(function(id){ els[id] = document.getElementById(id); });
   }
@@ -1596,11 +1599,6 @@
       classes.push('storage-lit');
       if (computeLocationCount(loc.id) === 0) classes.push('storage-empty');
     }
-    var patternPoly = (loc.pattern && PATTERN_BY_KEY[loc.pattern])
-      ? '<polygon class="location-pattern" points="' + pointsAttr(loc.points) + '" fill="url(#pat-' + loc.pattern + ')" fill-opacity="' +
-        (loc.patternOpacity != null ? loc.patternOpacity : 0.9) + '"></polygon>'
-      : '';
-
     var labelY = centroid.y + 5;
     var showIcon = isRoom && bbox.h > 60 && bbox.w > 50;
     var iconG = showIcon
@@ -1624,7 +1622,6 @@
       : '';
 
     return '<g class="' + classes.join(' ') + '" data-loc-id="' + loc.id + '" tabindex="0" role="button" aria-label="' + escapeHtml(displayName(loc)) + '">' +
-      patternPoly +
       '<polygon class="location-poly" data-role="body" points="' + pointsAttr(loc.points) + '"></polygon>' +
       iconG + handles +
     '</g>';
@@ -1644,6 +1641,10 @@
       });
       if (sel) ordered.push(sel);
     }
+    els.patternsGroup.innerHTML = ordered.filter(function(l){ return l.pattern && PATTERN_BY_KEY[l.pattern]; }).map(function(l){
+      return '<polygon class="location-pattern" data-loc-id="' + l.id + '" points="' + pointsAttr(l.points) + '" fill="url(#pat-' + l.pattern + ')" fill-opacity="' +
+             (l.patternOpacity != null ? l.patternOpacity : 0.9) + '"></polygon>';
+    }).join('');
     els.roomsGroup.innerHTML = ordered.map(locationMarkup).join('');
     renderLabels();
     els.canvasSvg.classList.toggle('mode-view', state.mode === 'view');
@@ -3496,6 +3497,59 @@
     return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); }; r.readAsDataURL(blob); });
   }
   function dataUrlToBlob(dataUrl){ return fetch(dataUrl).then(function(r){ return r.blob(); }); }
+  /* Pulls the dark linework (walls, cabinet and fixture outlines) out of the floor plan so it can be
+     drawn on top of surface patterns, keeping the layout crisp. Small specks such as the flecks in a
+     granite counter are dropped, so only real structure is redrawn. */
+  var INK_LO = 18, INK_HI = 55, INK_MIN_BLOB = 80, inkBuiltFor = null;
+  function buildInkOverlay(dataUrl){
+    return new Promise(function(resolve, reject){
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight, n = w * h;
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          var ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          var id = ctx.getImageData(0, 0, w, h), px = id.data;
+          var al = new Float32Array(n), mask = new Uint8Array(n), i, p, t;
+          for (i = 0; i < n; i++){
+            p = i * 4;
+            if (!px[p + 3]) continue;
+            t = (INK_HI - (0.299 * px[p] + 0.587 * px[p + 1] + 0.114 * px[p + 2])) / (INK_HI - INK_LO);
+            t = t < 0 ? 0 : (t > 1 ? 1 : t);
+            al[i] = t * (px[p + 3] / 255);
+            mask[i] = al[i] > 0.35 ? 1 : 0;
+          }
+          var keep = new Uint8Array(n), seen = new Uint8Array(n), stack = new Int32Array(n), comp = new Int32Array(n);
+          for (var s = 0; s < n; s++){
+            if (!mask[s] || seen[s]) continue;
+            var top = 0, count = 0;
+            stack[top++] = s; seen[s] = 1;
+            while (top){
+              var cur = stack[--top]; comp[count++] = cur;
+              var cx = cur % w, cy = (cur - cx) / w;
+              for (var dy = -1; dy <= 1; dy++){
+                for (var dx = -1; dx <= 1; dx++){
+                  if (!dx && !dy) continue;
+                  var nx = cx + dx, ny = cy + dy;
+                  if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                  var ni = ny * w + nx;
+                  if (mask[ni] && !seen[ni]){ seen[ni] = 1; stack[top++] = ni; }
+                }
+              }
+            }
+            if (count >= INK_MIN_BLOB) for (var k = 0; k < count; k++) keep[comp[k]] = 1;
+          }
+          for (var j = 0; j < n; j++) px[j * 4 + 3] = keep[j] ? Math.round(al[j] * 255) : 0;
+          ctx.putImageData(id, 0, 0);
+          resolve(c.toDataURL('image/png'));
+        } catch(err){ reject(err); }
+      };
+      img.onerror = function(){ reject(new Error('ink-image')); };
+      img.src = dataUrl;
+    });
+  }
+
   function showFloorPlan(){
     var fp = state.floorPlan;
     if (!els.floorPlanImage) return;
@@ -3503,9 +3557,21 @@
       els.floorPlanImage.setAttribute('href', fp.dataUrl);
       els.floorPlanImage.style.display = '';
       els.floorPlanPlaceholder.style.display = 'none';
+      if (inkBuiltFor !== fp.dataUrl){
+        inkBuiltFor = fp.dataUrl;
+        els.floorPlanInk.removeAttribute('href'); els.floorPlanInk.style.display = 'none';
+        buildInkOverlay(fp.dataUrl).then(function(url){
+          if (inkBuiltFor !== fp.dataUrl) return;
+          els.floorPlanInk.setAttribute('href', url);
+          els.floorPlanInk.style.display = '';
+        }, function(err){ console.error('Could not build the floor plan overlay', err); });
+      }
     } else {
+      inkBuiltFor = null;
       els.floorPlanImage.removeAttribute('href');
       els.floorPlanImage.style.display = 'none';
+      els.floorPlanInk.removeAttribute('href');
+      els.floorPlanInk.style.display = 'none';
       els.floorPlanPlaceholder.style.display = '';
     }
   }
