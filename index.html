@@ -3383,7 +3383,10 @@
     d = d || {};
     var tomb = {}, t = d.tombstones || {}, yearAgo = Date.now() - 365*86400000;
     Object.keys(t).sort().forEach(function(k){ if (t[k] > yearAgo) tomb[k] = t[k]; });
-    var asset = function(a){ return a && a.fileId ? {fileId: a.fileId, updatedAt: a.updatedAt || 0} : null; };
+    var asset = function(a){
+      if (!a || (!a.fileId && !a.removed)) return null;
+      return {fileId: a.fileId || null, updatedAt: a.updatedAt || 0, removed: !!a.removed};
+    };
     var fp = asset(d.floorPlan), lo = asset(d.lineOverlay);
     return {schema:1, locations: sortById(d.locations || []), items: sortById(d.items || []), tombstones: tomb,
             rules: sortById(d.rules || []), rulesUpdatedAt: d.rulesUpdatedAt || 0, floorPlan: fp, lineOverlay: lo};
@@ -3412,7 +3415,10 @@
   }
   function buildLocalDoc(){
     return Promise.all([idbGetAll('locations'), idbGetAll('items')]).then(function(r){
-      var ref = function(a){ return a && a.fileId ? {fileId: a.fileId, updatedAt: a.updatedAt} : null; };
+      var ref = function(a){
+        if (!a || (!a.fileId && !a.removed)) return null;
+        return {fileId: a.fileId || null, updatedAt: a.updatedAt || 0, removed: !!a.removed};
+      };
       return normalizeDoc({locations: r[0], items: r[1], tombstones: state.tombstones, rules: state.rules,
                            rulesUpdatedAt: state.rulesUpdatedAt,
                            floorPlan: ref(state.floorPlan), lineOverlay: ref(state.lineOverlay)});
@@ -3488,6 +3494,10 @@
     return driveFetch(DRIVE_UPLOAD + '/files/' + encodeURIComponent(id) + '?' + qs({uploadType:'media', fields:'id,version,modifiedTime'}),
       {method:'PATCH', headers:{'Content-Type': mime}, body: content}).then(function(r){ return r.json(); });
   }
+  function driveTrash(id){
+    return driveFetch(DRIVE_API + '/files/' + encodeURIComponent(id) + '?fields=id,trashed',
+      {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({trashed: true})}).then(function(r){ return r.json(); });
+  }
   function driveDownload(id){ return driveFetch(DRIVE_API + '/files/' + encodeURIComponent(id) + '?alt=media'); }
   function driveLocateDataFile(){
     var viaSearch = function(){ return driveFind("name='" + escQ(DRIVE_DATA_NAME) + "' and trashed=false"); };
@@ -3555,25 +3565,29 @@
     });
   }
 
+  function assetLoaded(a){ return !!(a && a.dataUrl && !a.removed); }
   function showFloorPlan(){
-    var fp = state.floorPlan;
+    var fp = state.floorPlan, lines = state.lineOverlay;
     if (!els.floorPlanImage) return;
-    if (fp && fp.dataUrl){
+    /* The line drawing can stand on its own if the floor plan image has been removed. */
+    if (assetLoaded(lines)){
+      els.floorPlanLines.setAttribute('href', lines.dataUrl);
+      els.floorPlanLines.style.display = '';
+    } else {
+      els.floorPlanLines.removeAttribute('href');
+      els.floorPlanLines.style.display = 'none';
+    }
+    els.floorPlanPlaceholder.style.display = (assetLoaded(fp) || assetLoaded(lines)) ? 'none' : '';
+    if (assetLoaded(fp)){
       els.floorPlanImage.setAttribute('href', fp.dataUrl);
       els.floorPlanImage.style.display = '';
-      els.floorPlanPlaceholder.style.display = 'none';
-      var lines = state.lineOverlay;
-      if (lines && lines.dataUrl){
-        /* A supplied transparent line drawing is sharper than anything we can extract, so prefer it. */
-        els.floorPlanLines.setAttribute('href', lines.dataUrl);
-        els.floorPlanLines.style.display = '';
+      if (assetLoaded(lines)){
+        /* A supplied line drawing is sharper than anything we can extract, so prefer it. */
         els.floorPlanInk.removeAttribute('href');
         els.floorPlanInk.style.display = 'none';
         inkBuiltFor = null;
         return;
       }
-      els.floorPlanLines.removeAttribute('href');
-      els.floorPlanLines.style.display = 'none';
       if (inkBuiltFor !== fp.dataUrl){
         inkBuiltFor = fp.dataUrl;
         els.floorPlanInk.removeAttribute('href'); els.floorPlanInk.style.display = 'none';
@@ -3583,15 +3597,14 @@
           els.floorPlanInk.style.display = '';
         }, function(err){ console.error('Could not build the floor plan overlay', err); });
       }
-    } else {
+      return;
+    }
+    {
       inkBuiltFor = null;
       els.floorPlanImage.removeAttribute('href');
       els.floorPlanImage.style.display = 'none';
       els.floorPlanInk.removeAttribute('href');
       els.floorPlanInk.style.display = 'none';
-      els.floorPlanLines.removeAttribute('href');
-      els.floorPlanLines.style.display = 'none';
-      els.floorPlanPlaceholder.style.display = '';
     }
   }
   function saveFloorPlanLocal(fp){ return saveImageAssetLocal('floorPlan', fp); }
@@ -3610,6 +3623,19 @@
     }).catch(function(err){ console.error(err); toast('Could not load that image', 'error'); });
   }
   function chooseFloorPlan(file){ chooseImageAsset('floorPlan', file); }
+  function removeImageAsset(key){
+    var label = key === 'floorPlan' ? 'floor plan image' : 'line overlay';
+    var inDrive = state[key] && state[key].fileId && syncConfigured();
+    openConfirm('Remove the ' + label + '?' + (inDrive ? ' It will also be moved to the trash in your Google Drive, and removed from your other devices.' : ' You can load it again at any time.'),
+      function(){
+        var prev = state[key] || {};
+        return saveImageAssetLocal(key, {dataUrl: null, updatedAt: Date.now(), fileId: prev.fileId || null, removed: true, needsRemoteDelete: !!prev.fileId})
+          .then(function(){
+            noteLocalChange(); renderSyncDialog();
+            toast(key === 'floorPlan' ? 'Floor plan removed' : 'Line overlay removed');
+          });
+      }, {danger:true, confirmLabel:'Remove'});
+  }
   function syncFloorPlan(merged){
     return syncImageAsset(merged, 'floorPlan', DRIVE_PLAN_NAME).then(function(){
       return syncImageAsset(merged, 'lineOverlay', DRIVE_LINES_NAME);
@@ -3617,6 +3643,19 @@
   }
   function syncImageAsset(merged, key, driveBase){
     var local = state[key], remote = merged[key];
+    /* This device removed the image: trash the Drive copy and record the removal for the others. */
+    if (local && local.removed && (!remote || local.updatedAt >= remote.updatedAt)){
+      merged[key] = {fileId: null, updatedAt: local.updatedAt, removed: true};
+      if (!local.needsRemoteDelete || !local.fileId) return Promise.resolve();
+      return driveTrash(local.fileId).catch(function(e){ if (e && e.code === 'notfound') return; throw e; })
+        .then(function(){
+          return saveImageAssetLocal(key, {dataUrl: null, updatedAt: local.updatedAt, fileId: null, removed: true, needsRemoteDelete: false});
+        });
+    }
+    /* Another device removed it: drop this device's copy too. */
+    if (remote && remote.removed && (!local || !local.removed) && remote.updatedAt > ((local && local.updatedAt) || 0)){
+      return saveImageAssetLocal(key, {dataUrl: null, updatedAt: remote.updatedAt, fileId: null, removed: true, needsRemoteDelete: false});
+    }
     if (local && local.dataUrl && local.needsUpload && (!remote || local.updatedAt >= remote.updatedAt)){
       return dataUrlToBlob(local.dataUrl).then(function(blob){
         var mime = blob.type || 'image/webp';
@@ -3628,7 +3667,7 @@
         return saveImageAssetLocal(key, {dataUrl: local.dataUrl, updatedAt: local.updatedAt, fileId: meta.id, needsUpload: false});
       });
     }
-    if (remote && remote.fileId && (!local || !local.dataUrl || remote.updatedAt > (local.updatedAt || 0))){
+    if (remote && remote.fileId && !remote.removed && (!local || !local.dataUrl || remote.updatedAt > (local.updatedAt || 0))){
       return driveDownload(remote.fileId).then(function(r){ return r.blob(); }).then(blobToDataUrl).then(function(dataUrl){
         return saveImageAssetLocal(key, {dataUrl: dataUrl, updatedAt: remote.updatedAt, fileId: remote.fileId, needsUpload: false});
       }).catch(function(e){ if (e && e.code === 'notfound') return; throw e; });
@@ -3848,20 +3887,21 @@
               '<button type="button" class="btn btn-ghost btn-sm" data-sync-action="copy-link">Copy link</button></div></div>';
     }
     var fp = state.floorPlan;
-    var fpText = (fp && fp.dataUrl)
+    var fpText = assetLoaded(fp)
       ? (fp.needsUpload && syncConfigured() ? 'Loaded on this device \u2014 it will be saved to your Drive on the next sync.'
          : (fp.fileId ? 'Loaded and saved in your Google Drive.' : 'Loaded on this device.'))
-      : 'Not loaded yet. Choose the floor-plan image file' + (syncConfigured() ? ', or connect Drive if another device already added it.' : '.');
+      : 'Not loaded. Choose the floor-plan image file' + (syncConfigured() ? ', or connect Drive if another device already added it.' : '.');
     html += '<div class="sync-section"><h3>Floor plan image</h3><p>' + fpText + '</p>' +
-            '<button type="button" class="btn btn-ghost btn-sm" data-sync-action="choose-plan">' + (fp && fp.dataUrl ? 'Replace image\u2026' : 'Choose image\u2026') + '</button></div>';
+            '<button type="button" class="btn btn-ghost btn-sm" data-sync-action="choose-plan">' + (assetLoaded(fp) ? 'Replace image\u2026' : 'Choose image\u2026') + '</button>' +
+            (assetLoaded(fp) ? ' <button type="button" class="btn btn-ghost danger btn-sm" data-sync-action="remove-plan">Remove</button>' : '') + '</div>';
     var lo = state.lineOverlay;
-    var loText = (lo && lo.dataUrl)
+    var loText = assetLoaded(lo)
       ? (lo.needsUpload && syncConfigured() ? 'Loaded on this device \u2014 it will be saved to your Drive on the next sync.'
          : (lo.fileId ? 'Loaded and saved in your Google Drive.' : 'Loaded on this device.'))
       : 'Not loaded. Without it, the app traces the lines out of your floor plan image instead.';
     html += '<div class="sync-section"><h3>Line overlay</h3><p>A transparent wall-and-cabinet drawing laid over your surface patterns, so the layout stays sharp. ' + loText + '</p>' +
-            '<button type="button" class="btn btn-ghost btn-sm" data-sync-action="choose-lines">' + (lo && lo.dataUrl ? 'Replace overlay\u2026' : 'Choose overlay\u2026') + '</button>' +
-            '</div>';
+            '<button type="button" class="btn btn-ghost btn-sm" data-sync-action="choose-lines">' + (assetLoaded(lo) ? 'Replace overlay\u2026' : 'Choose overlay\u2026') + '</button>' +
+            (assetLoaded(lo) ? ' <button type="button" class="btn btn-ghost danger btn-sm" data-sync-action="remove-lines">Remove</button>' : '') + '</div>';
     if (syncConfigured() && !sync.editingClient && !GOOGLE_CLIENT_ID){
       html += '<div class="sync-section"><button type="button" class="sync-small-link" data-sync-action="change-client">Change Client ID</button></div>';
     }
@@ -3896,6 +3936,8 @@
     else if (action === 'sync-now'){ syncNow('manual').then(renderSyncDialog); }
     else if (action === 'choose-plan'){ els.floorPlanInput.click(); }
     else if (action === 'choose-lines'){ els.lineOverlayInput.click(); }
+    else if (action === 'remove-plan'){ removeImageAsset('floorPlan'); }
+    else if (action === 'remove-lines'){ removeImageAsset('lineOverlay'); }
     else if (action === 'copy-link'){
       var link = setupLink();
       var done = function(){ toast('Link copied \u2014 open it on your other device'); };
