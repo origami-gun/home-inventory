@@ -707,22 +707,146 @@
     opacity: .45;
   }
 
-  /*
-    The crown is deliberately broad and radial so the tree reads as
-    an overhead palm rather than a side-view tree.
-  */
+  /* =========================================
+   PALM FROND BREEZE
+   ========================================= */
+
   .palm-fronds {
     transform-box: fill-box;
-    transform-origin: 50% 50%;
-    animation: palmBreezeTopDown 5.6s ease-in-out infinite alternate;
+    transform-origin: 0 0;
   }
 
-  @keyframes palmBreezeTopDown {
-    0% {
-      transform: rotate(-1.5deg) translateX(-1px) translateY(.5px);
-    }
-    100% {
-      transform: rotate(2deg) translateX(1.5px) translateY(-.5px);
+
+  /* Every frond moves independently from the crown */
+
+  .palm-fronds > path {
+    transform-box: fill-box;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+
+  /* Alternate speeds and directions */
+
+  .palm-fronds > path:nth-child(1) {
+    animation: palmFrond1 4.8s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(2) {
+    animation: palmFrond2 5.7s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(3) {
+    animation: palmFrond3 4.3s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(4) {
+    animation: palmFrond4 6.2s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(5) {
+    animation: palmFrond5 5.1s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(6) {
+    animation: palmFrond6 6.5s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(7) {
+    animation: palmFrond7 5.4s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(8) {
+    animation: palmFrond8 4.6s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(9) {
+    animation: palmFrond9 6.0s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(10) {
+    animation: palmFrond10 5.2s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(11) {
+    animation: palmFrond11 5.9s ease-in-out infinite alternate;
+  }
+
+  .palm-fronds > path:nth-child(12) {
+    animation: palmFrond12 4.9s ease-in-out infinite alternate;
+  }
+
+
+  /* -----------------------------------------
+    Individual frond movement
+    ----------------------------------------- */
+
+  @keyframes palmFrond1 {
+    from { transform: rotate(-2deg); }
+    to   { transform: rotate(4deg); }
+  }
+
+  @keyframes palmFrond2 {
+    from { transform: rotate(2deg); }
+    to   { transform: rotate(-3deg); }
+  }
+
+  @keyframes palmFrond3 {
+    from { transform: rotate(-3deg); }
+    to   { transform: rotate(5deg); }
+  }
+
+  @keyframes palmFrond4 {
+    from { transform: rotate(2deg); }
+    to   { transform: rotate(-4deg); }
+  }
+
+  @keyframes palmFrond5 {
+    from { transform: rotate(-2deg); }
+    to   { transform: rotate(4deg); }
+  }
+
+  @keyframes palmFrond6 {
+    from { transform: rotate(1deg); }
+    to   { transform: rotate(-3deg); }
+  }
+
+  @keyframes palmFrond7 {
+    from { transform: rotate(-3deg); }
+    to   { transform: rotate(3deg); }
+  }
+
+  @keyframes palmFrond8 {
+    from { transform: rotate(2deg); }
+    to   { transform: rotate(-4deg); }
+  }
+
+  @keyframes palmFrond9 {
+    from { transform: rotate(-2deg); }
+    to   { transform: rotate(5deg); }
+  }
+
+  @keyframes palmFrond10 {
+    from { transform: rotate(3deg); }
+    to   { transform: rotate(-3deg); }
+  }
+
+  @keyframes palmFrond11 {
+    from { transform: rotate(-3deg); }
+    to   { transform: rotate(4deg); }
+  }
+
+  @keyframes palmFrond12 {
+    from { transform: rotate(2deg); }
+    to   { transform: rotate(-5deg); }
+  }
+
+
+  /* Respect reduced-motion preference */
+
+  @media (prefers-reduced-motion: reduce) {
+    .palm-fronds > path {
+      animation: none !important;
     }
   }
 
