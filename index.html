@@ -687,164 +687,222 @@
   }
 
   /* =========================================
-    PALM TREES — TOP-DOWN / BIRD'S-EYE VIEW
+    PALM TREES — OFF-NADIR / BIRD'S-EYE VIEW
     ========================================= */
 
   .palm-tree {
     pointer-events: none;
   }
 
+  /*
+    The trunk is intentionally curved and offset from
+    the crown so the palm reads as an off-nadir view
+    instead of a perfectly vertical top-down symbol.
+  */
+  .palm-trunk-view {
+    transform-box: fill-box;
+    transform-origin: 0 0;
+  }
+
   .palm-trunk {
     fill: #806347;
     stroke: #60492F;
-    stroke-width: 1.2;
+    stroke-width: 1.3;
+  }
+
+  .palm-trunk-ground-shadow {
+    fill: #1B2E14;
+    opacity: .18;
   }
 
   .palm-trunk-highlight {
     fill: none;
     stroke: #B08A61;
-    stroke-width: 1.4;
-    opacity: .45;
+    stroke-width: 1.5;
+    opacity: .50;
   }
 
-  /* =========================================
-   PALM FROND BREEZE
-   ========================================= */
+  .palm-trunk-ring {
+    fill: none;
+    stroke: #60492F;
+    stroke-width: 1.0;
+    opacity: .48;
+  }
 
+  /*
+    Stronger, layered breeze.
+    The whole crown sways a little while each
+    individual frond moves independently.
+  */
   .palm-fronds {
     transform-box: fill-box;
     transform-origin: 0 0;
-  }
-
-
-  /* Every frond moves independently from the crown */
-
-  .palm-fronds > path {
-    transform-box: fill-box;
-    transform-origin: 0 0;
+    animation:
+      palmCrownBreeze
+      7.8s
+      ease-in-out
+      infinite alternate;
     will-change: transform;
   }
 
+  .palm-fronds > path {
+    transform-box: fill-box;
+    transform-origin: 0 50%;
+    will-change: transform;
+  }
 
-  /* Alternate speeds and directions */
-
+  /* Each frond has a different speed and phase. */
   .palm-fronds > path:nth-child(1) {
-    animation: palmFrond1 4.8s ease-in-out infinite alternate;
+    animation: palmFrond1 4.2s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(2) {
-    animation: palmFrond2 5.7s ease-in-out infinite alternate;
+    animation: palmFrond2 5.1s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(3) {
-    animation: palmFrond3 4.3s ease-in-out infinite alternate;
+    animation: palmFrond3 4.6s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(4) {
-    animation: palmFrond4 6.2s ease-in-out infinite alternate;
+    animation: palmFrond4 5.8s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(5) {
-    animation: palmFrond5 5.1s ease-in-out infinite alternate;
+    animation: palmFrond5 4.9s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(6) {
-    animation: palmFrond6 6.5s ease-in-out infinite alternate;
+    animation: palmFrond6 6.2s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(7) {
-    animation: palmFrond7 5.4s ease-in-out infinite alternate;
+    animation: palmFrond7 5.3s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(8) {
-    animation: palmFrond8 4.6s ease-in-out infinite alternate;
+    animation: palmFrond8 4.4s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(9) {
-    animation: palmFrond9 6.0s ease-in-out infinite alternate;
+    animation: palmFrond9 5.9s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(10) {
-    animation: palmFrond10 5.2s ease-in-out infinite alternate;
+    animation: palmFrond10 4.8s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(11) {
-    animation: palmFrond11 5.9s ease-in-out infinite alternate;
+    animation: palmFrond11 5.5s ease-in-out infinite alternate;
   }
 
   .palm-fronds > path:nth-child(12) {
-    animation: palmFrond12 4.9s ease-in-out infinite alternate;
+    animation: palmFrond12 6.0s ease-in-out infinite alternate;
   }
 
+  /* -----------------------------------------
+     Whole crown
+     ----------------------------------------- */
+
+  @keyframes palmCrownBreeze {
+    0% {
+      transform:
+        rotate(-3deg)
+        translate(-2px, 1px);
+    }
+
+    45% {
+      transform:
+        rotate(1deg)
+        translate(1px, -1px);
+    }
+
+    100% {
+      transform:
+        rotate(4deg)
+        translate(3px, 1px);
+    }
+  }
 
   /* -----------------------------------------
-    Individual frond movement
-    ----------------------------------------- */
+     Individual fronds — deliberately more visible
+     ----------------------------------------- */
 
   @keyframes palmFrond1 {
-    from { transform: rotate(-2deg); }
-    to   { transform: rotate(4deg); }
+    0%   { transform: rotate(-2deg) translate(-2px, 1px); }
+    50%  { transform: rotate(0deg) translate(1px, -2px); }
+    100% { transform: rotate(3deg) translate(4px, 1px); }
   }
 
   @keyframes palmFrond2 {
-    from { transform: rotate(2deg); }
-    to   { transform: rotate(-3deg); }
+    0%   { transform: rotate(4deg) translate(1px, -1px); }
+    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
+    100% { transform: rotate(-3deg) translate(-4px, 0); }
   }
 
   @keyframes palmFrond3 {
-    from { transform: rotate(-3deg); }
-    to   { transform: rotate(5deg); }
+    0%   { transform: rotate(-5deg) translate(-2px, 1px); }
+    50%  { transform: rotate(1deg) translate(1px, -2px); }
+    100% { transform: rotate(3deg) translate(4px, 1px); }
   }
 
   @keyframes palmFrond4 {
-    from { transform: rotate(2deg); }
-    to   { transform: rotate(-4deg); }
+    0%   { transform: rotate(4deg) translate(1px, -1px); }
+    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
+    100% { transform: rotate(-3deg) translate(-4px, 0); }
   }
 
   @keyframes palmFrond5 {
-    from { transform: rotate(-2deg); }
-    to   { transform: rotate(4deg); }
+    0%   { transform: rotate(-3deg) translate(-2px, 1px); }
+    50%  { transform: rotate(0deg) translate(1px, -2px); }
+    100% { transform: rotate(2deg) translate(4px, 1px); }
   }
 
   @keyframes palmFrond6 {
-    from { transform: rotate(1deg); }
-    to   { transform: rotate(-3deg); }
+    0%   { transform: rotate(3deg) translate(1px, -1px); }
+    50%  { transform: rotate(-2deg) translate(-1px, 2px); }
+    100% { transform: rotate(-1deg) translate(-4px, 0); }
   }
 
   @keyframes palmFrond7 {
-    from { transform: rotate(-3deg); }
-    to   { transform: rotate(3deg); }
+    0%   { transform: rotate(-3deg) translate(-2px, 1px); }
+    50%  { transform: rotate(1deg) translate(1px, -2px); }
+    100% { transform: rotate(3deg) translate(4px, 1px); }
   }
 
   @keyframes palmFrond8 {
-    from { transform: rotate(2deg); }
-    to   { transform: rotate(-4deg); }
+    0%   { transform: rotate(4deg) translate(1px, -1px); }
+    50%  { transform: rotate(1deg) translate(-1px, 2px); }
+    100% { transform: rotate(-2deg) translate(-4px, 0); }
   }
 
   @keyframes palmFrond9 {
-    from { transform: rotate(-2deg); }
-    to   { transform: rotate(5deg); }
+    0%   { transform: rotate(-3deg) translate(-2px, 1px); }
+    50%  { transform: rotate(1deg) translate(1px, -2px); }
+    100% { transform: rotate(4deg) translate(4px, 1px); }
   }
 
   @keyframes palmFrond10 {
-    from { transform: rotate(3deg); }
-    to   { transform: rotate(-3deg); }
+    0%   { transform: rotate(3deg) translate(1px, -1px); }
+    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
+    100% { transform: rotate(-4deg) translate(-4px, 0); }
   }
 
   @keyframes palmFrond11 {
-    from { transform: rotate(-3deg); }
-    to   { transform: rotate(4deg); }
+    0%   { transform: rotate(-4deg) translate(-2px, 1px); }
+    50%  { transform: rotate(1deg) translate(1px, -2px); }
+    100% { transform: rotate(3deg) translate(4px, 1px); }
   }
 
   @keyframes palmFrond12 {
-    from { transform: rotate(2deg); }
-    to   { transform: rotate(-5deg); }
+    0%   { transform: rotate(2deg) translate(1px, -1px); }
+    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
+    100% { transform: rotate(-4deg) translate(-4px, 0); }
   }
 
-
-  /* Respect reduced-motion preference */
-
-  @media (prefers-reduced-motion: reduce) {
+  /* Respect reduced-motion preference. */
+  @media (prefers-reduced-motion: no-preference) {
+    .palm-fronds,
     .palm-fronds > path {
       animation: none !important;
     }
@@ -1567,10 +1625,25 @@
 
   <!-- TREE 1 -->
   <g class="palm-tree" transform="translate(-100 55) scale(.98)">
-    <!-- top-down trunk / root shadow -->
-    <ellipse cx="0" cy="0" rx="11" ry="9" fill="#1B2E14" opacity=".22"/>
-    <ellipse cx="0" cy="0" rx="7.5" ry="6" class="palm-trunk"/>
-    <ellipse cx="-1" cy="-1" rx="3" ry="2.6" class="palm-trunk-highlight" opacity=".55"/>
+    <!-- curved off-nadir trunk -->
+    <g class="palm-trunk-view" transform="rotate(-13 0 0)">
+      <path class="palm-trunk-ground-shadow"
+            d="M17 38 C24 39 29 41 30 44 C24 48 15 47 8 44 C10 41 13 39 17 38 Z"/>
+      <path class="palm-trunk"
+            d="M-3 0
+               C-8 8 -9 16 -6 22
+               C-3 29 5 33 11 38
+               C16 42 20 44 24 42
+               C27 40 26 37 22 35
+               C16 32 12 28 8 23
+               C4 18 4 12 7 7
+               C9 3 8 1 5 0 Z"/>
+      <path class="palm-trunk-highlight"
+            d="M0 2 C-4 10 -5 16 -2 22 C1 28 8 32 14 37"/>
+      <path class="palm-trunk-ring" d="M-7 15 C-1 16 4 18 7 20"/>
+      <path class="palm-trunk-ring" d="M-4 25 C2 26 7 29 10 31"/>
+      <path class="palm-trunk-ring" d="M5 34 C10 35 14 38 16 40"/>
+    </g>
 
     <!-- The landing bird is placed BELOW the fronds so the crown hides it. -->
     <g id="palmPerch1" class="palm-perch-bird" aria-hidden="true"></g>
@@ -1598,10 +1671,25 @@
 
   <!-- TREE 2 -->
   <g class="palm-tree" transform="translate(-100 610) scale(.98)">
-    <!-- top-down trunk / root shadow -->
-    <ellipse cx="0" cy="0" rx="11" ry="9" fill="#1B2E14" opacity=".22"/>
-    <ellipse cx="0" cy="0" rx="7.5" ry="6" class="palm-trunk"/>
-    <ellipse cx="-1" cy="-1" rx="3" ry="2.6" class="palm-trunk-highlight" opacity=".55"/>
+    <!-- curved off-nadir trunk -->
+    <g class="palm-trunk-view" transform="rotate(7 0 0)">
+      <path class="palm-trunk-ground-shadow"
+            d="M17 38 C24 39 29 41 30 44 C24 48 15 47 8 44 C10 41 13 39 17 38 Z"/>
+      <path class="palm-trunk"
+            d="M-3 0
+               C-8 8 -9 16 -6 22
+               C-3 29 5 33 11 38
+               C16 42 20 44 24 42
+               C27 40 26 37 22 35
+               C16 32 12 28 8 23
+               C4 18 4 12 7 7
+               C9 3 8 1 5 0 Z"/>
+      <path class="palm-trunk-highlight"
+            d="M0 2 C-4 10 -5 16 -2 22 C1 28 8 32 14 37"/>
+      <path class="palm-trunk-ring" d="M-7 15 C-1 16 4 18 7 20"/>
+      <path class="palm-trunk-ring" d="M-4 25 C2 26 7 29 10 31"/>
+      <path class="palm-trunk-ring" d="M5 34 C10 35 14 38 16 40"/>
+    </g>
 
     <!-- The landing bird is placed BELOW the fronds so the crown hides it. -->
     <g id="palmPerch2" class="palm-perch-bird" aria-hidden="true"></g>
@@ -1629,10 +1717,25 @@
 
   <!-- TREE 3 -->
   <g class="palm-tree" transform="translate(-95 835) scale(.78)">
-    <!-- top-down trunk / root shadow -->
-    <ellipse cx="0" cy="0" rx="11" ry="9" fill="#1B2E14" opacity=".22"/>
-    <ellipse cx="0" cy="0" rx="7.5" ry="6" class="palm-trunk"/>
-    <ellipse cx="-1" cy="-1" rx="3" ry="2.6" class="palm-trunk-highlight" opacity=".55"/>
+    <!-- curved off-nadir trunk -->
+    <g class="palm-trunk-view" transform="rotate(-6 0 0)">
+      <path class="palm-trunk-ground-shadow"
+            d="M17 38 C24 39 29 41 30 44 C24 48 15 47 8 44 C10 41 13 39 17 38 Z"/>
+      <path class="palm-trunk"
+            d="M-3 0
+               C-8 8 -9 16 -6 22
+               C-3 29 5 33 11 38
+               C16 42 20 44 24 42
+               C27 40 26 37 22 35
+               C16 32 12 28 8 23
+               C4 18 4 12 7 7
+               C9 3 8 1 5 0 Z"/>
+      <path class="palm-trunk-highlight"
+            d="M0 2 C-4 10 -5 16 -2 22 C1 28 8 32 14 37"/>
+      <path class="palm-trunk-ring" d="M-7 15 C-1 16 4 18 7 20"/>
+      <path class="palm-trunk-ring" d="M-4 25 C2 26 7 29 10 31"/>
+      <path class="palm-trunk-ring" d="M5 34 C10 35 14 38 16 40"/>
+    </g>
 
     <!-- The landing bird is placed BELOW the fronds so the crown hides it. -->
     <g id="palmPerch3" class="palm-perch-bird" aria-hidden="true"></g>
@@ -1660,10 +1763,25 @@
 
   <!-- TREE 4 -->
   <g class="palm-tree" transform="translate(1228 20) scale(1.05)">
-    <!-- top-down trunk / root shadow -->
-    <ellipse cx="0" cy="0" rx="11" ry="9" fill="#1B2E14" opacity=".22"/>
-    <ellipse cx="0" cy="0" rx="7.5" ry="6" class="palm-trunk"/>
-    <ellipse cx="-1" cy="-1" rx="3" ry="2.6" class="palm-trunk-highlight" opacity=".55"/>
+    <!-- curved off-nadir trunk -->
+    <g class="palm-trunk-view" transform="rotate(12 0 0)">
+      <path class="palm-trunk-ground-shadow"
+            d="M17 38 C24 39 29 41 30 44 C24 48 15 47 8 44 C10 41 13 39 17 38 Z"/>
+      <path class="palm-trunk"
+            d="M-3 0
+               C-8 8 -9 16 -6 22
+               C-3 29 5 33 11 38
+               C16 42 20 44 24 42
+               C27 40 26 37 22 35
+               C16 32 12 28 8 23
+               C4 18 4 12 7 7
+               C9 3 8 1 5 0 Z"/>
+      <path class="palm-trunk-highlight"
+            d="M0 2 C-4 10 -5 16 -2 22 C1 28 8 32 14 37"/>
+      <path class="palm-trunk-ring" d="M-7 15 C-1 16 4 18 7 20"/>
+      <path class="palm-trunk-ring" d="M-4 25 C2 26 7 29 10 31"/>
+      <path class="palm-trunk-ring" d="M5 34 C10 35 14 38 16 40"/>
+    </g>
 
     <!-- The landing bird is placed BELOW the fronds so the crown hides it. -->
     <g id="palmPerch4" class="palm-perch-bird" aria-hidden="true"></g>
@@ -1691,10 +1809,25 @@
 
   <!-- TREE 5 -->
   <g class="palm-tree" transform="translate(1262 262) scale(.90)">
-    <!-- top-down trunk / root shadow -->
-    <ellipse cx="0" cy="0" rx="11" ry="9" fill="#1B2E14" opacity=".22"/>
-    <ellipse cx="0" cy="0" rx="7.5" ry="6" class="palm-trunk"/>
-    <ellipse cx="-1" cy="-1" rx="3" ry="2.6" class="palm-trunk-highlight" opacity=".55"/>
+    <!-- curved off-nadir trunk -->
+    <g class="palm-trunk-view" transform="rotate(-10 0 0)">
+      <path class="palm-trunk-ground-shadow"
+            d="M17 38 C24 39 29 41 30 44 C24 48 15 47 8 44 C10 41 13 39 17 38 Z"/>
+      <path class="palm-trunk"
+            d="M-3 0
+               C-8 8 -9 16 -6 22
+               C-3 29 5 33 11 38
+               C16 42 20 44 24 42
+               C27 40 26 37 22 35
+               C16 32 12 28 8 23
+               C4 18 4 12 7 7
+               C9 3 8 1 5 0 Z"/>
+      <path class="palm-trunk-highlight"
+            d="M0 2 C-4 10 -5 16 -2 22 C1 28 8 32 14 37"/>
+      <path class="palm-trunk-ring" d="M-7 15 C-1 16 4 18 7 20"/>
+      <path class="palm-trunk-ring" d="M-4 25 C2 26 7 29 10 31"/>
+      <path class="palm-trunk-ring" d="M5 34 C10 35 14 38 16 40"/>
+    </g>
 
     <!-- The landing bird is placed BELOW the fronds so the crown hides it. -->
     <g id="palmPerch5" class="palm-perch-bird" aria-hidden="true"></g>
@@ -1722,10 +1855,25 @@
 
   <!-- TREE 6 -->
   <g class="palm-tree" transform="translate(1255 790) scale(.98)">
-    <!-- top-down trunk / root shadow -->
-    <ellipse cx="0" cy="0" rx="11" ry="9" fill="#1B2E14" opacity=".22"/>
-    <ellipse cx="0" cy="0" rx="7.5" ry="6" class="palm-trunk"/>
-    <ellipse cx="-1" cy="-1" rx="3" ry="2.6" class="palm-trunk-highlight" opacity=".55"/>
+    <!-- curved off-nadir trunk -->
+    <g class="palm-trunk-view" transform="rotate(9 0 0)">
+      <path class="palm-trunk-ground-shadow"
+            d="M17 38 C24 39 29 41 30 44 C24 48 15 47 8 44 C10 41 13 39 17 38 Z"/>
+      <path class="palm-trunk"
+            d="M-3 0
+               C-8 8 -9 16 -6 22
+               C-3 29 5 33 11 38
+               C16 42 20 44 24 42
+               C27 40 26 37 22 35
+               C16 32 12 28 8 23
+               C4 18 4 12 7 7
+               C9 3 8 1 5 0 Z"/>
+      <path class="palm-trunk-highlight"
+            d="M0 2 C-4 10 -5 16 -2 22 C1 28 8 32 14 37"/>
+      <path class="palm-trunk-ring" d="M-7 15 C-1 16 4 18 7 20"/>
+      <path class="palm-trunk-ring" d="M-4 25 C2 26 7 29 10 31"/>
+      <path class="palm-trunk-ring" d="M5 34 C10 35 14 38 16 40"/>
+    </g>
 
     <!-- The landing bird is placed BELOW the fronds so the crown hides it. -->
     <g id="palmPerch6" class="palm-perch-bird" aria-hidden="true"></g>
