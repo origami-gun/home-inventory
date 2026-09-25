@@ -1274,6 +1274,15 @@
     flex:1 1 120px; min-width:100px; padding:7px 10px; border-radius:7px; border:1px solid var(--line); background:var(--paper-alt);
   }
   .panel-toolbar select{padding:7px 8px; border-radius:7px; border:1px solid var(--line); background:var(--paper-alt); max-width:130px;}
+  .panel-chips{display:flex; flex-wrap:wrap; gap:6px; padding:10px 18px 12px; border-bottom:1px solid var(--line);}
+  .panel-chips:empty{display:none;}
+  .panel-chip{display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 11px; border-radius:999px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-size:12.5px; font-weight:500; cursor:pointer; transition:background .12s ease, border-color .12s ease;}
+  .panel-chip .n{font-family:var(--font-mono); font-size:11px; color:var(--ink-soft);}
+  .panel-chip:hover{border-color:var(--ink-soft);}
+  .panel-chip.active{background:rgba(224,126,32,.14); border-color:rgba(224,126,32,.85); color:var(--accent-strong); font-weight:600;}
+  .panel-chip.active .n{color:inherit;}
+  .panel-chip:focus-visible{outline:none; box-shadow:var(--focus);}
+  .tag-where{color:var(--ink-soft); font-family:var(--font-mono); font-size:11px;}
   .panel-body{flex:1; overflow-y:auto; padding:12px 18px 24px; display:flex; flex-direction:column; gap:10px;}
 
   .item-card{
@@ -2294,6 +2303,7 @@
       <select id="panelSortSelect" aria-label="Sort items"></select>
       <button type="button" class="btn btn-primary btn-sm" id="panelAddBtn">+ Add item</button>
     </div>
+    <div class="panel-chips" id="panelChips" role="tablist" aria-label="Storage in this room"></div>
 
     <div class="panel-body" id="panelBody"></div>
   </aside>
@@ -2616,7 +2626,8 @@
   ROOM_ICONS.entry = '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M12 3 V21"/><circle cx="9" cy="12" r="1"/><path d="M15 8 L18 12 L15 16"/>';
   ROOM_ICONS.mudroom = '<rect x="4" y="3" width="16" height="18" rx="1"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><path d="M7 18 H9 M12 18 H14 M17 18 H19"/>';
   ROOM_ICONS.media = '<rect x="2" y="5" width="20" height="13" rx="1"/><polygon points="10,9 10,15 16,12"/><line x1="7" y1="21" x2="17" y2="21"/>';
-  ROOM_ICONS.hallway = '<path d="M5 3 H19 V21 H5 Z"/><path d="M9 3 V9 M15 15 V21"/><path d="M12 8 L15 12 L12 16"/>';
+  /* Hallway, drawn like the floor plan: a long corridor with a runner rug and doors opening off each side */
+  ROOM_ICONS.hallway = '<path d="M2 8 H7 M12 8 H22 M2 16 H12 M17 16 H22"/><path d="M7 8 V3"/><path d="M7 3 A5 5 0 0 1 12 8"/><path d="M17 16 V21"/><path d="M17 21 A5 5 0 0 1 12 16"/><rect x="4" y="10.6" width="16" height="2.8" rx="1.4"/>';
   ROOM_ICONS.nursery = '<rect x="3" y="10" width="18" height="8" rx="1"/><rect x="3" y="6" width="5" height="5" rx="1"/><circle cx="17" cy="6" r="3"/><line x1="17" y1="3" x2="17" y2="9"/><line x1="14" y1="6" x2="20" y2="6"/>';
   ROOM_ICONS.guest = ROOM_ICONS.bedroom;
   ROOM_TYPES.push(
@@ -2695,7 +2706,8 @@
     bathroom:['Bath'], closet:['Shirt'], pantry:['Archive','Package'], laundry:['WashingMachine'], shed:['House','Home'],
     basement:['Stairs','Layers'], living:['Sofa'], deck:['Fence','TreePalm','Trees'], other:['Box'],
     dining:['UtensilsCrossed','Utensils'], entry:['DoorOpen'], mudroom:['Footprints'], media:['Tv','MonitorPlay'],
-    hallway:['DoorClosed','MoveHorizontal'], nursery:['Baby'], guest:['BedSingle','Bed']
+    /* hallway keeps its own corridor drawing (Lucide has no good hallway icon) */
+    nursery:['Baby'], guest:['BedSingle','Bed']
   };
   var LUCIDE_STORAGE_MAP = {
     cabinet:['Archive'], shelf:['LibraryBig','Library','Layers'], bin:['Package','Box'], closet:['Shirt'],
@@ -2834,7 +2846,7 @@
       'addRoomShapeBtn','addStorageShapeBtn','deleteShapeBtn','submodeBoxBtn','submodePointsBtn','undoShapeBtn',
       'canvasWrap','sidePanel','panelTitle','panelSubtitle','panelRoomActions','panelEditRoomBtn',
       'panelDeleteRoomBtn','panelCloseBtn','panelSearchInput','panelCategorySelect','panelSortSelect',
-      'panelAddBtn','panelBody','roomModalOverlay','roomModalTitle','roomTypeGrid','roomTypeGridWrap',
+      'panelAddBtn','panelChips','panelBody','roomModalOverlay','roomModalTitle','roomTypeGrid','roomTypeGridWrap',
       'storageParentWrap','storageParentSelect','roomNameFieldLabel','locationIconLabel','roomNameInput',
       'locTypeRoomTab','locTypeStorageTab',
       'roomSaveBtn','roomDeleteBtn','itemModalOverlay','itemModalTitle','itemVisualPreview',
@@ -3578,13 +3590,43 @@
     els.sidePanel.setAttribute('aria-hidden','true');
     state.activePanel = null;
   }
+  /* A room's panel lists everything in the room AND in its storage areas; the storage chips
+     (or clicking a storage area on the map) narrow it down. storageFilter: '' = all,
+     '__room' = loose in the room itself, otherwise a storage id. */
   function openLocationPanel(locationId){
     var loc = getLocation(locationId);
     if (!loc) return;
-    state.activePanel = {type:'location', locationId:locationId, sort:'name', filter:'', categoryFilter:null};
-    els.panelSearchInput.value = '';
+    var roomId = locationId, storageFilter = '';
+    if (loc.type === 'storage' && loc.parentId && getLocation(loc.parentId)){ roomId = loc.parentId; storageFilter = loc.id; }
+    var same = state.activePanel && state.activePanel.type === 'location' && state.activePanel.locationId === roomId && els.sidePanel.classList.contains('open');
+    if (same){
+      state.activePanel.storageFilter = storageFilter;
+    } else {
+      state.activePanel = {type:'location', locationId:roomId, storageFilter:storageFilter, sort:'name', filter:'', categoryFilter:null};
+      els.panelSearchInput.value = '';
+    }
     els.sidePanel.classList.add('open');
     els.sidePanel.setAttribute('aria-hidden','false');
+    renderPanel();
+    animateList(els.panelBody);
+  }
+  function panelRoomStorages(room){
+    var roomItems = state.items.filter(function(i){ return i.locationId === room.id; });
+    return locationChildren(room.id).filter(function(st){
+      return st.name || state.items.some(function(i){ return i.locationId === st.id; });
+    }).sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
+  }
+  /* The location new items / edit / delete act on: the selected storage, or the room. */
+  function panelTarget(ap){
+    var room = getLocation(ap.locationId);
+    if (ap.storageFilter && ap.storageFilter !== '__room'){ var st = getLocation(ap.storageFilter); if (st) return st; }
+    return room;
+  }
+  function setPanelStorageFilter(id){
+    var ap = state.activePanel; if (!ap || ap.type !== 'location') return;
+    ap.storageFilter = id || '';
+    state.selectedStorageId = (id && id !== '__room') ? id : null;     /* highlight it on the map */
+    renderCanvas();
     renderPanel();
     animateList(els.panelBody);
   }
@@ -3958,7 +4000,7 @@
     return item.usedAt ? '<span class="badge badge-used">Used ' + fmtDate(item.usedAt) + '</span>' : '';
   }
 
-  function itemCardMarkup(item, showRoom){
+  function itemCardMarkup(item, showRoom, showStorage){
     var expBadge = item.usedAt ? usedBadge(item) : expirationBadge(item);
     var loc = showRoom ? getLocation(item.locationId) : null;
     var value = (Number(item.value) || 0) > 0 ? '<span class="item-value">' + money(item.value) + '</span>' : '';
@@ -3970,6 +4012,7 @@
           '<div class="item-meta">' +
             categoryTag(item.category) +
             (loc ? '<span class="tag tag-room">' + escapeHtml(displayName(loc)) + '</span>' : '') +
+            (showStorage && getLocation(item.locationId) ? '<span class="tag-where">' + escapeHtml(displayName(getLocation(item.locationId))) + '</span>' : '') +
             value +
           '</div>' +
           (item.subLocation ? '<div class="item-sub">' + escapeHtml(item.subLocation) + '</div>' : '') +
@@ -3979,6 +4022,9 @@
   }
 
   function emptyStateMarkup(ap){
+    if (ap.type === 'location' && ((ap.filter || '').trim() || ap.categoryFilter)){
+      return '<div class="empty-state"><p>No items match these filters.</p></div>';
+    }
     if (ap.type === 'location'){
       return '<div class="empty-state">' +
         '<svg viewBox="0 0 24 24" class="empty-icon">' + ROOM_ICONS.other + '</svg>' +
@@ -3994,12 +4040,39 @@
     if (!ap) return;
     var items, title, locForHeader = null;
 
+    var roomLoc = null, storages = [], storeName = '';
     if (ap.type === 'location'){
-      locForHeader = getLocation(ap.locationId);
-      if (!locForHeader){ closePanel(); return; }
-      items = state.items.filter(function(i){ return i.locationId === ap.locationId; });
-      title = displayName(locForHeader);
+      roomLoc = getLocation(ap.locationId);
+      if (!roomLoc){ closePanel(); return; }
+      if (roomLoc.type === 'room'){
+        storages = panelRoomStorages(roomLoc);
+        var inRoom = {}; inRoom[roomLoc.id] = true;
+        locationChildren(roomLoc.id).forEach(function(c){ inRoom[c.id] = true; });
+        items = state.items.filter(function(i){ return inRoom[i.locationId]; });
+        if (ap.storageFilter && ap.storageFilter !== '__room' && !getLocation(ap.storageFilter)) ap.storageFilter = '';
+      } else {
+        items = state.items.filter(function(i){ return i.locationId === roomLoc.id; });   /* storage with no room */
+        ap.storageFilter = '';
+      }
+      var allInRoom = items;
+      /* storage chips */
+      if (storages.length){
+        var countIn = function(id){ return allInRoom.filter(function(i){ return i.locationId === id; }).length; };
+        var chips = [{id:'', label:'All', n: allInRoom.length}].concat(storages.map(function(st){ return {id: st.id, label: displayName(st), n: countIn(st.id)}; }));
+        var loose = countIn(roomLoc.id);
+        if (loose) chips.push({id:'__room', label:'Loose in room', n: loose});
+        els.panelChips.innerHTML = chips.map(function(c){
+          var on = (ap.storageFilter || '') === c.id;
+          return '<button type="button" class="panel-chip' + (on ? ' active' : '') + '" data-panel-storage="' + c.id + '" role="tab" aria-selected="' + on + '">' +
+            escapeHtml(c.label) + '<span class="n">' + c.n + '</span></button>';
+        }).join('');
+      } else els.panelChips.innerHTML = '';
+      if (ap.storageFilter === '__room'){ items = items.filter(function(i){ return i.locationId === roomLoc.id; }); storeName = 'Loose in room'; }
+      else if (ap.storageFilter){ items = items.filter(function(i){ return i.locationId === ap.storageFilter; }); storeName = displayName(getLocation(ap.storageFilter)); }
+      locForHeader = panelTarget(ap);
+      title = displayName(roomLoc);
     } else {
+      els.panelChips.innerHTML = '';
       items = ap.getItems();
       title = ap.title;
     }
@@ -4015,18 +4088,23 @@
 
     els.panelTitle.textContent = title;
     var parentBit = '';
-    if (locForHeader && locForHeader.parentId){
-      var parent = getLocation(locForHeader.parentId);
+    if (roomLoc && roomLoc.type === 'storage' && roomLoc.parentId){
+      var parent = getLocation(roomLoc.parentId);
       if (parent) parentBit = ' · in ' + displayName(parent);
     }
-    els.panelSubtitle.textContent = items.length + ' item' + (items.length===1?'':'s') + (totalValue ? ' · ' + money(totalValue) : '') + parentBit;
+    els.panelSubtitle.textContent = (storeName ? storeName + ' · ' : '') + items.length + ' item' + (items.length===1?'':'s') + (totalValue ? ' · ' + money(totalValue) : '') + parentBit;
     els.panelRoomActions.style.display = ap.type === 'location' ? 'flex' : 'none';
     els.panelAddBtn.style.display = ap.type === 'location' ? 'inline-flex' : 'none';
 
     if (ap.type === 'location' && locForHeader){
+      /* edit / delete / add act on the selected storage, or on the room when "All" is showing */
+      var what = locForHeader.type === 'storage' ? 'storage area' : 'room';
       els.panelEditRoomBtn.onclick = function(){ openLabelModal(locForHeader); };
       els.panelDeleteRoomBtn.onclick = function(){ deleteShapeAction(locForHeader); };
       els.panelAddBtn.onclick = function(){ openItemModal(null, locForHeader.id); };
+      els.panelEditRoomBtn.title = 'Edit ' + what + ' \u201c' + displayName(locForHeader) + '\u201d';
+      els.panelDeleteRoomBtn.title = 'Delete ' + what + ' \u201c' + displayName(locForHeader) + '\u201d';
+      els.panelAddBtn.title = 'Add an item to ' + displayName(locForHeader);
     }
 
     var cats = [];
@@ -4043,7 +4121,9 @@
     if (items.length === 0){
       els.panelBody.innerHTML = emptyStateMarkup(ap);
     } else {
-      els.panelBody.innerHTML = items.map(function(i){ return itemCardMarkup(i, ap.type !== 'location'); }).join('');
+      /* in a room showing "All", tag each item with the storage it's in */
+      var tagWhere = ap.type === 'location' && roomLoc && roomLoc.type === 'room' && !ap.storageFilter;
+      els.panelBody.innerHTML = items.map(function(i){ return itemCardMarkup(i, ap.type !== 'location', tagWhere && i.locationId !== roomLoc.id); }).join('');
     }
   }
 
@@ -4074,7 +4154,7 @@
     els.roomTypeGridWrap.style.display = '';
     els.storageParentWrap.style.display = type === 'storage' ? '' : 'none';
     var iconLabel = document.getElementById('locationIconLabel');
-    if (iconLabel) iconLabel.textContent = type === 'room' ? 'Room icon' : 'Storage icon';
+    if (iconLabel) iconLabel.textContent = type === 'room' ? 'Room icon' : 'Storage type';
     els.roomNameFieldLabel.textContent = type === 'room' ? 'Room name' : 'Storage name';
     workingLocation.type = type;
     renderRoomTypeGrid(type);
@@ -5104,10 +5184,13 @@
     els.panelSortSelect.addEventListener('change', function(){
       if (state.activePanel){ state.activePanel.sort = els.panelSortSelect.value; renderPanel(); }
     });
+    els.panelChips.addEventListener('click', function(e){
+      var c = e.target.closest('[data-panel-storage]'); if (c) setPanelStorageFilter(c.getAttribute('data-panel-storage'));
+    });
     els.panelBody.addEventListener('click', function(e){
       if (e.target.closest('#emptyAddItemBtn')){
         var ap = state.activePanel;
-        if (ap && ap.type === 'location') openItemModal(null, ap.locationId);
+        if (ap && ap.type === 'location') openItemModal(null, panelTarget(ap).id);
         return;
       }
       var card = e.target.closest('.item-card');
@@ -6307,6 +6390,7 @@
     return best ? {x: best.x, y: best.y} : {x: bb.cx, y: bb.cy};
   }
   function locationIconRect(loc){
+    if (loc.type !== 'room') return null;          /* only rooms show an icon on the map */
     var bb = polygonBBox(loc.points);
     if (!(bb.h > 60 && bb.w > 50)) return null;
     var c = shapeCenter(loc.points), z = Math.max(1, currentZoom), s = ICON_BOX / z;
