@@ -1,0 +1,18 @@
+{
+  "name": "The S.H.I.T.S. — Surkan Home Inventory Tracking System",
+  "short_name": "S.H.I.T.S.",
+  "description": "Home inventory on a map of your house: find anything, track expiration dates, and log what you use from your phone.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F5F1",
+  "theme_color": "#1B2430",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "Quick use", "short_name": "Quick use", "url": "./#quick", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]}
+  ]
+}
