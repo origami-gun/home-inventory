@@ -1577,6 +1577,42 @@
   }
   @media print{ #app{display:block !important; height:auto;} }
 
+
+  /* ---------- Shopping list / restock subscriptions ---------- */
+  .shop-safety{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:var(--paper-alt); border:1px solid var(--line); font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;}
+  .shop-safety svg{width:18px; height:18px; flex:0 0 auto; margin-top:1px; color:var(--good);}
+  .shop-safety svg *{stroke:currentColor; stroke-width:1.9; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .shop-safety b{color:var(--ink);}
+  .shop-tabs{display:flex; gap:6px; margin-bottom:12px; border-bottom:1px solid var(--line);}
+  .shop-tabs button{background:none; border:none; border-bottom:2px solid transparent; padding:8px 10px; font-weight:600; font-size:13.5px; color:var(--ink-soft); cursor:pointer; margin-bottom:-1px;}
+  .shop-tabs button.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .shop-list{display:flex; flex-direction:column; gap:8px; max-height:52vh; overflow-y:auto;}
+  .shop-row{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel-bg);}
+  .shop-row.off{opacity:.72;}
+  .shop-row input[type=checkbox]{margin-top:3px; width:18px; height:18px; accent-color:var(--accent); flex:0 0 auto;}
+  .shop-main{flex:1; min-width:0;}
+  .shop-name{font-weight:600; font-size:14px;}
+  .shop-meta{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .shop-stores{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+  .shop-store{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--ink-soft);}
+  .shop-store.on{border-color:var(--good); color:var(--good);}
+  .shop-incart{font-size:11px; padding:2px 8px; border-radius:999px; background:var(--warn-bg); color:var(--accent-strong);}
+  .shop-fields{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:8px;}
+  .shop-fields label{display:flex; flex-direction:column; gap:3px; font-size:11.5px; color:var(--ink-soft);}
+  .shop-fields input{padding:6px 8px; border-radius:7px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); min-width:0; font-size:13px;}
+  .shop-fields .wide{grid-column:1 / -1;}
+  .shop-toggle{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;}
+  .shop-toggle input{width:18px; height:18px; accent-color:var(--accent);}
+  .shop-search{width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); margin-bottom:10px;}
+  .shop-empty{padding:26px 10px; text-align:center; color:var(--ink-soft); font-size:13px;}
+  .shop-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .shop-actions .btn{flex:1 1 180px;}
+  .shop-actions .btn[disabled]{opacity:.45; cursor:not-allowed;}
+  .shop-bad{color:var(--bad); font-size:11.5px;}
+  .item-reorder{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--paper-alt);}
+  .item-reorder summary{cursor:pointer; font-size:13px; font-weight:600;}
+  .item-reorder summary span{font-weight:400; color:var(--ink-soft);}
+  #shopModalOverlay{z-index:1004;}
 </style>
 </head>
 <body>
@@ -1640,6 +1676,7 @@
       <button type="button" class="sb-item" id="modeViewBtn" data-mode="view" title="Map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span class="sb-text">Map</span><kbd class="sb-kbd">M</kbd></button>
       <button type="button" class="sb-item" id="invOpenBtn" title="Inventory"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg><span class="sb-text">Inventory</span><span class="sb-count" id="navInvCount"></span></button>
       <button type="button" class="sb-item" id="navExpiringBtn" title="Expiring soon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg><span class="sb-text">Expiring</span><span class="sb-badge" id="navExpCount" hidden></span></button>
+      <button type="button" class="sb-item" id="navShopBtn" title="Shopping list: subscribed items running low"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21.5 8H6.1"/></svg><span class="sb-text">Shopping</span><span class="sb-badge" id="navShopCount" hidden></span></button>
       <button type="button" class="sb-item" id="quickOpenBtn" title="Quick use (phone screen)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="18" x2="14" y2="18"/></svg><span class="sb-text">Quick use</span><kbd class="sb-kbd">Q</kbd></button>
 
       <div class="sb-label">Edit map</div>
@@ -2256,7 +2293,7 @@
           <select id="storageParentSelect"></select>
         </label>
         <label class="field" id="binParentWrap" style="display:none; margin-bottom:12px;">
-          <span>Inside which storage</span>
+          <span>Inside which room or storage</span>
           <select id="binParentSelect"></select>
         </label>
         <label class="field">
@@ -2310,7 +2347,7 @@
         <div id="notifyPermissionSection"></div>
         <div class="permission-card email-card">
           <div class="permission-text"><strong>Email reminders</strong>
-            <span>A weekly list every Sunday at 7 AM of anything expiring in the next 7 days, plus a final reminder the morning before each item expires. They're sent by a small script in your own Google account that reads your synced Drive data, so they arrive even when this app is closed. Items you mark as used are skipped.</span></div>
+            <span>A weekly list every Sunday at 7 AM of anything expiring in the next 7 days, plus a final reminder the morning before each item expires. They're sent by a small script in your own Google account that reads your synced Drive data, so they arrive even when this app is closed. Items you mark as used are skipped. The script also emails when a subscribed item runs low (with add-to-cart links; see Shopping), and files every reminder under a "The S.H.I.T.S." label in Gmail.</span></div>
         </div>
         <h3 class="rules-heading">Warning windows</h3>
         <p class="rules-hint">Set how many days before an item's expiration date it should start counting as "expiring soon." There's one default for everything, plus optional overrides per category.</p>
@@ -2355,6 +2392,16 @@
           <label class="field"><span>Purchased</span><input type="date" id="itemPurchaseInput" /></label>
           <label class="field"><span>Expires / best-by</span><input type="date" id="itemExpiresInput" /></label>
           <label class="field span-2"><span>Notes</span><textarea id="itemNotesInput" rows="3" maxlength="500" placeholder="Anything worth remembering about this item"></textarea></label>
+          <details class="item-reorder span-2" id="itemReorderBox">
+            <summary>Restock subscription <span id="itemReorderSummary">(off)</span></summary>
+            <label class="shop-toggle" style="margin-top:10px"><input type="checkbox" id="itemReorderOn" /> Put this on the shopping list when it runs low</label>
+            <div class="shop-fields">
+              <label>Running low at or below<input type="number" id="itemReorderMin" min="0" max="999" value="1" /></label>
+              <label>How many to add to cart<input type="number" id="itemReorderQty" min="1" max="50" value="1" /></label>
+              <label class="wide">Amazon product link or ASIN<input type="text" id="itemReorderAmazon" placeholder="https://www.amazon.com/dp/B0…" /></label>
+              <label class="wide">Walmart product link or item number<input type="text" id="itemReorderWalmart" placeholder="https://www.walmart.com/ip/…/123456789" /></label>
+            </div>
+          </details>
         </div>
       </div>
       <div class="modal-footer">
@@ -2419,6 +2466,42 @@
           <button type="submit" class="btn btn-primary" id="restockSaveBtn">Restock</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Shopping list modal -->
+  <div class="modal-overlay" id="shopModalOverlay">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
+      <div class="modal-header">
+        <h2 id="shopModalTitle">Shopping list</h2>
+        <button type="button" class="icon-btn" data-close-modal="shopModalOverlay" aria-label="Close">
+          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="shop-safety"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span><b>This only fills your cart. It can never check out.</b> The app doesn't sign in to Amazon or Walmart and has no payment details. The buttons open the store with the items in your cart, and nothing is bought until one of you reviews the cart and places the order there yourself.</span></div>
+        <div class="shop-tabs" role="tablist">
+          <button type="button" data-shop-tab="low" class="active" role="tab">Running low <span id="shopLowCount"></span></button>
+          <button type="button" data-shop-tab="subs" role="tab">Subscriptions <span id="shopSubCount"></span></button>
+        </div>
+        <div id="shopLowPane">
+          <div class="shop-list" id="shopLowList"></div>
+          <div class="shop-actions">
+            <button type="button" class="btn btn-primary" id="shopAmazonBtn">Add to Amazon cart</button>
+            <button type="button" class="btn btn-primary" id="shopWalmartBtn">Add to Walmart cart</button>
+          </div>
+          <p class="rules-hint" style="margin:10px 0 0">Items you send to a cart are marked "In cart" for 2 weeks (or until you restock them) so they don't get added twice.</p>
+        </div>
+        <div id="shopSubsPane" hidden>
+          <input type="search" class="shop-search" id="shopSearch" placeholder="Find an item to subscribe…" />
+          <div class="shop-list" id="shopSubsList"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-ghost" data-close-modal="shopModalOverlay">Done</button>
+      </div>
     </div>
   </div>
 
@@ -2667,7 +2750,9 @@
   var CATEGORY_FALLBACK = 'Other';
   function isHexColor(c){ return /^#[0-9a-f]{6}$/i.test(String(c || '')); }
   function categoryList(){ return state.categories && state.categories.length ? state.categories : DEFAULT_CATEGORIES; }
-  function categoryNames(){ return categoryList().map(function(c){ return c.name; }); }
+  function categoryNames(){ return sortNames(categoryList().map(function(c){ return c.name; })); }
+  /* Alphabetical, case-insensitive, so every category dropdown reads A to Z. */
+  function sortNames(list){ return list.slice().sort(function(a, b){ return String(a).localeCompare(String(b), undefined, {sensitivity: 'base', numeric: true}); }); }
   function findCategory(name){
     var n = String(name || '').trim().toLowerCase();
     return categoryList().find(function(c){ return c.name.toLowerCase() === n; }) || null;
@@ -3140,7 +3225,8 @@
   function getLocation(id){ return state.locations.find(function(l){ return l.id === id; }); }
   /* Hierarchy: Room > Storage (closet, cabinet, workbench…) > Bin (shelf, tub, toolbox…) > Item */
   function locationChildren(roomId){ return state.locations.filter(function(l){ return l.type==='storage' && l.parentId===roomId; }); }
-  function binChildren(storageId){ return state.locations.filter(function(l){ return l.type==='bin' && l.parentId===storageId; }); }
+  /* bins live in a storage, or straight in a room (a tub on the garage floor) */
+  function binChildren(parentId){ return state.locations.filter(function(l){ return l.type==='bin' && l.parentId===parentId; }); }
   /* room / storage / bin that a location sits in (any may be null) */
   function locChain(loc){
     var out = {room:null, storage:null, bin:null};
@@ -3161,6 +3247,7 @@
     var ids = {}; if (!loc) return ids;
     ids[loc.id] = true;
     if (loc.type === 'room') locationChildren(loc.id).forEach(function(st){ ids[st.id] = true; binChildren(st.id).forEach(function(b){ ids[b.id] = true; }); });
+    if (loc.type === 'room') binChildren(loc.id).forEach(function(b){ ids[b.id] = true; });   /* bins sitting straight in the room */
     if (loc.type === 'storage') binChildren(loc.id).forEach(function(b){ ids[b.id] = true; });
     return ids;
   }
@@ -3253,7 +3340,9 @@
     var w = type === 'bin' ? 34 : 70, h = type === 'bin' ? 28 : 70, parentId = null, pos;
     if (type === 'storage') parentId = (sel && sel.type === 'room') ? sel.id : (sel && sel.type === 'storage' ? sel.parentId : state.selectedRoomId) || null;
     if (type === 'bin'){
-      var host = sel && sel.type === 'storage' ? sel : (sel && sel.type === 'bin' ? getLocation(sel.parentId) : (state.selectedStorageId ? getLocation(state.selectedStorageId) : null));
+      /* a bin goes in the selected storage, or straight in the selected room */
+      var host = sel && (sel.type === 'storage' || sel.type === 'room') ? sel : (sel && sel.type === 'bin' ? getLocation(sel.parentId) :
+                 (state.selectedStorageId ? getLocation(state.selectedStorageId) : (state.selectedRoomId ? getLocation(state.selectedRoomId) : null)));
       parentId = host ? host.id : null;
     }
     /* drop a new shape in the middle of its parent when there is one, otherwise the middle of the view */
@@ -3270,7 +3359,7 @@
       state.selectedShapeId = loc.id;
       softZoomToShape(loc,.56);
       renderCanvas(); renderStats(); updateBackBtn();
-      toast((type === 'room' ? 'Room' : type === 'storage' ? 'Storage' : 'Bin') + ' added (unlocked) \u2014 drag to place it, then name it in Label spaces' + (type === 'bin' && !parentId ? '. Pick its storage area there too.' : ''));
+      toast((type === 'room' ? 'Room' : type === 'storage' ? 'Storage' : 'Bin') + ' added (unlocked) \u2014 drag to place it, then name it in Label spaces' + (type === 'bin' && !parentId ? '. Pick its room (or storage) there too.' : ''));
     }).catch(function(err){ console.error(err); toast('Could not add shape', 'error'); });
   }
 
@@ -3374,8 +3463,10 @@
       classes.push('storage-lit');
       if (computeLocationTotalCount(loc) === 0) classes.push('storage-empty');
     }
-    /* With a storage selected, its bins light up the same way (teal). */
-    if (loc.type === 'bin' && !binSelected && state.selectedStorageId && loc.parentId === state.selectedStorageId){
+    /* With a storage selected, its bins light up the same way (teal); with just a room selected,
+       the bins sitting straight in that room do. */
+    if (loc.type === 'bin' && !binSelected && ((state.selectedStorageId && loc.parentId === state.selectedStorageId) ||
+        (!state.selectedStorageId && state.selectedRoomId && loc.parentId === state.selectedRoomId))){
       classes.push('bin-lit');
       if (computeLocationCount(loc.id) === 0) classes.push('storage-empty');
     }
@@ -3662,6 +3753,7 @@
       els.expiringBanner.style.display = 'none';
     }
     els.bellDot.style.display = expiring.length ? 'block' : 'none';
+    updateShopBadge();
     if (inv.open) renderInventoryView();
   }
 
@@ -3682,6 +3774,7 @@
     var roomId = ch.room ? ch.room.id : locationId, storageFilter = '', binFilter = '';
     if (ch.room && ch.storage) storageFilter = ch.storage.id;
     if (ch.room && ch.storage && ch.bin) binFilter = ch.bin.id;
+    if (ch.room && !ch.storage && ch.bin) storageFilter = ch.bin.id;     /* a bin straight in the room */
     if (!ch.room){ roomId = (ch.storage || loc).id; if (ch.bin && ch.storage) binFilter = ch.bin.id; }   /* storage or bin with no room */
     var same = state.activePanel && state.activePanel.type === 'location' && state.activePanel.locationId === roomId && els.sidePanel.classList.contains('open');
     if (same){
@@ -3696,9 +3789,11 @@
     animateList(els.panelBody);
   }
   function hasItemsIn(loc){ var ids = descendantIds(loc); return state.items.some(function(i){ return ids[i.locationId]; }); }
+  /* first chip row: the room's storage, then any bins sitting straight in the room */
   function panelRoomStorages(room){
-    return locationChildren(room.id).filter(function(st){ return st.name || hasItemsIn(st); })
-      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
+    var byName = function(a, b){ return displayName(a).localeCompare(displayName(b)); };
+    var keep = function(l){ return l.name || hasItemsIn(l); };
+    return locationChildren(room.id).filter(keep).sort(byName).concat(binChildren(room.id).filter(keep).sort(byName));
   }
   function panelStorageBins(storage){
     return binChildren(storage.id).filter(function(b){ return b.name || hasItemsIn(b); })
@@ -3714,8 +3809,9 @@
   function setPanelStorageFilter(id){
     var ap = state.activePanel; if (!ap || ap.type !== 'location') return;
     ap.storageFilter = id || ''; ap.binFilter = '';
-    state.selectedStorageId = (id && id !== '__room') ? id : null;     /* highlight it on the map */
-    state.selectedBinId = null;
+    var picked = (id && id !== '__room') ? getLocation(id) : null;     /* highlight it on the map */
+    state.selectedStorageId = picked && picked.type === 'storage' ? id : null;
+    state.selectedBinId = picked && picked.type === 'bin' ? id : null;
     renderCanvas();
     renderPanel();
     animateList(els.panelBody);
@@ -3899,6 +3995,7 @@
     }).join('');
     var counts = {}, cats = categoryNames().slice();
     state.items.forEach(function(i){ var c = i.category || CATEGORY_FALLBACK; counts[c] = (counts[c] || 0) + 1; if (cats.indexOf(c) === -1) cats.push(c); });
+    cats = sortNames(cats);
     els.invCategory.innerHTML = '<option value="">All categories</option>' + cats.map(function(c){
       return '<option value="' + escapeHtml(c) + '"' + (c === catVal ? ' selected' : '') + '>' + escapeHtml(c) + '</option>';
     }).join('');
@@ -4162,7 +4259,7 @@
         storages = panelRoomStorages(roomLoc);
         if (ap.storageFilter && ap.storageFilter !== '__room' && !getLocation(ap.storageFilter)) ap.storageFilter = '';
         if (storages.length){
-          var chips = [{id:'', label:'All', n: allInRoom.length}].concat(storages.map(function(st){ return {id: st.id, label: displayName(st), n: countIn(allInRoom, st)}; }));
+          var chips = [{id:'', label:'All', n: allInRoom.length}].concat(storages.map(function(st){ return {id: st.id, label: displayName(st), n: countIn(allInRoom, st), tier: st.type === 'bin' ? 'bin' : ''}; }));
           var loose = countIn(allInRoom, roomLoc.id);
           if (loose) chips.push({id:'__room', label:'Loose in room', n: loose});
           chipsHtml += '<div class="chip-row">' + chips.map(function(c){ return chip('data-panel-storage', c, (ap.storageFilter || '') === c.id); }).join('') + '</div>';
@@ -4172,6 +4269,7 @@
       }
       /* bin tier: shown once a storage is picked (or when the panel is for a storage with no room) */
       var binHost = roomLoc.type === 'storage' ? roomLoc : (ap.storageFilter && ap.storageFilter !== '__room' ? getLocation(ap.storageFilter) : null);
+      if (binHost && binHost.type !== 'storage') binHost = null;     /* a room-level bin has no tier below it */
       if (binHost){
         var bins = panelStorageBins(binHost), inHost = itemsIn(binHost);
         if (ap.binFilter && ap.binFilter !== '__storage' && !getLocation(ap.binFilter)) ap.binFilter = '';
@@ -4225,7 +4323,7 @@
 
     var cats = [];
     baseItems.forEach(function(i){ if (cats.indexOf(i.category) === -1) cats.push(i.category); });
-    cats.sort();
+    cats = sortNames(cats.filter(Boolean));
     els.panelCategorySelect.innerHTML = '<option value="">All categories</option>' +
       cats.map(function(c){ return '<option value="' + escapeHtml(c) + '"' + (ap.categoryFilter===c?' selected':'') + '>' + escapeHtml(c) + '</option>'; }).join('');
 
@@ -4266,12 +4364,17 @@
   }
 
   function renderBinParentSelect(currentParentId){
-    var storages = state.locations.filter(function(l){ return l.type === 'storage'; });
-    var pathOf = function(st){ var r = st.parentId ? getLocation(st.parentId) : null; return (r ? displayName(r) + ' \u203a ' : '') + displayName(st); };
-    storages.sort(function(a, b){ return pathOf(a).localeCompare(pathOf(b)); });
-    els.binParentSelect.innerHTML = storages.length ? storages.map(function(st){
-      return '<option value="' + st.id + '"' + (st.id === currentParentId ? ' selected' : '') + '>' + escapeHtml(pathOf(st)) + '</option>';
-    }).join('') : '<option value="">(add a storage space first)</option>';
+    /* a bin needs at least a room: list every room, then each storage that sits in it */
+    var byName = function(a, b){ return displayName(a).localeCompare(displayName(b)); };
+    var rooms = state.locations.filter(function(l){ return l.type === 'room'; }).sort(byName);
+    var html = '';
+    rooms.forEach(function(r){
+      html += '<option value="' + r.id + '"' + (r.id === currentParentId ? ' selected' : '') + '>' + escapeHtml(displayName(r)) + ' (loose in room)</option>';
+      locationChildren(r.id).sort(byName).forEach(function(st){
+        html += '<option value="' + st.id + '"' + (st.id === currentParentId ? ' selected' : '') + '>' + escapeHtml(displayName(r)) + ' \u203a ' + escapeHtml(displayName(st)) + '</option>';
+      });
+    });
+    els.binParentSelect.innerHTML = html || '<option value="">(add a room first)</option>';
   }
 
   function setLocType(type){
@@ -4332,8 +4435,8 @@
     var parentLoc = getLocation(loc.parentId);
     var defaultParent = (loc.type === 'storage' && loc.parentId) || (state.selectedRoomId) || (state.locations.filter(function(l){return l.type==='room';})[0] || {}).id;
     renderStorageParentSelect(defaultParent);
-    var defaultStorage = (parentLoc && parentLoc.type === 'storage' ? parentLoc.id : null) || state.selectedStorageId ||
-                         (state.locations.filter(function(l){ return l.type === 'storage'; })[0] || {}).id;
+    var defaultStorage = (loc.type === 'bin' && parentLoc ? parentLoc.id : null) || state.selectedStorageId || state.selectedRoomId ||
+                         (state.locations.filter(function(l){ return l.type === 'room'; })[0] || {}).id;
     renderBinParentSelect(defaultStorage);
     if (!workingLocation.parentId) workingLocation.parentId = defaultParent;
     setLocType(loc.type === 'storage' || loc.type === 'bin' ? loc.type : 'room');
@@ -4358,7 +4461,7 @@
       loc.parentId = null;
     } else if (workingLocation.type === 'bin'){
       var binParent = els.binParentSelect.value;
-      if (!binParent){ toast('Add a storage space first — bins live inside storage', 'error'); return; }
+      if (!binParent){ toast('Pick a room for this bin \u2014 every bin needs at least a room', 'error'); return; }
       loc.iconKey = selectedBinIconType;
       loc.parentId = binParent;
     } else {
@@ -4400,7 +4503,7 @@
   var lastUsedCategory = null;
   function renderItemCategorySelect(selected){
     var names = categoryNames().slice();
-    if (selected && names.indexOf(selected) === -1) names.push(selected);   /* legacy/imported category not in the list */
+    if (selected && names.indexOf(selected) === -1){ names.push(selected); names = sortNames(names); }   /* legacy/imported category not in the list */
     els.itemCategorySelect.innerHTML = names.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('') +
       '<option value="__custom">+ New category…</option>';
     /* new items start in the last category you used (handy when adding several groceries), else "Other" */
@@ -4426,6 +4529,7 @@
     els.itemPurchaseInput.value = item ? (item.purchaseDate || '') : '';
     els.itemExpiresInput.value = item ? (item.expirationDate || '') : '';
     els.itemNotesInput.value = item ? (item.notes || '') : '';
+    fillItemReorder(item);
     currentPhotoDataUrl = item ? (item.photo || null) : null;
     renderVisualPreview();
     openModalEl(els.itemModalOverlay);
@@ -4452,6 +4556,8 @@
       photo: currentPhotoDataUrl || null,
       updatedAt: Date.now()
     };
+    var reorder = readItemReorder(editingItem);
+    if (reorder) payload.reorder = reorder;
     ensureCategories([category]);
     lastUsedCategory = category;
 
@@ -4725,7 +4831,7 @@
       '</div>';
     }
     var names = categoryNames().slice();
-    if (rule.category && names.indexOf(rule.category) === -1) names.push(rule.category);
+    if (rule.category && names.indexOf(rule.category) === -1){ names.push(rule.category); names = sortNames(names); }
     var options = names.map(function(c){
       var disabled = (usedCategories.indexOf(c) !== -1 && c !== rule.category) ? ' disabled' : '';
       return '<option value="' + escapeHtml(c) + '"' + (c===rule.category?' selected':'') + disabled + '>' + escapeHtml(c) + '</option>';
@@ -5104,7 +5210,10 @@
             locationId = binLoc.id;
           }
         } else if (binName){
-          errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — bin "' + binName + '" needs a Storage too'}); continue;
+          /* a bin straight in the room (no storage) */
+          var roomBin = binByStorageAndName[room.id + '::' + binName.toLowerCase()];
+          if (!roomBin){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" \u2014 bin "' + binName + '" not found in "' + roomName + '"'}); continue; }
+          locationId = roomBin.id;
         }
       }
 
@@ -5526,7 +5635,8 @@
 
       if (loc.type === 'bin'){
         /* tapping the selected bin again steps back out to its storage */
-        if (state.selectedBinId === locId && loc.parentId){ selectStorage(loc.parentId); return; }
+        var up = loc.parentId ? getLocation(loc.parentId) : null;
+        if (state.selectedBinId === locId && up){ if (up.type === 'storage') selectStorage(up.id); else selectRoom(up.id); return; }
         selectBin(locId);
       } else if (loc.type === 'storage'){
         selectStorage(locId);
@@ -7255,7 +7365,7 @@
     /* where inside the current filter: "Closet › Tub" in All, "Tub" inside a storage, nothing inside a bin */
     var parts = [];
     if (!quick.storageId && ch.storage) parts.push(displayName(ch.storage));
-    if (!quick.binId && ch.bin) parts.push(displayName(ch.bin));
+    if (!quick.binId && ch.bin && quick.storageId !== ch.bin.id) parts.push(displayName(ch.bin));
     var where = quick.storageId === '__room' ? '' : parts.join(' \u203A ');
     var status = getItemExpiryStatus(it);
     var badge = status === 'expired' ? '<span class="badge badge-bad">Expired ' + fmtDate(it.expirationDate) + '</span>'
@@ -7298,9 +7408,9 @@
     }
     /* a room: storage chips, then items */
     els.qvTitle.textContent = displayName(room);
-    var all = quickRoomItems(room.id), stores = locationChildren(room.id)
-      .filter(function(st){ return st.name || all.some(function(i){ return i.locationId === st.id; }); })   /* skip unnamed, empty spots */
-      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
+    var all = quickRoomItems(room.id), keepSpot = function(l){ return l.name || itemsIn(l).length; };   /* skip unnamed, empty spots */
+    var byDisp = function(a, b){ return displayName(a).localeCompare(displayName(b)); };
+    var stores = locationChildren(room.id).filter(keepSpot).sort(byDisp).concat(binChildren(room.id).filter(keepSpot).sort(byDisp));
     var active = function(list){ return list.filter(function(i){ return !i.usedAt && qtyOf(i) > 0; }).length; };
     var loose = all.filter(function(i){ return i.locationId === room.id; });
     var chips = [{id:'', label:'All', n: active(all)}];
@@ -7308,11 +7418,13 @@
     if (loose.length && stores.length) chips.push({id:'__room', label:'Loose in room', n: active(loose)});
     if (quick.storageId && !chips.some(function(c){ return c.id === quick.storageId; })) quick.storageId = '';
     els.qvChips.innerHTML = stores.length ? chips.map(function(c){
-      return '<button type="button" class="qv-chip' + (c.id === quick.storageId ? ' active' : '') + '" data-storage="' + c.id + '" role="tab" aria-selected="' + (c.id === quick.storageId) + '">' +
+      var cl = c.id && c.id !== '__room' && (getLocation(c.id) || {}).type === 'bin' ? ' bin' : '';
+      return '<button type="button" class="qv-chip' + cl + (c.id === quick.storageId ? ' active' : '') + '" data-storage="' + c.id + '" role="tab" aria-selected="' + (c.id === quick.storageId) + '">' +
         escapeHtml(c.label) + '<span class="n">' + c.n + '</span></button>';
     }).join('') : '';
     /* second tier: the bins inside the selected storage (same rules, one level down) */
-    var selStore = quick.storageId && quick.storageId !== '__room' ? getLocation(quick.storageId) : null;
+    var selSpot = quick.storageId && quick.storageId !== '__room' ? getLocation(quick.storageId) : null;
+    var selStore = selSpot && selSpot.type === 'storage' ? selSpot : null;
     var storeItems = selStore ? itemsIn(selStore) : [];
     var bins = selStore ? binChildren(selStore.id).filter(function(b){ return b.name || storeItems.some(function(i){ return i.locationId === b.id; }); })
       .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); }) : [];
@@ -7330,6 +7442,7 @@
     }).join('');
     var list = all;
     if (quick.storageId === '__room') list = loose;
+    else if (selSpot && !selStore) list = itemsIn(selSpot);          /* a bin straight in the room */
     else if (selStore){
       list = storeItems;
       if (quick.binId === '__storage') list = storeLoose;
@@ -7343,7 +7456,7 @@
       return sa - sb || byName(a, b);
     });
     usedUp.sort(byName);
-    var storeName = quick.storageId === '__room' ? 'Loose in room' : (selStore ? displayName(selStore) : '');
+    var storeName = quick.storageId === '__room' ? 'Loose in room' : (selSpot ? displayName(selSpot) : '');
     if (selStore && quick.binId) storeName += ' \u203A ' + (quick.binId === '__storage' ? 'loose' : displayName(getLocation(quick.binId)));
     els.qvSub.textContent = (storeName ? storeName + ' · ' : '') + inStock.length + ' in stock' + (usedUp.length ? ' · ' + usedUp.length + ' used up' : '');
     if (!list.length){
@@ -7495,7 +7608,19 @@
       restockTarget = null;
     }).catch(function(err){ console.error(err); toast('Could not restock that', 'error'); });
   }
+  /* Expiration fields: when you open an empty one, it starts a week out (today + 7 days, in the
+     current month and year unless the week rolls into the next month), so you only nudge the day.
+     Fields stay blank until touched, so non-perishables don't get a date by accident. */
+  function weekAheadStr(){ var d = new Date(); d.setDate(d.getDate() + 7); return localDateStr(d); }
+  function bindWeekAheadDefault(input){
+    if (!input || input.dataset.weekAhead) return;
+    input.dataset.weekAhead = '1';
+    var fill = function(){ if (!input.value){ input.value = weekAheadStr(); input.dispatchEvent(new Event('change', {bubbles: true})); } };
+    input.addEventListener('pointerdown', fill);
+    input.addEventListener('focus', fill);
+  }
   function bindRestock(){
+    [els.itemExpiresInput, els.qvAddExp, els.restockExp].forEach(bindWeekAheadDefault);
     els.restockForm.addEventListener('submit', function(e){ e.preventDefault(); saveRestock(); });
     els.restockQty.addEventListener('input', updateRestockPreview);
     els.restockForm.addEventListener('click', function(e){
@@ -7528,7 +7653,10 @@
         .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); })
         .forEach(function(b){ out.push({id: b.id, label: displayName(st) + ' \u203A ' + displayName(b)}); });
     });
-    return out.concat([{id: room.id, label: stores.length ? 'Loose in room' : displayName(room)}]);
+    binChildren(room.id).filter(function(b){ return b.name || all.some(function(i){ return i.locationId === b.id; }); })
+      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); })
+      .forEach(function(b){ out.push({id: b.id, label: displayName(b)}); });
+    return out.concat([{id: room.id, label: out.length ? 'Loose in room' : displayName(room)}]);
   }
   function quickAddMatch(name, locationId){
     var n = normText(name);
@@ -7623,6 +7751,208 @@
     });
     els.qvAddExp.addEventListener('input', function(){ [].forEach.call(els.qvExpChips.querySelectorAll('button'), function(b){ b.classList.remove('active'); }); });
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !els.qvAdd.hidden){ e.stopPropagation(); closeQuickAdd(); } }, true);
+  }
+
+
+  /* ======================= Shopping list / restock subscriptions =======================
+     An item can be "subscribed": when its quantity drops to its low mark it shows up on the
+     shopping list, with one button per store that opens the store's own add-to-cart page.
+     SAFEGUARD: the app only ever builds add-to-cart links. It never signs in to a store,
+     stores no payment info, and has no way to check out; a person always places the order. */
+  var SHOP_MAX_QTY = 50, SHOP_IN_CART_DAYS = 14;
+  var shop = {tab: 'low', query: '', unchecked: {}};
+  function amazonAsin(v){
+    v = String(v || '').trim(); if (!v) return '';
+    if (/^[A-Z0-9]{10}$/i.test(v)) return v.toUpperCase();
+    var m = /(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|\/product\/|[?&]asin=)([A-Z0-9]{10})(?:[/?&#]|$)/i.exec(v);
+    return m ? m[1].toUpperCase() : '';
+  }
+  function walmartId(v){
+    v = String(v || '').trim(); if (!v) return '';
+    if (/^\d{5,14}$/.test(v)) return v;
+    var m = /\/ip\/(?:[^/?#]*\/)?(\d{5,14})(?:[/?#]|$)/.exec(v);
+    return m ? m[1] : '';
+  }
+  function reorderOf(it){ return it && it.reorder && typeof it.reorder === 'object' ? it.reorder : null; }
+  function reorderQty(r){ var n = parseInt(r && r.qty, 10); return isNaN(n) || n < 1 ? 1 : Math.min(n, SHOP_MAX_QTY); }
+  function reorderMin(r){ var n = parseInt(r && r.min, 10); return isNaN(n) || n < 0 ? 1 : Math.min(n, 999); }
+  function isLow(it){
+    var r = reorderOf(it);
+    if (!r || !r.on || it.deleted) return false;
+    return !!it.usedAt || qtyOf(it) <= reorderMin(r);
+  }
+  function inCart(it){
+    var r = reorderOf(it);
+    if (!r || !r.cartAt) return false;
+    var age = (new Date(localDateStr()) - new Date(r.cartAt)) / 86400000;
+    if (age > SHOP_IN_CART_DAYS) return false;
+    if (it.purchaseDate && it.purchaseDate > r.cartAt) return false;            /* restocked since */
+    var q = it.usedAt ? 0 : qtyOf(it);
+    return r.cartQty == null || q <= r.cartQty;
+  }
+  function lowItems(){ return state.items.filter(isLow).sort(function(a, b){ return String(a.name).localeCompare(String(b.name)); }); }
+  function updateShopBadge(){
+    var b = document.getElementById('navShopCount'); if (!b) return;
+    var n = lowItems().filter(function(it){ return !inCart(it); }).length;
+    b.hidden = !n; b.textContent = n > 99 ? '99+' : n;
+  }
+  function saveReorder(it, patch, quiet){
+    var copy = JSON.parse(JSON.stringify(it));
+    copy.reorder = Object.assign({}, reorderOf(it) || {min: 1, qty: 1}, patch);
+    return idbPut('items', copy).then(function(){
+      replaceItemInState(copy); updateShopBadge();
+      if (getToken()) scheduleSync(700);
+      return copy;
+    }).catch(function(err){ console.error(err); if (!quiet) toast('Could not save that', 'error'); });
+  }
+  function storeChips(r){
+    var a = amazonAsin(r.amazon), w = walmartId(r.walmart);
+    return '<span class="shop-store' + (a ? ' on' : '') + '">Amazon' + (a ? ' ✓' : ' —') + '</span>' +
+           '<span class="shop-store' + (w ? ' on' : '') + '">Walmart' + (w ? ' ✓' : ' —') + '</span>';
+  }
+  function renderShopLow(){
+    var list = lowItems(), box = document.getElementById('shopLowList');
+    document.getElementById('shopLowCount').textContent = list.length ? '(' + list.length + ')' : '';
+    if (!list.length){
+      box.innerHTML = '<div class="shop-empty">Nothing subscribed is running low. 🎉<br>Use the Subscriptions tab to choose which items to watch.</div>';
+    } else {
+      box.innerHTML = list.map(function(it){
+        var r = reorderOf(it), cart = inCart(it), q = it.usedAt ? 0 : qtyOf(it);
+        var checked = !cart && !shop.unchecked[it.id];
+        return '<label class="shop-row' + (cart ? ' off' : '') + '"><input type="checkbox" data-shop-pick="' + it.id + '"' + (checked ? ' checked' : '') + ' />' +
+          '<div class="shop-main"><div class="shop-name">' + escapeHtml(it.name) + ' <span class="shop-meta">× ' + reorderQty(r) + '</span></div>' +
+          '<div class="shop-meta">' + q + ' left · low at ' + reorderMin(r) + ' · ' + escapeHtml(locationPath(it)) + '</div>' +
+          '<div class="shop-stores">' + storeChips(r) + (cart ? '<span class="shop-incart">In cart since ' + escapeHtml(fmtDate(r.cartAt)) + '</span>' : '') + '</div></div></label>';
+      }).join('');
+    }
+    updateShopButtons();
+  }
+  function pickedItems(){
+    var ids = [].map.call(document.querySelectorAll('#shopLowList [data-shop-pick]:checked'), function(c){ return c.getAttribute('data-shop-pick'); });
+    return state.items.filter(function(it){ return ids.indexOf(it.id) !== -1; });
+  }
+  function updateShopButtons(){
+    var picked = pickedItems();
+    var a = picked.filter(function(it){ return amazonAsin(reorderOf(it).amazon); });
+    var w = picked.filter(function(it){ return walmartId(reorderOf(it).walmart); });
+    var ab = document.getElementById('shopAmazonBtn'), wb = document.getElementById('shopWalmartBtn');
+    ab.disabled = !a.length; ab.textContent = a.length ? 'Add ' + a.length + ' to Amazon cart' : 'Add to Amazon cart';
+    wb.disabled = !w.length; wb.textContent = w.length ? 'Add ' + w.length + ' to Walmart cart' : 'Add to Walmart cart';
+  }
+  function cartUrl(store, items){
+    if (store === 'amazon'){
+      return 'https://www.amazon.com/gp/aws/cart/add.html?' + items.map(function(it, i){
+        var r = reorderOf(it); return 'ASIN.' + (i + 1) + '=' + encodeURIComponent(amazonAsin(r.amazon)) + '&Quantity.' + (i + 1) + '=' + reorderQty(r);
+      }).join('&');
+    }
+    return 'https://affil.walmart.com/cart/addToCart?items=' + items.map(function(it){
+      var r = reorderOf(it); return walmartId(r.walmart) + '|' + reorderQty(r);
+    }).join(',');
+  }
+  function sendToCart(store){
+    var picked = pickedItems().filter(function(it){ var r = reorderOf(it); return store === 'amazon' ? amazonAsin(r.amazon) : walmartId(r.walmart); });
+    if (!picked.length) return;
+    var units = picked.reduce(function(n, it){ return n + reorderQty(reorderOf(it)); }, 0);
+    var go = function(){
+      /* Opens the store's own page in a new tab. That's all: a person still reviews the cart and checks out. */
+      var w = window.open(cartUrl(store, picked), '_blank');
+      if (!w){ toast('Your browser blocked the new tab. Allow pop-ups for this site and try again.', 'error'); return; }
+      try { w.opener = null; } catch(e){}
+      var today = localDateStr();
+      Promise.all(picked.map(function(it){ return saveReorder(it, {cartAt: today, cartQty: it.usedAt ? 0 : qtyOf(it)}, true); }))
+        .then(function(){ renderShopLow(); toast(picked.length + ' item' + (picked.length === 1 ? '' : 's') + ' sent to your ' + (store === 'amazon' ? 'Amazon' : 'Walmart') + ' cart. Check out there when you’re ready.'); });
+    };
+    /* extra check before a big batch */
+    if (units > 12) openConfirm('Add ' + units + ' units (' + picked.length + ' items) to your ' + (store === 'amazon' ? 'Amazon' : 'Walmart') + ' cart? Nothing is ordered until you check out on the store’s site.', go, {title: 'That’s a big batch', confirmLabel: 'Add to cart'});
+    else go();
+  }
+  function renderShopSubs(){
+    var q = shop.query.trim().toLowerCase(), box = document.getElementById('shopSubsList');
+    var all = state.items.filter(function(it){ return !it.deleted; });
+    document.getElementById('shopSubCount').textContent = '(' + all.filter(function(it){ var r = reorderOf(it); return r && r.on; }).length + ')';
+    var list = all.filter(function(it){ return !q || String(it.name).toLowerCase().indexOf(q) !== -1 || String(it.category || '').toLowerCase().indexOf(q) !== -1; })
+      .sort(function(a, b){
+        var ao = reorderOf(a) && reorderOf(a).on ? 0 : 1, bo = reorderOf(b) && reorderOf(b).on ? 0 : 1;
+        return ao - bo || String(a.name).localeCompare(String(b.name));
+      });
+    if (!q && list.length > 60) list = list.filter(function(it, i){ return (reorderOf(it) && reorderOf(it).on) || i < 60; });
+    if (!list.length){ box.innerHTML = '<div class="shop-empty">' + (q ? 'No items match.' : 'No items yet.') + '</div>'; return; }
+    box.innerHTML = list.map(function(it){
+      var r = reorderOf(it) || {}, on = !!r.on, q2 = it.usedAt ? 0 : qtyOf(it);
+      var html = '<div class="shop-row' + (on ? '' : ' off') + '" data-sub-row="' + it.id + '"><div class="shop-main">' +
+        '<div style="display:flex; justify-content:space-between; gap:8px; align-items:center"><div><div class="shop-name">' + escapeHtml(it.name) + '</div>' +
+        '<div class="shop-meta">' + q2 + ' on hand · ' + escapeHtml(locationPath(it)) + '</div></div>' +
+        '<label class="shop-toggle"><input type="checkbox" data-sub-on="' + it.id + '"' + (on ? ' checked' : '') + ' /> Subscribed</label></div>';
+      if (on){
+        var badA = r.amazon && !amazonAsin(r.amazon), badW = r.walmart && !walmartId(r.walmart);
+        html += '<div class="shop-fields">' +
+          '<label>Low at or below<input type="number" min="0" max="999" data-sub-field="min" data-id="' + it.id + '" value="' + reorderMin(r) + '" /></label>' +
+          '<label>Add to cart<input type="number" min="1" max="' + SHOP_MAX_QTY + '" data-sub-field="qty" data-id="' + it.id + '" value="' + reorderQty(r) + '" /></label>' +
+          '<label class="wide">Amazon link or ASIN' + (badA ? ' <span class="shop-bad">— can’t find a product ID in this</span>' : '') + '<input type="text" data-sub-field="amazon" data-id="' + it.id + '" value="' + escapeHtml(r.amazon || '') + '" placeholder="https://www.amazon.com/dp/B0…" /></label>' +
+          '<label class="wide">Walmart link or item #' + (badW ? ' <span class="shop-bad">— can’t find an item number in this</span>' : '') + '<input type="text" data-sub-field="walmart" data-id="' + it.id + '" value="' + escapeHtml(r.walmart || '') + '" placeholder="https://www.walmart.com/ip/…/123456789" /></label>' +
+          '</div>';
+      }
+      return html + '</div></div>';
+    }).join('');
+  }
+  function setShopTab(tab){
+    shop.tab = tab;
+    [].forEach.call(document.querySelectorAll('[data-shop-tab]'), function(b){ b.classList.toggle('active', b.getAttribute('data-shop-tab') === tab); });
+    document.getElementById('shopLowPane').hidden = tab !== 'low';
+    document.getElementById('shopSubsPane').hidden = tab !== 'subs';
+    if (tab === 'low') renderShopLow(); else renderShopSubs();
+  }
+  function openShopping(tab){
+    shop.unchecked = {};
+    renderShopSubs();
+    setShopTab(tab || (lowItems().length ? 'low' : 'subs'));
+    openModalEl(document.getElementById('shopModalOverlay'));
+  }
+  function bindShopping(){
+    document.getElementById('navShopBtn').addEventListener('click', function(){ openShopping(); });
+    [].forEach.call(document.querySelectorAll('[data-shop-tab]'), function(b){ b.addEventListener('click', function(){ setShopTab(b.getAttribute('data-shop-tab')); }); });
+    document.getElementById('shopLowList').addEventListener('change', function(e){
+      var id = e.target.getAttribute('data-shop-pick'); if (!id) return;
+      if (e.target.checked) delete shop.unchecked[id]; else shop.unchecked[id] = true;
+      updateShopButtons();
+    });
+    document.getElementById('shopAmazonBtn').addEventListener('click', function(){ sendToCart('amazon'); });
+    document.getElementById('shopWalmartBtn').addEventListener('click', function(){ sendToCart('walmart'); });
+    document.getElementById('shopSearch').addEventListener('input', function(e){ shop.query = e.target.value; renderShopSubs(); });
+    var subs = document.getElementById('shopSubsList');
+    subs.addEventListener('change', function(e){
+      var t = e.target, id = t.getAttribute('data-sub-on') || t.getAttribute('data-id');
+      var it = id && state.items.find(function(x){ return x.id === id; }); if (!it) return;
+      var patch = {};
+      if (t.hasAttribute('data-sub-on')) patch.on = t.checked;
+      else {
+        var f = t.getAttribute('data-sub-field');
+        if (f === 'min') patch.min = reorderMin({min: t.value});
+        else if (f === 'qty') patch.qty = reorderQty({qty: t.value});
+        else patch[f] = t.value.trim();
+      }
+      saveReorder(it, patch).then(function(){ var y = subs.scrollTop; renderShopSubs(); subs.scrollTop = y; });
+    });
+  }
+  /* item dialog fields */
+  function fillItemReorder(item){
+    var r = reorderOf(item) || {};
+    document.getElementById('itemReorderOn').checked = !!r.on;
+    document.getElementById('itemReorderMin').value = r.on || r.min != null ? reorderMin(r) : 1;
+    document.getElementById('itemReorderQty').value = reorderQty(r);
+    document.getElementById('itemReorderAmazon').value = r.amazon || '';
+    document.getElementById('itemReorderWalmart').value = r.walmart || '';
+    document.getElementById('itemReorderSummary').textContent = r.on ? '(on — low at ' + reorderMin(r) + ')' : '(off)';
+    document.getElementById('itemReorderBox').open = !!r.on;
+  }
+  function readItemReorder(existing){
+    var prev = reorderOf(existing) || {};
+    var on = document.getElementById('itemReorderOn').checked;
+    var amazon = document.getElementById('itemReorderAmazon').value.trim(), walmart = document.getElementById('itemReorderWalmart').value.trim();
+    if (!on && !amazon && !walmart && !prev.on && !prev.amazon && !prev.walmart) return undefined;
+    var r = Object.assign({}, prev, {on: on, min: reorderMin({min: document.getElementById('itemReorderMin').value}),
+      qty: reorderQty({qty: document.getElementById('itemReorderQty').value}), amazon: amazon, walmart: walmart});
+    return r;
   }
 
   /* ======================= Room QR stickers ======================= */
@@ -7790,6 +8120,7 @@
     bindLabelHover();
     bindInventoryView();
     bindPatternPicker();
+    bindShopping();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ measureCache = {}; if (state.locations.length) renderCanvas(); });
     migrateLegacyDb().then(function(){
       return Promise.all([idbGetAll('locations'), idbGetAll('items'), idbGetAll('rules'), idbGetAll('meta')]);
