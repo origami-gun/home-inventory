@@ -981,6 +981,41 @@
   .map-label.unnamed .label-text{fill:#6B5A45; font-style:italic; font-weight:500;}
   .storage-label.unnamed .label-plate{fill:rgba(255,244,232,0.94);}
   .storage-label.unnamed .label-text{fill:#9A5A1C;}
+  .bin-label .label-plate{fill:#138A80; stroke:rgba(255,255,255,0.9); stroke-width:1.1;}
+  .bin-label .label-text{font-family:'IBM Plex Mono',Consolas,monospace; font-size:11px; font-weight:600; fill:#FFFFFF;}
+  .bin-label.unnamed .label-plate{fill:rgba(230,248,245,0.94);}
+  .bin-label.unnamed .label-text{fill:#11695F;}
+
+  /* ---- Bins (4th tier: shelves, tubs, toolboxes): teal ---- */
+  .blueprint-svg.mode-view .location.bin-type:not(.bin-selected) .location-poly:hover{
+    fill:rgba(19,138,128,0.16); stroke:rgba(19,138,128,0.9); stroke-width:1.6;
+  }
+  .blueprint-svg.mode-label .location.bin-type .location-poly,
+  .blueprint-svg.mode-shape .location.bin-type .location-poly{stroke:rgba(19,138,128,0.8); stroke-dasharray:3 2;}
+  .location.bin-lit .location-poly{
+    fill:rgba(19,138,128,0.10); stroke:rgba(19,138,128,0.6); stroke-width:1.4;
+    filter:drop-shadow(0 0 3px rgba(19,138,128,0.3));
+  }
+  .location.bin-lit.storage-empty .location-poly{fill:rgba(214,72,60,0.12); stroke:rgba(206,66,54,0.62);}
+  .location.bin-selected .location-poly{
+    stroke:rgba(15,128,118,0.95) !important; stroke-width:2.2; stroke-dasharray:none !important; fill:rgba(19,138,128,0.16);
+    filter:drop-shadow(0 0 5px rgba(19,138,128,0.45));
+  }
+  .blueprint-svg .location.bin-type.patterned .location-poly{fill:transparent !important;}
+
+  /* ---- Padlocks (Edit shapes) ---- */
+  .shape-lock{cursor:pointer;}
+  .shape-lock rect{fill:rgba(255,255,255,0.95); stroke:rgba(27,36,48,0.35); stroke-width:.8; transition:fill .15s ease;}
+  .shape-lock g{fill:none; stroke:#1F8A4C; stroke-linecap:round; stroke-linejoin:round;}
+  .shape-lock:not(.locked) rect{fill:#FFF4D6; stroke:#D98A12;}
+  .shape-lock:not(.locked) g{stroke:#B86A00;}
+  .shape-lock.locked g{stroke:#4A5563;}
+  .shape-lock:hover rect{fill:#E8F0FF;}
+  .shape-lock.nudge{animation:lockNudge .42s ease;}
+  @keyframes lockNudge{0%,100%{opacity:1;} 20%{opacity:.5;} 40%{opacity:1;} 60%{opacity:.6;} 80%{opacity:1;}}
+  .blueprint-svg.mode-shape .location.is-locked .location-poly{cursor:default;}
+  .blueprint-svg.mode-shape .location.is-unlocked .location-poly{cursor:move; stroke:#D98A12; stroke-width:1.6;}
+  .btn:disabled,.btn[disabled]{opacity:.45; cursor:not-allowed;}
 
   .location-icon-bg{fill:rgba(255,255,255,0.72); pointer-events:none;}
   .location-icon{color:var(--room-text); opacity:.85; pointer-events:none;}
@@ -1078,6 +1113,12 @@
   .panel-toolbar select{padding:7px 8px; border-radius:7px; border:1px solid var(--line); background:var(--paper-alt); max-width:130px;}
   .panel-chips{display:flex; flex-wrap:wrap; gap:6px; padding:10px 18px 12px; border-bottom:1px solid var(--line);}
   .panel-chips:empty{display:none;}
+  .panel-chips{flex-direction:column; flex-wrap:nowrap;}
+  .chip-row{display:flex; flex-wrap:wrap; gap:6px;}
+  .chip-row.bins{padding-top:8px; margin-top:2px; border-top:1px dashed var(--line);}
+  .panel-chip.tier-bin{height:27px; font-size:12px;}
+  .panel-chip.tier-bin.active{background:rgba(46,150,140,.14); border-color:rgba(46,150,140,.8); color:#1f7d74;}
+  :root[data-theme="dark"] .panel-chip.tier-bin.active{color:#7fd6cc;}
   .panel-chip{display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 11px; border-radius:999px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-size:12.5px; font-weight:500; cursor:pointer; transition:background .12s ease, border-color .12s ease;}
   .panel-chip .n{font-family:var(--font-mono); font-size:11px; color:var(--ink-soft);}
   .panel-chip:hover{border-color:var(--ink-soft);}
@@ -1291,6 +1332,9 @@
   .qv-chips{display:flex; gap:8px; overflow-x:auto; padding:8px 12px 10px; scrollbar-width:none; flex:0 0 auto;}
   .qv-chips::-webkit-scrollbar{display:none;}
   .qv-chips:empty{display:none;}
+  .qv-chips.bins{padding-top:0; margin-top:-2px;}
+  .qv-chip.bin{height:36px; font-size:13.5px; border-color:rgba(19,138,128,0.45);}
+  .qv-chip.bin.active{background:#138A80; border-color:#138A80; color:#fff;}
   .qv-chip{flex:0 0 auto; height:40px; padding:0 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-size:14.5px; cursor:pointer; white-space:nowrap;}
   .qv-chip .n{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); margin-left:4px;}
   .qv-chip.active{background:var(--ink); color:var(--paper); border-color:var(--ink);} .qv-chip.active .n{color:inherit; opacity:.75;}
@@ -2150,6 +2194,8 @@
       </div>
       <button type="button" class="btn btn-primary btn-sm" id="addRoomShapeBtn">+ Add room</button>
       <button type="button" class="btn btn-primary btn-sm" id="addStorageShapeBtn">+ Add storage</button>
+      <button type="button" class="btn btn-primary btn-sm" id="addBinShapeBtn" title="Shelves, tubs, toolboxes… inside a storage area">+ Add bin</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="lockAllBtn" title="Lock every shape in place">🔒 Lock all</button>
       <button type="button" class="btn btn-ghost danger btn-sm" id="deleteShapeBtn" style="display:none">Delete selected</button>
     </div>
 
@@ -2198,7 +2244,8 @@
       <div class="modal-body">
         <div class="visual-tabs" role="tablist" style="margin-bottom:14px;">
           <button type="button" class="visual-tab" id="locTypeRoomTab" data-loctype="room" role="tab">Room</button>
-          <button type="button" class="visual-tab" id="locTypeStorageTab" data-loctype="storage" role="tab">Storage space</button>
+          <button type="button" class="visual-tab" id="locTypeStorageTab" data-loctype="storage" role="tab">Storage</button>
+          <button type="button" class="visual-tab" id="locTypeBinTab" data-loctype="bin" role="tab">Bin</button>
         </div>
         <div id="roomTypeGridWrap">
           <div class="field-label" id="locationIconLabel">Room icon</div>
@@ -2207,6 +2254,10 @@
         <label class="field" id="storageParentWrap" style="display:none; margin-bottom:12px;">
           <span>Part of which room</span>
           <select id="storageParentSelect"></select>
+        </label>
+        <label class="field" id="binParentWrap" style="display:none; margin-bottom:12px;">
+          <span>Inside which storage</span>
+          <select id="binParentSelect"></select>
         </label>
         <label class="field">
           <span id="roomNameFieldLabel">Name</span>
@@ -2427,6 +2478,7 @@
     </div>
     <div class="qv-search"><input type="search" id="qvSearch" placeholder="Find an item…" autocomplete="off" aria-label="Find an item" /></div>
     <div class="qv-chips" id="qvChips" role="tablist" aria-label="Storage in this room"></div>
+    <div class="qv-chips bins" id="qvBinChips" role="tablist" aria-label="Bins in this storage"></div>
     <div class="qv-body" id="qvBody"></div>
     <button type="button" class="qv-addbtn" id="qvAddBtn" hidden>+ Add item</button>
     <button type="button" class="qv-fullapp" id="qvFullApp">Open the full map</button>
@@ -2562,11 +2614,32 @@
     locker:'<rect x="5" y="3" width="14" height="18" rx="1"/><circle cx="12" cy="8" r="1"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>',
     garage:'<polyline points="3,15 4,10 7,7 15,7 18,10 21,10 21,15"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="13" x2="16" y2="13"/>'
   };
+  STORAGE_ICONS.workbench = '<rect x="3" y="8" width="18" height="3" rx=".5"/><line x1="5" y1="11" x2="5" y2="20"/><line x1="19" y1="11" x2="19" y2="20"/><line x1="5" y1="16" x2="19" y2="16"/><path d="M8 8V5h3v3"/><line x1="15" y1="4" x2="15" y2="8"/>';
+  STORAGE_ICONS.pantry = '<rect x="4" y="3" width="16" height="18" rx="1"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><rect x="6.5" y="5" width="3" height="4"/><circle cx="14" cy="7.5" r="1.5"/><rect x="7" y="11" width="4" height="4"/><rect x="13" y="12" width="3" height="3"/>';
+  STORAGE_ICONS.dresser = '<rect x="4" y="4" width="16" height="15" rx="1"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="10" y1="6.5" x2="14" y2="6.5"/><line x1="10" y1="11.5" x2="14" y2="11.5"/><line x1="10" y1="16.5" x2="14" y2="16.5"/><line x1="6" y1="19" x2="6" y2="21"/><line x1="18" y1="19" x2="18" y2="21"/>';
+  /* Storage = the big fixtures (closets, cabinets, workbenches). Older records that used
+     "shelf" / "bin" as a storage type keep their icon (STORAGE_ICONS still has them). */
   var STORAGE_TYPES = [
-    {key:'cabinet', label:'Cabinet'}, {key:'shelf', label:'Shelving'}, {key:'bin', label:'Bin'},
-    {key:'closet', label:'Closet'}, {key:'locker', label:'Locker'}, {key:'garage', label:'Garage bay'}, {key:'other', label:'Other'}
+    {key:'closet', label:'Closet'}, {key:'cabinet', label:'Cabinet'}, {key:'workbench', label:'Workbench'},
+    {key:'pantry', label:'Pantry'}, {key:'locker', label:'Locker'}, {key:'garage', label:'Garage bay'},
+    {key:'dresser', label:'Dresser'}, {key:'other', label:'Other'}
   ];
   STORAGE_ICONS.other = ROOM_ICONS.other;
+  /* Bins = the containers inside storage (shelves, tubs, toolboxes...). */
+  var BIN_ICONS = {
+    shelf: STORAGE_ICONS.shelf,
+    tub:'<path d="M4 8h16l-1.5 12a1 1 0 0 1-1 .9h-11a1 1 0 0 1-1-.9z"/><rect x="3" y="5" width="18" height="3" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/>',
+    toolbox:'<rect x="3" y="9" width="18" height="11" rx="1.5"/><path d="M9 9V6.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V9"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="10" y1="13" x2="10" y2="15"/><line x1="14" y1="13" x2="14" y2="15"/>',
+    drawer:'<rect x="3" y="6" width="18" height="12" rx="1"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="10" y1="9" x2="14" y2="9"/><line x1="10" y1="15" x2="14" y2="15"/>',
+    basket:'<path d="M3 10h18l-2 9.5a1 1 0 0 1-1 .5H6a1 1 0 0 1-1-.5z"/><path d="M8 10l3-6M16 10l-3-6"/><line x1="9" y1="13" x2="9.5" y2="17"/><line x1="15" y1="13" x2="14.5" y2="17"/>',
+    box: STORAGE_ICONS.bin,
+    rack:'<line x1="5" y1="3" x2="5" y2="21"/><line x1="19" y1="3" x2="19" y2="21"/><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/>',
+    other: ROOM_ICONS.other
+  };
+  var BIN_TYPES = [
+    {key:'shelf', label:'Shelf'}, {key:'tub', label:'Tub'}, {key:'toolbox', label:'Toolbox'}, {key:'drawer', label:'Drawer'},
+    {key:'basket', label:'Basket'}, {key:'box', label:'Box'}, {key:'rack', label:'Rack'}, {key:'other', label:'Other'}
+  ];
 
   /* ---------------- Item categories ----------------
      Each category has a color used to mark its items. The list is editable in the app
@@ -2630,7 +2703,12 @@
   };
   var LUCIDE_STORAGE_MAP = {
     cabinet:['Archive'], shelf:['LibraryBig','Library','Layers'], bin:['Package','Box'], closet:['Shirt'],
-    locker:['LockKeyhole','Lock'], garage:['Warehouse','Car'], other:['Box']
+    locker:['LockKeyhole','Lock'], garage:['Warehouse','Car'], other:['Box'],
+    workbench:['Hammer','Wrench'], pantry:['Refrigerator','CookingPot'], dresser:['Columns3']
+  };
+  var LUCIDE_BIN_MAP = {
+    shelf:['LibraryBig','Library'], toolbox:['BriefcaseBusiness','Briefcase'], drawer:['Inbox'],
+    basket:['ShoppingBasket'], box:['Package','Box'], tub:['PackageOpen'], other:['Box']
   };
   function lucideAttrs(attrs){
     return Object.keys(attrs || {}).filter(function(k){ return k !== 'key'; }).map(function(k){
@@ -2659,7 +2737,7 @@
   var usingLucide = false;
   function applyLucideIcons(){
     if (!(window.lucide && window.lucide.icons)) return;
-    [[ROOM_ICONS, LUCIDE_ROOM_MAP], [STORAGE_ICONS, LUCIDE_STORAGE_MAP]].forEach(function(pair){
+    [[ROOM_ICONS, LUCIDE_ROOM_MAP], [STORAGE_ICONS, LUCIDE_STORAGE_MAP], [BIN_ICONS, LUCIDE_BIN_MAP]].forEach(function(pair){
       Object.keys(pair[1]).forEach(function(key){
         var inner = lucideInner(pair[1][key]);
         if (inner){ pair[0][key] = inner; usingLucide = true; }
@@ -2729,6 +2807,7 @@
     mode: 'view',
     selectedRoomId: null,
     selectedStorageId: null,
+    selectedBinId: null,
     selectedShapeId: null,
     activePanel: null,
     tombstones: {},        /* itemId -> deletion time, so deletions sync */
@@ -2743,6 +2822,7 @@
   var roomIconAuto = false;
   var selectedRoomIconType = ROOM_TYPES[0].key;
   var selectedStorageIconType = STORAGE_TYPES[0].key;
+  var selectedBinIconType = BIN_TYPES[0].key;
   var editingItem = null;
   var activeLocationIdForNewItem = null;
   var currentPhotoDataUrl = null;
@@ -2763,14 +2843,14 @@
       'exportBtn','importInput','importCsvInput','csvModalOverlay','csvModalTitle','csvSummary',
       'csvIssuesWrap','csvIssuesList','csvConfirmBtn','exportCsvBtn',
       'canvasSvg','zoomGroup','roomsGroup','editHint','backBtn','shapeToolbar',
-      'addRoomShapeBtn','addStorageShapeBtn','deleteShapeBtn','submodeBoxBtn','submodePointsBtn','undoShapeBtn',
+      'addRoomShapeBtn','addStorageShapeBtn','addBinShapeBtn','lockAllBtn','deleteShapeBtn','submodeBoxBtn','submodePointsBtn','undoShapeBtn',
       'canvasWrap','sidePanel','panelTitle','panelSubtitle','panelRoomActions','panelEditRoomBtn',
       'panelDeleteRoomBtn','panelCloseBtn','panelSearchInput','panelCategorySelect','panelSortSelect',
       'panelAddBtn','panelChips','panelBody','roomModalOverlay','roomModalTitle','roomTypeGrid','roomTypeGridWrap',
       'storageParentWrap','storageParentSelect','roomNameFieldLabel','locationIconLabel','roomNameInput',
-      'locTypeRoomTab','locTypeStorageTab',
+      'locTypeRoomTab','locTypeStorageTab','locTypeBinTab','binParentWrap','binParentSelect',
       'roomSaveBtn','roomDeleteBtn','itemModalOverlay','itemModalTitle','itemVisualPreview',
-      'quickView','qvAddBtn','qvAdd','qvAddForm','qvAddTitle','qvAddClose','qvAddName','qvAddHint','qvAddWhere','qvAddQty','qvAddCat','qvAddExp','qvExpChips','qvAddNext','qvAddSave','qvBack','qvTitle','qvSub','qvSync','qvSyncLabel','qvSearch','qvChips','qvBody','qvFullApp','quickOpenBtn',
+      'quickView','qvAddBtn','qvAdd','qvAddForm','qvAddTitle','qvAddClose','qvAddName','qvAddHint','qvAddWhere','qvAddQty','qvAddCat','qvAddExp','qvExpChips','qvAddNext','qvAddSave','qvBack','qvTitle','qvSub','qvSync','qvSyncLabel','qvSearch','qvChips','qvBinChips','qvBody','qvFullApp','quickOpenBtn',
       'qrModalOverlay','qrWarn','qrSize','qrAll','qrNone','qrPick','qrPrintBtn','printSheet','qrStickersBtn',
       'itemUsedBtn','itemRestockBtn','restockModalOverlay','restockForm','restockTitle','restockSub','restockQty','restockPresets','restockResult','restockMore','restockExp','restockExpChips','restockSaveBtn','itemEditCategoriesBtn','invHideUsed','invLegend','invCategoriesBtn','catModalOverlay','catRows','catAddBtn','catSaveBtn',
       'itemPhotoInput','itemPhotoRemoveBtn','itemNameInput','itemCategorySelect','itemCustomCategoryWrap',
@@ -3058,7 +3138,34 @@
 
   /* ---------------- Location helpers ---------------- */
   function getLocation(id){ return state.locations.find(function(l){ return l.id === id; }); }
+  /* Hierarchy: Room > Storage (closet, cabinet, workbench…) > Bin (shelf, tub, toolbox…) > Item */
   function locationChildren(roomId){ return state.locations.filter(function(l){ return l.type==='storage' && l.parentId===roomId; }); }
+  function binChildren(storageId){ return state.locations.filter(function(l){ return l.type==='bin' && l.parentId===storageId; }); }
+  /* room / storage / bin that a location sits in (any may be null) */
+  function locChain(loc){
+    var out = {room:null, storage:null, bin:null};
+    if (!loc) return out;
+    if (loc.type === 'bin'){
+      out.bin = loc;
+      var st = loc.parentId ? getLocation(loc.parentId) : null;
+      if (st && st.type === 'storage'){ out.storage = st; var r = st.parentId ? getLocation(st.parentId) : null; if (r && r.type === 'room') out.room = r; }
+      else if (st && st.type === 'room') out.room = st;
+    } else if (loc.type === 'storage'){
+      out.storage = loc;
+      var rm = loc.parentId ? getLocation(loc.parentId) : null; if (rm && rm.type === 'room') out.room = rm;
+    } else out.room = loc;
+    return out;
+  }
+  /* ids of a location and everything inside it */
+  function descendantIds(loc){
+    var ids = {}; if (!loc) return ids;
+    ids[loc.id] = true;
+    if (loc.type === 'room') locationChildren(loc.id).forEach(function(st){ ids[st.id] = true; binChildren(st.id).forEach(function(b){ ids[b.id] = true; }); });
+    if (loc.type === 'storage') binChildren(loc.id).forEach(function(b){ ids[b.id] = true; });
+    return ids;
+  }
+  function itemsIn(loc){ var ids = descendantIds(loc); return state.items.filter(function(i){ return ids[i.locationId]; }); }
+  function isLocked(loc){ return !!loc && loc.locked !== false; }
   function computeLocationCount(id){
     var count = 0;
     for (var i=0;i<state.items.length;i++){
@@ -3067,11 +3174,7 @@
     return count;
   }
   function computeLocationTotalCount(loc){
-    var count = computeLocationCount(loc.id);
-    if (loc.type === 'room'){
-      locationChildren(loc.id).forEach(function(c){ count += computeLocationCount(c.id); });
-    }
-    return count;
+    return itemsIn(loc).reduce(function(n, i){ return n + qtyOf(i); }, 0);
   }
   function displayName(loc){ return loc.name || '(unnamed)'; }
 
@@ -3144,34 +3247,47 @@
     var c = getCurrentViewCenter();
     return {x:clamp(c.x-w/2, LOT_MIN_X, LOT_MAX_X-w), y:clamp(c.y-h/2, LOT_MIN_Y, LOT_MAX_Y-h)};
   }
+  var TIER_LABEL = {room:'room', storage:'storage', bin:'bin'};
   function addNewLocation(type){
-    var w = 70, h = 70, pos = centerNewShape(w,h), parentId = null;
-    if (type === 'storage') parentId = state.selectedRoomId || null;
-    var iconKey = type === 'room' ? 'other' : 'other';
+    var sel = state.selectedShapeId ? getLocation(state.selectedShapeId) : null;
+    var w = type === 'bin' ? 34 : 70, h = type === 'bin' ? 28 : 70, parentId = null, pos;
+    if (type === 'storage') parentId = (sel && sel.type === 'room') ? sel.id : (sel && sel.type === 'storage' ? sel.parentId : state.selectedRoomId) || null;
+    if (type === 'bin'){
+      var host = sel && sel.type === 'storage' ? sel : (sel && sel.type === 'bin' ? getLocation(sel.parentId) : (state.selectedStorageId ? getLocation(state.selectedStorageId) : null));
+      parentId = host ? host.id : null;
+    }
+    /* drop a new shape in the middle of its parent when there is one, otherwise the middle of the view */
+    var parent = parentId ? getLocation(parentId) : null;
+    if (parent){ var pb = polygonBBox(parent.points); w = Math.min(w, Math.max(12, pb.w * 0.6)); h = Math.min(h, Math.max(10, pb.h * 0.6)); pos = {x: pb.cx - w/2, y: pb.cy - h/2}; }
+    else pos = centerNewShape(w,h);
     var loc = {
-      id: 'loc_' + uid(), type: type, name: null, iconKey: iconKey, parentId: parentId,
+      id: 'loc_' + uid(), type: type, name: null, iconKey: 'other', parentId: parentId, locked: false,   /* new shapes start unlocked */
       points: [[pos.x,pos.y],[pos.x+w,pos.y],[pos.x+w,pos.y+h],[pos.x,pos.y+h]]
     };
     idbPut('locations', loc).then(function(){
       state.locations.push(loc);
-      pushShapeHistory('adding the ' + (type === 'room' ? 'room' : 'storage') + ' shape', {type:'add', locId: loc.id});
+      pushShapeHistory('adding the ' + TIER_LABEL[type] + ' shape', {type:'add', locId: loc.id});
       state.selectedShapeId = loc.id;
       softZoomToShape(loc,.56);
       renderCanvas(); renderStats(); updateBackBtn();
-      toast((type === 'room' ? 'Room' : 'Storage') + ' shape added — drag to position, resize, or reshape it');
+      toast((type === 'room' ? 'Room' : type === 'storage' ? 'Storage' : 'Bin') + ' added (unlocked) \u2014 drag to place it, then name it in Label spaces' + (type === 'bin' && !parentId ? '. Pick its storage area there too.' : ''));
     }).catch(function(err){ console.error(err); toast('Could not add shape', 'error'); });
   }
 
   function deleteShapeAction(loc){
     if (!loc) return;
-    var children = loc.type === 'room' ? locationChildren(loc.id) : [];
+    if (isLocked(loc)){ toast('\u201c' + displayName(loc) + '\u201d is locked \u2014 unlock it in Edit shapes before deleting', 'error'); return; }
+    /* everything inside goes with it: room > storage > bins */
+    var dIds = descendantIds(loc); delete dIds[loc.id];
+    var children = state.locations.filter(function(l){ return dIds[l.id]; });
     var directItems = state.items.filter(function(i){ return i.locationId === loc.id; });
-    var childItems = [];
-    children.forEach(function(c){ state.items.filter(function(i){ return i.locationId === c.id; }).forEach(function(i){ childItems.push(i); }); });
+    var childItems = state.items.filter(function(i){ return dIds[i.locationId]; });
     var totalItems = directItems.length + childItems.length;
+    var nSt = children.filter(function(c){ return c.type === 'storage'; }).length, nBin = children.filter(function(c){ return c.type === 'bin'; }).length;
+    var inside = [nSt ? nSt + ' storage area' + (nSt === 1 ? '' : 's') : '', nBin ? nBin + ' bin' + (nBin === 1 ? '' : 's') : ''].filter(Boolean).join(' and ');
     var msg = 'Delete "' + displayName(loc) + '"' +
-      (children.length ? ' and its ' + children.length + ' storage area(s)' : '') +
-      (totalItems ? ' and ' + totalItems + ' item(s)' : '') + '? This can\'t be undone.';
+      (inside ? ', its ' + inside : '') +
+      (totalItems ? ' and ' + totalItems + ' item(s)' : '') + '? You can undo this from Edit shapes.';
     openConfirm(msg, function(){
       var fading = els.roomsGroup.querySelector('.location[data-loc-id="' + loc.id + '"]');
       if (fading) fading.classList.add('vanishing');
@@ -3242,16 +3358,25 @@
     var icon = isRoom ? (ROOM_ICONS[roomIconKey(loc)] || ROOM_ICONS.other) : (STORAGE_ICONS[loc.iconKey] || STORAGE_ICONS.other);
     var roomSelected = state.selectedRoomId === loc.id;
     var storageSelected = state.selectedStorageId === loc.id;
+    var binSelected = state.selectedBinId === loc.id;
     var shapeSelected = state.mode === 'shape' && state.selectedShapeId === loc.id;
+    var locked = isLocked(loc);
     var classes = ['location', loc.type + '-type'];
     if (!loc.name) classes.push('unassigned');
     if (loc.pattern && PATTERN_BY_KEY[loc.pattern]) classes.push('patterned');
     if (roomSelected) classes.push('room-selected');
     if (storageSelected) classes.push('storage-selected');
+    if (binSelected) classes.push('bin-selected');
     if (shapeSelected) classes.push('shape-selected');
+    if (state.mode === 'shape') classes.push(locked ? 'is-locked' : 'is-unlocked');
     /* With a room selected, softly light up every storage area in it; empty ones glow soft red. */
-    if (!isRoom && !storageSelected && state.selectedRoomId && loc.parentId === state.selectedRoomId){
+    if (loc.type === 'storage' && !storageSelected && state.selectedRoomId && loc.parentId === state.selectedRoomId){
       classes.push('storage-lit');
+      if (computeLocationTotalCount(loc) === 0) classes.push('storage-empty');
+    }
+    /* With a storage selected, its bins light up the same way (teal). */
+    if (loc.type === 'bin' && !binSelected && state.selectedStorageId && loc.parentId === state.selectedStorageId){
+      classes.push('bin-lit');
       if (computeLocationCount(loc.id) === 0) classes.push('storage-empty');
     }
     /* Icon sits in the middle of the shape; the name label is placed below it (see placeLabel). */
@@ -3261,20 +3386,37 @@
       iconG = '<rect class="location-icon-bg" x="' + ir.x + '" y="' + ir.y + '" width="' + ir.w + '" height="' + ir.h + '" rx="' + (5/iz) + '"></rect>' +
         '<g class="location-icon" transform="translate(' + (ir.cx - glyph/2) + ',' + (ir.cy - glyph/2) + ') scale(' + (glyph/24) + ')" style="stroke-width:' + (1.6*iz) + '">' + icon + '</g>';
     }
-    var handles = shapeSelected
+    /* locked shapes get no handles: they can be selected but not moved or reshaped */
+    var handles = (shapeSelected && !locked)
       ? (shapeSubmode === 'points' ? shapeVertexHandlesMarkup(loc.points) : shapeResizeHandlesMarkup(bbox))
       : '';
+    var lockBtn = state.mode === 'shape' ? padlockMarkup(loc, bbox, locked) : '';
 
     return '<g class="' + classes.join(' ') + '" data-loc-id="' + loc.id + '" tabindex="0" role="button" aria-label="' + escapeHtml(displayName(loc)) + '">' +
       '<polygon class="location-poly" data-role="body" points="' + pointsAttr(loc.points) + '"></polygon>' +
-      iconG + handles +
+      iconG + handles + lockBtn +
+    '</g>';
+  }
+  /* Padlock toggle drawn in each shape's top-left corner while editing shapes. */
+  var LOCK_ICON = '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>';
+  var UNLOCK_ICON = '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.8"/>';
+  function padlockMarkup(loc, bbox, locked){
+    var z = Math.max(1, currentZoom);
+    var sz = (loc.type === 'room' ? 20 : 16) / z, pad = 4 / z;
+    if (bbox.w < sz * 1.6 || bbox.h < sz * 1.4) sz = Math.max(10 / z, Math.min(bbox.w, bbox.h) * 0.55);
+    var x = bbox.minX + pad, y = bbox.minY + pad;
+    return '<g class="shape-lock' + (locked ? ' locked' : '') + '" data-role="lock" transform="translate(' + x + ',' + y + ')">' +
+      '<title>' + (locked ? 'Locked \u2014 click to unlock and edit' : 'Unlocked \u2014 click to lock in place') + '</title>' +
+      '<rect data-role="lock" width="' + sz + '" height="' + sz + '" rx="' + (4 / z) + '"></rect>' +
+      '<g data-role="lock" transform="translate(' + (sz * 0.14) + ',' + (sz * 0.12) + ') scale(' + (sz * 0.72 / 24) + ')" style="stroke-width:' + (2.2 * z / Math.max(z, 1)) + '">' + (locked ? LOCK_ICON : UNLOCK_ICON) + '</g>' +
     '</g>';
   }
 
   function renderCanvas(){
     var rooms = state.locations.filter(function(l){ return l.type==='room'; });
     var storages = state.locations.filter(function(l){ return l.type==='storage'; });
-    var ordered = rooms.concat(storages);
+    var bins = state.locations.filter(function(l){ return l.type==='bin'; });
+    var ordered = rooms.concat(storages, bins);
     // The shape being edited must render last so its resize handles sit on top
     // of every other polygon and actually receive pointer events.
     if (state.mode === 'shape' && state.selectedShapeId){
@@ -3288,7 +3430,7 @@
     /* Patterns always stack rooms first, then storage on top. (They used to follow the edit order,
        which moves the selected shape last — so selecting a room laid its floor pattern over the
        storage patterns inside it.) */
-    els.patternsGroup.innerHTML = rooms.concat(storages).filter(function(l){ return l.pattern && PATTERN_BY_KEY[l.pattern]; }).map(function(l){
+    els.patternsGroup.innerHTML = rooms.concat(storages, bins).filter(function(l){ return l.pattern && PATTERN_BY_KEY[l.pattern]; }).map(function(l){
       return '<polygon class="location-pattern" data-loc-id="' + l.id + '" points="' + pointsAttr(l.points) + '" fill="url(#pat-' + l.pattern + ')" fill-opacity="' +
              (l.patternOpacity != null ? l.patternOpacity : 0.9) + '"></polygon>';
     }).join('');
@@ -3304,9 +3446,13 @@
     } else if (state.mode === 'shape'){
       els.editHint.textContent = (shapeSubmode === 'points')
         ? 'Drag points to reshape. Hold Shift to lock a dragged point to the nearest horizontal or vertical axis.'
-        : 'Click to softly zoom. Drag to move. Drag a handle to resize and the purple handle to rotate.';
+        : 'Tap a padlock to unlock a shape, then drag to move, resize or rotate it. Existing shapes stay locked so nothing moves by accident.';
     }
     els.deleteShapeBtn.style.display = (state.mode === 'shape' && state.selectedShapeId) ? 'inline-flex' : 'none';
+    var selShape = state.selectedShapeId ? getLocation(state.selectedShapeId) : null;
+    els.deleteShapeBtn.disabled = !!(selShape && isLocked(selShape));
+    els.deleteShapeBtn.title = selShape && isLocked(selShape) ? 'Unlock it first (padlock in its corner)' : 'Delete the selected shape';
+    if (state.mode === 'shape'){ var nUn = unlockedShapes().length; els.lockAllBtn.disabled = !nUn; els.lockAllBtn.textContent = '\uD83D\uDD12 Lock all' + (nUn ? ' (' + nUn + ')' : ''); }
   }
 
   /* ---------------- Zoom + selection ---------------- */
@@ -3450,6 +3596,7 @@
   function selectRoom(roomId){
     state.selectedRoomId = roomId;
     state.selectedStorageId = null;
+    state.selectedBinId = null;
     var loc = getLocation(roomId);
     applyZoomTransform(loc);
     updateBackBtn();
@@ -3462,16 +3609,30 @@
     if (!loc) return;
     state.selectedRoomId = loc.parentId || state.selectedRoomId;
     state.selectedStorageId = storageId;
+    state.selectedBinId = null;
     var room = getLocation(state.selectedRoomId);
     applyZoomTransform(room || loc);
     updateBackBtn();
     renderCanvas();
     openLocationPanel(storageId);
   }
+  function selectBin(binId){
+    var loc = getLocation(binId);
+    if (!loc) return;
+    var ch = locChain(loc);
+    state.selectedRoomId = ch.room ? ch.room.id : state.selectedRoomId;
+    state.selectedStorageId = ch.storage ? ch.storage.id : null;
+    state.selectedBinId = binId;
+    applyZoomTransform(ch.room || ch.storage || loc);
+    updateBackBtn();
+    renderCanvas();
+    openLocationPanel(binId);
+  }
 
   function deselectAll(){
     state.selectedRoomId = null;
     state.selectedStorageId = null;
+    state.selectedBinId = null;
     applyZoomTransform(null);
     updateBackBtn();
     renderCanvas();
@@ -3510,19 +3671,23 @@
     els.sidePanel.setAttribute('aria-hidden','true');
     state.activePanel = null;
   }
-  /* A room's panel lists everything in the room AND in its storage areas; the storage chips
-     (or clicking a storage area on the map) narrow it down. storageFilter: '' = all,
-     '__room' = loose in the room itself, otherwise a storage id. */
+  /* A room's panel lists everything in the room, its storage and their bins. Two rows of chips
+     narrow it down, the same way at each tier:
+       storageFilter: ''  = everything in the room, '__room'    = loose in the room, or a storage id
+       binFilter:     ''  = everything in that storage, '__storage' = loose in the storage, or a bin id */
   function openLocationPanel(locationId){
     var loc = getLocation(locationId);
     if (!loc) return;
-    var roomId = locationId, storageFilter = '';
-    if (loc.type === 'storage' && loc.parentId && getLocation(loc.parentId)){ roomId = loc.parentId; storageFilter = loc.id; }
+    var ch = locChain(loc);
+    var roomId = ch.room ? ch.room.id : locationId, storageFilter = '', binFilter = '';
+    if (ch.room && ch.storage) storageFilter = ch.storage.id;
+    if (ch.room && ch.storage && ch.bin) binFilter = ch.bin.id;
+    if (!ch.room){ roomId = (ch.storage || loc).id; if (ch.bin && ch.storage) binFilter = ch.bin.id; }   /* storage or bin with no room */
     var same = state.activePanel && state.activePanel.type === 'location' && state.activePanel.locationId === roomId && els.sidePanel.classList.contains('open');
     if (same){
-      state.activePanel.storageFilter = storageFilter;
+      state.activePanel.storageFilter = storageFilter; state.activePanel.binFilter = binFilter;
     } else {
-      state.activePanel = {type:'location', locationId:roomId, storageFilter:storageFilter, sort:'name', filter:'', categoryFilter:null};
+      state.activePanel = {type:'location', locationId:roomId, storageFilter:storageFilter, binFilter:binFilter, sort:'name', filter:'', categoryFilter:null};
       els.panelSearchInput.value = '';
     }
     els.sidePanel.classList.add('open');
@@ -3530,22 +3695,35 @@
     renderPanel();
     animateList(els.panelBody);
   }
+  function hasItemsIn(loc){ var ids = descendantIds(loc); return state.items.some(function(i){ return ids[i.locationId]; }); }
   function panelRoomStorages(room){
-    var roomItems = state.items.filter(function(i){ return i.locationId === room.id; });
-    return locationChildren(room.id).filter(function(st){
-      return st.name || state.items.some(function(i){ return i.locationId === st.id; });
-    }).sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
+    return locationChildren(room.id).filter(function(st){ return st.name || hasItemsIn(st); })
+      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
   }
-  /* The location new items / edit / delete act on: the selected storage, or the room. */
+  function panelStorageBins(storage){
+    return binChildren(storage.id).filter(function(b){ return b.name || hasItemsIn(b); })
+      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
+  }
+  /* The location new items / edit / delete act on: the selected bin, storage, or the room. */
   function panelTarget(ap){
     var room = getLocation(ap.locationId);
+    if (ap.binFilter && ap.binFilter !== '__storage'){ var b = getLocation(ap.binFilter); if (b) return b; }
     if (ap.storageFilter && ap.storageFilter !== '__room'){ var st = getLocation(ap.storageFilter); if (st) return st; }
     return room;
   }
   function setPanelStorageFilter(id){
     var ap = state.activePanel; if (!ap || ap.type !== 'location') return;
-    ap.storageFilter = id || '';
+    ap.storageFilter = id || ''; ap.binFilter = '';
     state.selectedStorageId = (id && id !== '__room') ? id : null;     /* highlight it on the map */
+    state.selectedBinId = null;
+    renderCanvas();
+    renderPanel();
+    animateList(els.panelBody);
+  }
+  function setPanelBinFilter(id){
+    var ap = state.activePanel; if (!ap || ap.type !== 'location') return;
+    ap.binFilter = id || '';
+    state.selectedBinId = (id && id !== '__storage') ? id : null;
     renderCanvas();
     renderPanel();
     animateList(els.panelBody);
@@ -3615,17 +3793,13 @@
     var kept = toks.filter(function(t){ return !SEARCH_STOPWORDS[t]; });
     return {raw: normText(query), tokens: kept.length ? kept : toks};
   }
-  var SEARCH_FIELDS = [['name', 1.0], ['category', 0.65], ['storage', 0.72], ['room', 0.72], ['subLocation', 0.6], ['notes', 0.45]];
-  function itemPlace(item){
-    var loc = getLocation(item.locationId), room = null, storage = null;
-    if (loc){ if (loc.type === 'storage'){ storage = loc; room = loc.parentId ? getLocation(loc.parentId) : null; } else room = loc; }
-    return {room: room, storage: storage};
-  }
+  var SEARCH_FIELDS = [['name', 1.0], ['category', 0.65], ['bin', 0.72], ['storage', 0.72], ['room', 0.72], ['subLocation', 0.6], ['notes', 0.45]];
+  function itemPlace(item){ return locChain(getLocation(item.locationId)); }
   function itemSearchScore(item, query){
     var pq = prepareQuery(query);
     if (!pq.tokens.length) return 0;
     var place = itemPlace(item);
-    var fields = {name: item.name, category: item.category, storage: place.storage && place.storage.name,
+    var fields = {name: item.name, category: item.category, bin: place.bin && place.bin.name, storage: place.storage && place.storage.name,
                   room: place.room && place.room.name, subLocation: item.subLocation, notes: item.notes};
     var fieldToks = {};
     SEARCH_FIELDS.forEach(function(fw){
@@ -3684,11 +3858,12 @@
   var inv = {open:false, expandedId:null, flashId:null};
   function locationPath(item){
     var p = itemPlace(item);
-    if (!p.room && !p.storage) return 'Not in a room';
-    return (p.room ? displayName(p.room) : '') + (p.room && p.storage ? ' \u203a ' : '') + (p.storage ? displayName(p.storage) : '');
+    if (!p.room && !p.storage && !p.bin) return 'Not in a room';
+    return [p.room, p.storage, p.bin].filter(Boolean).map(displayName).join(' \u203a ');
   }
   function openInventoryView(opts){
     opts = opts || {};
+    if (state.mode === 'shape' && unlockedShapes().length){ guardLeaveEdit(function(){ setMode('view', true); openInventoryView(opts); }); return; }
     inv.open = true;
     if (opts.query != null){ els.invSearch.value = opts.query; els.searchInput.value = opts.query; }
     if (opts.expiring != null) els.invExpiring.checked = !!opts.expiring;
@@ -3819,7 +3994,7 @@
     if (!loc){ toast('This item isn\u2019t assigned to a room yet', 'error'); return; }
     closeInventoryView();
     if (state.mode !== 'view') setMode('view');
-    if (loc.type === 'storage') selectStorage(loc.id); else selectRoom(loc.id);
+    if (loc.type === 'bin') selectBin(loc.id); else if (loc.type === 'storage') selectStorage(loc.id); else selectRoom(loc.id);
     setTimeout(function(){
       var card = els.panelBody.querySelector('.item-card[data-item-id="' + item.id + '"]');
       if (card){ card.scrollIntoView({block:'nearest'}); card.classList.add('flash'); setTimeout(function(){ card.classList.remove('flash'); }, 1700); }
@@ -3922,6 +4097,13 @@
     return item.usedAt ? '<span class="badge badge-used">Used ' + fmtDate(item.usedAt) + '</span>' : '';
   }
 
+  /* "Fridge › Top shelf": where an item is, below the given location */
+  function subPathLabel(item, aboveId){
+    var ch = itemPlace(item), parts = [ch.storage, ch.bin].filter(Boolean);
+    var k = parts.findIndex(function(l){ return l.id === aboveId; });
+    if (k !== -1) parts = parts.slice(k + 1);
+    return parts.map(displayName).join(' › ');
+  }
   function itemCardMarkup(item, showRoom, showStorage){
     var expBadge = item.usedAt ? usedBadge(item) : expirationBadge(item);
     var loc = showRoom ? getLocation(item.locationId) : null;
@@ -3934,7 +4116,7 @@
           '<div class="item-meta">' +
             categoryTag(item.category) +
             (loc ? '<span class="tag tag-room">' + escapeHtml(displayName(loc)) + '</span>' : '') +
-            (showStorage && getLocation(item.locationId) ? '<span class="tag-where">' + escapeHtml(displayName(getLocation(item.locationId))) + '</span>' : '') +
+            (showStorage ? '<span class="tag-where">' + escapeHtml(showStorage) + '</span>' : '') +
             value +
           '</div>' +
           (item.subLocation ? '<div class="item-sub">' + escapeHtml(item.subLocation) + '</div>' : '') +
@@ -3966,31 +4148,43 @@
     if (ap.type === 'location'){
       roomLoc = getLocation(ap.locationId);
       if (!roomLoc){ closePanel(); return; }
+      var countIn = function(list, idOrLoc){
+        if (typeof idOrLoc === 'string') return list.filter(function(i){ return i.locationId === idOrLoc; }).length;
+        var ids = descendantIds(idOrLoc); return list.filter(function(i){ return ids[i.locationId]; }).length;
+      };
+      var chip = function(attr, c, on){
+        return '<button type="button" class="panel-chip' + (c.tier ? ' tier-' + c.tier : '') + (on ? ' active' : '') + '" ' + attr + '="' + c.id + '" role="tab" aria-selected="' + on + '">' +
+          escapeHtml(c.label) + '<span class="n">' + c.n + '</span></button>';
+      };
+      items = itemsIn(roomLoc);
+      var allInRoom = items, chipsHtml = '';
       if (roomLoc.type === 'room'){
         storages = panelRoomStorages(roomLoc);
-        var inRoom = {}; inRoom[roomLoc.id] = true;
-        locationChildren(roomLoc.id).forEach(function(c){ inRoom[c.id] = true; });
-        items = state.items.filter(function(i){ return inRoom[i.locationId]; });
         if (ap.storageFilter && ap.storageFilter !== '__room' && !getLocation(ap.storageFilter)) ap.storageFilter = '';
-      } else {
-        items = state.items.filter(function(i){ return i.locationId === roomLoc.id; });   /* storage with no room */
-        ap.storageFilter = '';
+        if (storages.length){
+          var chips = [{id:'', label:'All', n: allInRoom.length}].concat(storages.map(function(st){ return {id: st.id, label: displayName(st), n: countIn(allInRoom, st)}; }));
+          var loose = countIn(allInRoom, roomLoc.id);
+          if (loose) chips.push({id:'__room', label:'Loose in room', n: loose});
+          chipsHtml += '<div class="chip-row">' + chips.map(function(c){ return chip('data-panel-storage', c, (ap.storageFilter || '') === c.id); }).join('') + '</div>';
+        }
+        if (ap.storageFilter === '__room'){ items = items.filter(function(i){ return i.locationId === roomLoc.id; }); storeName = 'Loose in room'; ap.binFilter = ''; }
+        else if (ap.storageFilter){ var stLoc = getLocation(ap.storageFilter); items = itemsIn(stLoc); storeName = displayName(stLoc); }
       }
-      var allInRoom = items;
-      /* storage chips */
-      if (storages.length){
-        var countIn = function(id){ return allInRoom.filter(function(i){ return i.locationId === id; }).length; };
-        var chips = [{id:'', label:'All', n: allInRoom.length}].concat(storages.map(function(st){ return {id: st.id, label: displayName(st), n: countIn(st.id)}; }));
-        var loose = countIn(roomLoc.id);
-        if (loose) chips.push({id:'__room', label:'Loose in room', n: loose});
-        els.panelChips.innerHTML = chips.map(function(c){
-          var on = (ap.storageFilter || '') === c.id;
-          return '<button type="button" class="panel-chip' + (on ? ' active' : '') + '" data-panel-storage="' + c.id + '" role="tab" aria-selected="' + on + '">' +
-            escapeHtml(c.label) + '<span class="n">' + c.n + '</span></button>';
-        }).join('');
-      } else els.panelChips.innerHTML = '';
-      if (ap.storageFilter === '__room'){ items = items.filter(function(i){ return i.locationId === roomLoc.id; }); storeName = 'Loose in room'; }
-      else if (ap.storageFilter){ items = items.filter(function(i){ return i.locationId === ap.storageFilter; }); storeName = displayName(getLocation(ap.storageFilter)); }
+      /* bin tier: shown once a storage is picked (or when the panel is for a storage with no room) */
+      var binHost = roomLoc.type === 'storage' ? roomLoc : (ap.storageFilter && ap.storageFilter !== '__room' ? getLocation(ap.storageFilter) : null);
+      if (binHost){
+        var bins = panelStorageBins(binHost), inHost = itemsIn(binHost);
+        if (ap.binFilter && ap.binFilter !== '__storage' && !getLocation(ap.binFilter)) ap.binFilter = '';
+        if (bins.length){
+          var bchips = [{id:'', label:'All in ' + displayName(binHost), n: inHost.length, tier:'bin'}].concat(bins.map(function(b){ return {id: b.id, label: displayName(b), n: countIn(inHost, b.id), tier:'bin'}; }));
+          var looseSt = countIn(inHost, binHost.id);
+          if (looseSt) bchips.push({id:'__storage', label:'Loose in ' + displayName(binHost), n: looseSt, tier:'bin'});
+          chipsHtml += '<div class="chip-row bins">' + bchips.map(function(c){ return chip('data-panel-bin', c, (ap.binFilter || '') === c.id); }).join('') + '</div>';
+        }
+        if (ap.binFilter === '__storage'){ items = inHost.filter(function(i){ return i.locationId === binHost.id; }); storeName = displayName(binHost) + ' › loose'; }
+        else if (ap.binFilter){ items = inHost.filter(function(i){ return i.locationId === ap.binFilter; }); storeName = displayName(binHost) + ' › ' + displayName(getLocation(ap.binFilter)); }
+      } else ap.binFilter = '';
+      els.panelChips.innerHTML = chipsHtml;
       locForHeader = panelTarget(ap);
       title = displayName(roomLoc);
     } else {
@@ -4010,7 +4204,7 @@
 
     els.panelTitle.textContent = title;
     var parentBit = '';
-    if (roomLoc && roomLoc.type === 'storage' && roomLoc.parentId){
+    if (roomLoc && roomLoc.type !== 'room' && roomLoc.parentId){
       var parent = getLocation(roomLoc.parentId);
       if (parent) parentBit = ' · in ' + displayName(parent);
     }
@@ -4020,7 +4214,7 @@
 
     if (ap.type === 'location' && locForHeader){
       /* edit / delete / add act on the selected storage, or on the room when "All" is showing */
-      var what = locForHeader.type === 'storage' ? 'storage area' : 'room';
+      var what = locForHeader.type === 'bin' ? 'bin' : (locForHeader.type === 'storage' ? 'storage area' : 'room');
       els.panelEditRoomBtn.onclick = function(){ openLabelModal(locForHeader); };
       els.panelDeleteRoomBtn.onclick = function(){ deleteShapeAction(locForHeader); };
       els.panelAddBtn.onclick = function(){ openItemModal(null, locForHeader.id); };
@@ -4043,18 +4237,19 @@
     if (items.length === 0){
       els.panelBody.innerHTML = emptyStateMarkup(ap);
     } else {
-      /* in a room showing "All", tag each item with the storage it's in */
-      var tagWhere = ap.type === 'location' && roomLoc && roomLoc.type === 'room' && !ap.storageFilter;
-      els.panelBody.innerHTML = items.map(function(i){ return itemCardMarkup(i, ap.type !== 'location', tagWhere && i.locationId !== roomLoc.id); }).join('');
+      /* tag each item with where it sits below what's being shown (storage › bin) */
+      var shownId = ap.type === 'location' ? panelTarget(ap).id : null;
+      var showAllLevel = ap.type === 'location' && !(ap.binFilter && ap.binFilter !== '');
+      els.panelBody.innerHTML = items.map(function(i){ return itemCardMarkup(i, ap.type !== 'location', showAllLevel && i.locationId !== shownId ? subPathLabel(i, shownId) : ''); }).join('');
     }
   }
 
   /* ---------------- Location label modal ---------------- */
   function renderRoomTypeGrid(type){
     type = type || (workingLocation && workingLocation.type) || 'room';
-    var list = type === 'storage' ? STORAGE_TYPES : ROOM_TYPES;
-    var icons = type === 'storage' ? STORAGE_ICONS : ROOM_ICONS;
-    var selected = type === 'storage' ? selectedStorageIconType : selectedRoomIconType;
+    var list = type === 'bin' ? BIN_TYPES : type === 'storage' ? STORAGE_TYPES : ROOM_TYPES;
+    var icons = type === 'bin' ? BIN_ICONS : type === 'storage' ? STORAGE_ICONS : ROOM_ICONS;
+    var selected = type === 'bin' ? selectedBinIconType : type === 'storage' ? selectedStorageIconType : selectedRoomIconType;
     els.roomTypeGrid.innerHTML = list.map(function(t){
       return '<button type="button" class="type-btn' + (t.key===selected?' active':'') + '" data-type="' + t.key + '">' +
         '<svg viewBox="0 0 24 24" class="type-icon">' + (icons[t.key] || icons.other) + '</svg>' +
@@ -4070,14 +4265,25 @@
     }).join('');
   }
 
+  function renderBinParentSelect(currentParentId){
+    var storages = state.locations.filter(function(l){ return l.type === 'storage'; });
+    var pathOf = function(st){ var r = st.parentId ? getLocation(st.parentId) : null; return (r ? displayName(r) + ' \u203a ' : '') + displayName(st); };
+    storages.sort(function(a, b){ return pathOf(a).localeCompare(pathOf(b)); });
+    els.binParentSelect.innerHTML = storages.length ? storages.map(function(st){
+      return '<option value="' + st.id + '"' + (st.id === currentParentId ? ' selected' : '') + '>' + escapeHtml(pathOf(st)) + '</option>';
+    }).join('') : '<option value="">(add a storage space first)</option>';
+  }
+
   function setLocType(type){
     els.locTypeRoomTab.classList.toggle('active', type === 'room');
     els.locTypeStorageTab.classList.toggle('active', type === 'storage');
+    els.locTypeBinTab.classList.toggle('active', type === 'bin');
     els.roomTypeGridWrap.style.display = '';
     els.storageParentWrap.style.display = type === 'storage' ? '' : 'none';
+    els.binParentWrap.style.display = type === 'bin' ? '' : 'none';
     var iconLabel = document.getElementById('locationIconLabel');
-    if (iconLabel) iconLabel.textContent = type === 'room' ? 'Room icon' : 'Storage type';
-    els.roomNameFieldLabel.textContent = type === 'room' ? 'Room name' : 'Storage name';
+    if (iconLabel) iconLabel.textContent = type === 'room' ? 'Room icon' : type === 'bin' ? 'Bin type' : 'Storage type';
+    els.roomNameFieldLabel.textContent = type === 'room' ? 'Room name' : type === 'bin' ? 'Bin name' : 'Storage name';
     workingLocation.type = type;
     renderRoomTypeGrid(type);
   }
@@ -4117,15 +4323,20 @@
     selectedRoomIconType = loc.type === 'room' ? (loc.iconKey && loc.iconKey !== 'other' ? loc.iconKey : (guessRoomIcon(loc.name) || loc.iconKey || ROOM_TYPES[0].key)) : ROOM_TYPES[0].key;
     roomIconAuto = loc.type === 'room' && (!loc.iconKey || loc.iconKey === 'other');
     selectedStorageIconType = loc.type === 'storage' ? (loc.iconKey || STORAGE_TYPES[0].key) : STORAGE_TYPES[0].key;
+    selectedBinIconType = loc.type === 'bin' && BIN_ICONS[loc.iconKey] ? loc.iconKey : BIN_TYPES[0].key;
     els.roomModalTitle.textContent = loc.name ? 'Edit "' + loc.name + '"' : 'Name this space';
     els.roomNameInput.value = loc.name || '';
     els.roomSaveBtn.textContent = 'Save';
     els.roomDeleteBtn.style.display = loc.name ? 'inline-flex' : 'none';
     renderPatternPicker();
-    var defaultParent = loc.parentId || (state.selectedRoomId) || (state.locations.filter(function(l){return l.type==='room';})[0] || {}).id;
+    var parentLoc = getLocation(loc.parentId);
+    var defaultParent = (loc.type === 'storage' && loc.parentId) || (state.selectedRoomId) || (state.locations.filter(function(l){return l.type==='room';})[0] || {}).id;
     renderStorageParentSelect(defaultParent);
+    var defaultStorage = (parentLoc && parentLoc.type === 'storage' ? parentLoc.id : null) || state.selectedStorageId ||
+                         (state.locations.filter(function(l){ return l.type === 'storage'; })[0] || {}).id;
+    renderBinParentSelect(defaultStorage);
     if (!workingLocation.parentId) workingLocation.parentId = defaultParent;
-    setLocType(loc.type === 'storage' ? 'storage' : 'room');
+    setLocType(loc.type === 'storage' || loc.type === 'bin' ? loc.type : 'room');
     openModalEl(els.roomModalOverlay);
     setTimeout(function(){ els.roomNameInput.focus(); }, 0);
   }
@@ -4135,6 +4346,9 @@
     if (!name){ toast('Give this space a name', 'error'); els.roomNameInput.focus(); return; }
     var loc = getLocation(workingLocation.id);
     if (!loc) return;
+    if (loc.type !== workingLocation.type && Object.keys(descendantIds(loc)).length > 1){
+      toast('Move or delete what\u2019s inside this ' + loc.type + ' before changing its tier', 'error'); return;
+    }
     loc.name = name;
     loc.type = workingLocation.type;
     loc.pattern = workingLocation.pattern || null;
@@ -4142,6 +4356,11 @@
     if (workingLocation.type === 'room'){
       loc.iconKey = selectedRoomIconType;
       loc.parentId = null;
+    } else if (workingLocation.type === 'bin'){
+      var binParent = els.binParentSelect.value;
+      if (!binParent){ toast('Add a storage space first — bins live inside storage', 'error'); return; }
+      loc.iconKey = selectedBinIconType;
+      loc.parentId = binParent;
     } else {
       loc.iconKey = selectedStorageIconType;
       loc.parentId = els.storageParentSelect.value || workingLocation.parentId || null;
@@ -4163,7 +4382,7 @@
       var idx = state.locations.findIndex(function(l){ return l.id === id; });
       if (idx !== -1) state.locations[idx] = restored;
       closeModal('roomModalOverlay');
-      if (state.selectedStorageId === id || state.selectedRoomId === id) deselectAll();
+      if (state.selectedStorageId === id || state.selectedRoomId === id || state.selectedBinId === id) deselectAll();
       renderCanvas(); renderStats(); refreshActivePanel();
       toast('Reset to unlabeled');
     }).catch(function(err){ console.error(err); toast('Could not reset', 'error'); });
@@ -4404,6 +4623,9 @@
   function openConfirm(message, onConfirm, opts){
     opts = opts || {};
     els.confirmMessage.textContent = message;
+    document.getElementById('confirmTitle').textContent = opts.title || 'Are you sure?';
+    var cancelBtn = els.confirmModalOverlay.querySelector('[data-close-modal="confirmModalOverlay"]');
+    if (cancelBtn) cancelBtn.textContent = opts.cancelLabel || 'Cancel';
     els.confirmBtn.textContent = opts.confirmLabel || 'Confirm';
     els.confirmBtn.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
     openModalEl(els.confirmModalOverlay);
@@ -4667,7 +4889,7 @@
      One row per item. The same file can be imported back: the ID column lets an import update
      the items it came from instead of duplicating them, and LocationID finds the right room even
      if it is unnamed or two rooms share a name. Photos are not included (too large for CSV). */
-  var CSV_COLUMNS = ['Room','Storage','Item','Category','Quantity','Value','SubLocation','Notes','PurchaseDate','ExpirationDate','Used','ID','LocationID'];
+  var CSV_COLUMNS = ['Room','Storage','Bin','Item','Category','Quantity','Value','SubLocation','Notes','PurchaseDate','ExpirationDate','Used','ID','LocationID'];
   function generateInventoryCsv(){
     var rows = [CSV_COLUMNS];
     var list = state.items.slice().sort(function(a, b){
@@ -4677,6 +4899,7 @@
       var place = itemPlace(it);
       rows.push([
         place.room ? (place.room.name || '') : '', place.storage ? (place.storage.name || '') : '',
+        place.bin ? (place.bin.name || '') : '',
         it.name, it.category || 'Other', qtyOf(it), it.value != null && it.value !== '' ? it.value : '',
         it.subLocation || '', it.notes || '', it.purchaseDate || '', it.expirationDate || '',
         it.usedAt || '', it.id, it.locationId || ''
@@ -4769,6 +4992,7 @@
   var CSV_FIELD_ALIASES = {
     room: ['room','roomname','location','location1'],
     storage: ['storage','storagename','storagearea','substorage','location2'],
+    bin: ['bin','binname','container','tub','location3'],
     item: ['item','itemname','name'],
     category: ['category','type','cat'],
     quantity: ['quantity','qty','count'],
@@ -4817,7 +5041,7 @@
     if (colMap.item === undefined || (colMap.room === undefined && colMap.locationid === undefined)){
       return {ok:[], errors:[{row:0, message:'Could not find "Room" and "Item" columns in the header row'}], added:0, updated:0, unchanged:0};
     }
-    var roomsByName = {}, storageByRoomAndName = {}, storageByNameOnly = {};
+    var roomsByName = {}, storageByRoomAndName = {}, storageByNameOnly = {}, binByStorageAndName = {};
     state.locations.forEach(function(l){
       if (!l.name) return;
       var key = l.name.trim().toLowerCase();
@@ -4827,6 +5051,7 @@
         if (!storageByNameOnly[key]) storageByNameOnly[key] = [];
         storageByNameOnly[key].push(l);
       }
+      else if (l.type === 'bin') binByStorageAndName[(l.parentId || '') + '::' + key] = l;
     });
     var itemsById = {};
     state.items.forEach(function(i){ itemsById[i.id] = i; });
@@ -4840,7 +5065,7 @@
         var idx = colMap[field];
         return (idx === undefined || idx >= cells.length) ? '' : String(cells[idx] || '').trim();
       };
-      var roomName = get('room'), storageName = get('storage'), itemName = get('item');
+      var roomName = get('room'), storageName = get('storage'), binName = get('bin'), itemName = get('item');
       var rowNum = r + 1;
 
       if (!itemName){
@@ -4852,11 +5077,12 @@
       /* 1. LocationID from an export, as long as the Room/Storage names in the row still agree with it
             (so moving an item by editing its Room column in a spreadsheet still works). */
       var locationId = null, byId = get('locationid') ? getLocation(get('locationid')) : null;
-      if (byId && (byId.type === 'room' || byId.type === 'storage')){
-        var idRoom = byId.type === 'room' ? byId : getLocation(byId.parentId), idStorage = byId.type === 'storage' ? byId : null;
+      if (byId && (byId.type === 'room' || byId.type === 'storage' || byId.type === 'bin')){
+        var ch = locChain(byId), idRoom = ch.room, idStorage = ch.storage, idBin = ch.bin;
         var roomAgrees = !roomName || (idRoom && norm(idRoom.name) === norm(roomName));
         var storageAgrees = idStorage ? (!storageName || norm(idStorage.name) === norm(storageName)) : !storageName;
-        if (roomAgrees && storageAgrees) locationId = byId.id;
+        var binAgrees = idBin ? (!binName || norm(idBin.name) === norm(binName)) : !binName;
+        if (roomAgrees && storageAgrees && binAgrees) locationId = byId.id;
       }
       /* 2. Otherwise match by name, as before. */
       if (!locationId){
@@ -4872,6 +5098,13 @@
           }
           if (!storLoc){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — storage "' + storageName + '" not found in "' + roomName + '"'}); continue; }
           locationId = storLoc.id;
+          if (binName){
+            var binLoc = binByStorageAndName[storLoc.id + '::' + binName.toLowerCase()];
+            if (!binLoc){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — bin "' + binName + '" not found in "' + storageName + '"'}); continue; }
+            locationId = binLoc.id;
+          }
+        } else if (binName){
+          errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — bin "' + binName + '" needs a Storage too'}); continue;
         }
       }
 
@@ -5011,7 +5244,44 @@
     els.modeShapeBtn.setAttribute('aria-current', String(state.mode === 'shape'));
     updateChrome();
   }
-  function setMode(mode){
+  /* ---------------- Shape locks ----------------
+     Rooms, storage and bins are locked in place by default (anything saved without a
+     "locked" flag counts as locked). New shapes start unlocked. Leaving Edit shapes with
+     anything unlocked asks you to lock it first. */
+  function unlockedShapes(){ return state.locations.filter(function(l){ return (l.type === 'room' || l.type === 'storage' || l.type === 'bin') && !isLocked(l); }); }
+  function setShapeLocked(loc, locked){
+    var copy = JSON.parse(JSON.stringify(loc)); copy.locked = !!locked;
+    return idbPut('locations', copy).then(function(){
+      var idx = state.locations.findIndex(function(l){ return l.id === copy.id; });
+      if (idx !== -1) state.locations[idx] = copy;
+      if (state.selectedShapeId !== copy.id){ state.selectedShapeId = copy.id; }
+      renderCanvas(); updateBackBtn();
+      toast(locked ? '\uD83D\uDD12 \u201c' + displayName(copy) + '\u201d locked in place' : '\uD83D\uDD13 \u201c' + displayName(copy) + '\u201d unlocked \u2014 you can move and reshape it');
+    }).catch(function(err){ console.error(err); toast('Could not change the lock', 'error'); });
+  }
+  function lockAllShapes(){
+    var list = unlockedShapes();
+    return Promise.all(list.map(function(l){
+      var copy = JSON.parse(JSON.stringify(l)); copy.locked = true;
+      return idbPut('locations', copy).then(function(){ var idx = state.locations.findIndex(function(x){ return x.id === copy.id; }); if (idx !== -1) state.locations[idx] = copy; });
+    })).then(function(){ renderCanvas(); return list.length; });
+  }
+  /* Run `next` once it's safe to leave Edit shapes: straight away if nothing is unlocked,
+     otherwise after you confirm locking everything. */
+  function guardLeaveEdit(next){
+    if (state.mode !== 'shape') return next();
+    var n = unlockedShapes().length;
+    if (!n) return next();
+    openConfirm(n + ' shape' + (n === 1 ? ' is' : 's are') + ' still unlocked. Lock ' + (n === 1 ? 'it' : 'them') + ' in place before leaving Edit shapes?', function(){
+      return lockAllShapes().then(function(k){ toast('\uD83D\uDD12 Locked ' + k + ' shape' + (k === 1 ? '' : 's')); next(); });
+    }, {confirmLabel:'Lock & leave', cancelLabel:'Keep editing', title:'Lock your changes?'});
+  }
+
+  function setMode(mode, force){
+    if (state.mode === 'shape' && mode !== 'shape' && !force && unlockedShapes().length){
+      guardLeaveEdit(function(){ setMode(mode, true); });
+      return;
+    }
     if (inv.open) closeInventoryView();
     if (state.mode === 'shape' && state.selectedShapeId) applyZoomTransform(state.selectedRoomId ? getLocation(state.selectedRoomId) : null);
 
@@ -5109,7 +5379,8 @@
       if (state.activePanel){ state.activePanel.sort = els.panelSortSelect.value; renderPanel(); }
     });
     els.panelChips.addEventListener('click', function(e){
-      var c = e.target.closest('[data-panel-storage]'); if (c) setPanelStorageFilter(c.getAttribute('data-panel-storage'));
+      var c = e.target.closest('[data-panel-storage]'); if (c){ setPanelStorageFilter(c.getAttribute('data-panel-storage')); return; }
+      var bc = e.target.closest('[data-panel-bin]'); if (bc) setPanelBinFilter(bc.getAttribute('data-panel-bin'));
     });
     els.panelBody.addEventListener('click', function(e){
       if (e.target.closest('#emptyAddItemBtn')){
@@ -5150,11 +5421,18 @@
     /* Location label modal */
     els.locTypeRoomTab.addEventListener('click', function(){ setLocType('room'); });
     els.locTypeStorageTab.addEventListener('click', function(){ setLocType('storage'); });
+    els.locTypeBinTab.addEventListener('click', function(){ setLocType('bin'); });
     els.roomTypeGrid.addEventListener('click', function(e){
       var btn = e.target.closest('.type-btn');
       if (!btn || !workingLocation) return;
       var key = btn.getAttribute('data-type');
-      if (workingLocation.type === 'storage'){
+      if (workingLocation.type === 'bin'){
+        selectedBinIconType = key;
+        if (!els.roomNameInput.value.trim()){
+          var bt = BIN_TYPES.find(function(t){ return t.key === key; });
+          if (bt) els.roomNameInput.value = bt.label;
+        }
+      } else if (workingLocation.type === 'storage'){
         selectedStorageIconType = key;
         if (!els.roomNameInput.value.trim()){
           var st = STORAGE_TYPES.find(function(t){ return t.key === key; });
@@ -5246,10 +5524,14 @@
 
       if (state.mode === 'label'){ openLabelModal(loc); return; }
 
-      if (loc.type === 'storage'){
+      if (loc.type === 'bin'){
+        /* tapping the selected bin again steps back out to its storage */
+        if (state.selectedBinId === locId && loc.parentId){ selectStorage(loc.parentId); return; }
+        selectBin(locId);
+      } else if (loc.type === 'storage'){
         selectStorage(locId);
       } else {
-        if (state.selectedRoomId === locId && !state.selectedStorageId){ deselectAll(); return; }
+        if (state.selectedRoomId === locId && !state.selectedStorageId && !state.selectedBinId){ deselectAll(); return; }
         selectRoom(locId);
       }
     });
@@ -5268,6 +5550,12 @@
       var shapeId = shapeEl.getAttribute('data-loc-id');
       var shape = getShapeTarget(shapeId);
       if (!shape) return;
+      /* padlock: toggle lock and stop here */
+      if (target.closest('[data-role="lock"]')){
+        e.preventDefault();
+        setShapeLocked(shape, !isLocked(shape));
+        return;
+      }
       var p = svgPoint(e);
       var selected = state.selectedShapeId === shape.id;
 
@@ -5305,7 +5593,7 @@
         /* A body click selects immediately but does not zoom. A movement turns the same gesture into a move. */
         if (state.selectedShapeId !== shape.id) resetEditZoomCycle();
         state.selectedShapeId = shape.id;
-        shapeDrag = {type:'selectOrMove', locId:shape.id, startX:p.x, startY:p.y, origPoints:clonePoints(shape.points), moved:false};
+        shapeDrag = {type:'selectOrMove', locId:shape.id, startX:p.x, startY:p.y, origPoints:clonePoints(shape.points), moved:false, locked:isLocked(shape)};
         renderCanvas(); updateBackBtn();
       }
       try { els.canvasSvg.setPointerCapture(e.pointerId); } catch(err){}
@@ -5320,6 +5608,16 @@
 
       var p = svgPoint(e);
       var dx = p.x - shapeDrag.startX, dy = p.y - shapeDrag.startY;
+      /* locked shapes stay put; say why once per drag */
+      if (shapeDrag.locked){
+        if (!shapeDrag.warned && (Math.abs(dx) > 6 || Math.abs(dy) > 6)){
+          shapeDrag.warned = true; shapeDrag.moved = true;
+          toast('\u201c' + displayName(shape) + '\u201d is locked \u2014 click its padlock to unlock it first');
+          var lockEl = els.roomsGroup.querySelector('.location[data-loc-id="' + shape.id + '"] .shape-lock');
+          if (lockEl){ lockEl.classList.remove('nudge'); void lockEl.getBoundingClientRect(); lockEl.classList.add('nudge'); }
+        }
+        return;
+      }
       if (Math.abs(dx) > 2 || Math.abs(dy) > 2){
         shapeDrag.moved = true;
         if (shapeDrag.type === 'selectOrMove') shapeDrag.type = 'move';
@@ -5368,6 +5666,7 @@
       var shape = getShapeTarget(ds.locId);
       if (!shape) return;
 
+      if (ds.locked){ if (!ds.moved){ clickZoomToShape(shape); renderCanvas(); updateBackBtn(); } return; }
       if (!ds.moved){
         /* A plain click on the added-point marker already inserted a point in memory — save it.
            (Before, it was never written to the database, so it vanished on reload/sync.) */
@@ -5423,6 +5722,12 @@
 
     els.addRoomShapeBtn.addEventListener('click', function(){ addNewLocation('room'); });
     els.addStorageShapeBtn.addEventListener('click', function(){ addNewLocation('storage'); });
+    els.addBinShapeBtn.addEventListener('click', function(){ addNewLocation('bin'); });
+    els.lockAllBtn.addEventListener('click', function(){ lockAllShapes().then(function(n){ if (n) toast('\uD83D\uDD12 Locked ' + n + ' shape' + (n === 1 ? '' : 's')); renderCanvas(); }); });
+    /* closing the tab while shapes are unlocked in Edit shapes: let the browser ask */
+    window.addEventListener('beforeunload', function(e){
+      if (state.mode === 'shape' && unlockedShapes().length){ e.preventDefault(); e.returnValue = ''; }
+    });
     els.undoShapeBtn.addEventListener('click', undoShapeEdit);
     document.addEventListener('keydown', function(e){
       if (!(e.key === 'z' || e.key === 'Z') || !(e.ctrlKey || e.metaKey) || e.shiftKey) return;
@@ -6249,6 +6554,7 @@
   var LABEL_FONTS = {
     room:    {size:16,   weight:700, family:"'IBM Plex Sans','Segoe UI',system-ui,sans-serif", lh:18,   padX:8, padY:5, rx:7},
     storage: {size:13,   weight:600, family:"'IBM Plex Mono',Consolas,monospace",               lh:15,   padX:7, padY:4, rx:3},
+    bin:     {size:11,   weight:600, family:"'IBM Plex Mono',Consolas,monospace",               lh:13,   padX:6, padY:3, rx:6},
     count:   {size:11,   weight:500, family:"'IBM Plex Mono',Consolas,monospace",               lh:13}
   };
   var measureCtx = null, measureCache = {};
@@ -6275,15 +6581,16 @@
     return best.lines;
   }
   function labelSpec(loc){
-    var isRoom = loc.type === 'room', f = isRoom ? LABEL_FONTS.room : LABEL_FONTS.storage;
-    var lines = wrapTwoLines(loc.name || (isRoom ? 'Unnamed room' : 'Unnamed storage'), f);
+    var isRoom = loc.type === 'room', isBin = loc.type === 'bin';
+    var f = isRoom ? LABEL_FONTS.room : (isBin ? LABEL_FONTS.bin : LABEL_FONTS.storage);
+    var lines = wrapTwoLines(loc.name || (isRoom ? 'Unnamed room' : (isBin ? 'Unnamed bin' : 'Unnamed storage')), f);
     var countLine = null;
     if (isRoom){ var c = computeLocationTotalCount(loc); countLine = c + ' item' + (c === 1 ? '' : 's'); }
     var widths = lines.map(function(l){ return measureText(l, f); });
     if (countLine) widths.push(measureText(countLine, LABEL_FONTS.count));
     /* Divide through by the zoom so a label keeps the same size on screen however far you zoom in. */
     var z = Math.max(1, currentZoom);
-    return {loc:loc, isRoom:isRoom, f:f, lines:lines, countLine:countLine, unnamed:!loc.name, z:z,
+    return {loc:loc, isRoom:isRoom, isBin:isBin, f:f, lines:lines, countLine:countLine, unnamed:!loc.name, z:z,
             size: f.size / z, lh: f.lh / z, countSize: LABEL_FONTS.count.size / z, countLh: LABEL_FONTS.count.lh / z,
             padX: f.padX / z, padY: f.padY / z, rx: f.rx / z,
             w: (Math.max.apply(null, widths) + f.padX * 2) / z,
@@ -6384,6 +6691,7 @@
   function labelShouldShow(loc){
     if (state.mode !== 'view') return true;
     if (loc.type === 'room') return loc.id === state.selectedRoomId || loc.id === hoverRoomId;
+    if (loc.type === 'bin') return loc.id === state.selectedBinId || (loc.parentId === state.selectedStorageId && !!state.selectedStorageId);
     return loc.id === state.selectedStorageId;
   }
   function labelMarkup(s){
@@ -6396,7 +6704,7 @@
     if (s.countLine){
       out += '<text class="label-count" x="' + cx.toFixed(1) + '" y="' + (y + (s.lines.length - 1) * s.lh + s.countLh).toFixed(1) + '" text-anchor="middle" style="font-size:' + s.countSize.toFixed(2) + 'px; stroke-width:' + halo.toFixed(2) + 'px">' + escapeHtml(s.countLine) + '</text>';
     }
-    return '<g class="map-label ' + (s.isRoom ? 'room-label' : 'storage-label') + (s.unnamed ? ' unnamed' : '') +
+    return '<g class="map-label ' + (s.isRoom ? 'room-label' : (s.isBin ? 'bin-label' : 'storage-label')) + (s.unnamed ? ' unnamed' : '') +
            (labelShouldShow(s.loc) ? ' show' : '') + '" data-label-for="' + s.loc.id + '">' + out + '</g>';
   }
   function renderLabels(){
@@ -6419,9 +6727,16 @@
       var r = placeLabel(s, fixed.concat(placedRooms, avoidStorages ? placedStorages : []));
       placedStorages.push(r);
     });
-    /* storage tags draw above room plates */
+    /* bins: small teal tags, placed last so they avoid everything above them */
+    var placedBins = [];
+    state.locations.filter(function(l){ return l.type === 'bin'; }).sort(areaDesc).forEach(function(loc){
+      var s = labelSpec(loc); specs.push(s);
+      placedBins.push(placeLabel(s, fixed.concat(placedRooms, placedStorages, avoidStorages ? placedBins : [])));
+    });
+    /* storage tags draw above room plates, bin tags above those */
     els.labelsGroup.innerHTML = specs.filter(function(s){ return s.isRoom; }).map(labelMarkup).join('') +
-                                specs.filter(function(s){ return !s.isRoom; }).map(labelMarkup).join('');
+                                specs.filter(function(s){ return !s.isRoom && !s.isBin; }).map(labelMarkup).join('') +
+                                specs.filter(function(s){ return s.isBin; }).map(labelMarkup).join('');
   }
   function setHoverRoom(id){
     if (id === hoverRoomId) return;
@@ -6636,14 +6951,15 @@
         iconKey: o.iconKey != null ? o.iconKey : seed.iconKey,
         parentId: o.parentId !== undefined ? o.parentId : seed.parentId,
         points: (o.points && o.points.length >= 3) ? o.points : seed.points,
-        pattern: o.pattern || null, patternOpacity: o.patternOpacity != null ? o.patternOpacity : null
+        pattern: o.pattern || null, patternOpacity: o.patternOpacity != null ? o.patternOpacity : null,
+        locked: o.locked
       });
     });
     overrides.forEach(function(o){
       if (seedIds[o.id]) return;
       if (o.deleted) return;
       if (!o.points || o.points.length < 3) return;
-      if (o.type && o.type !== 'room' && o.type !== 'storage') return;   /* e.g. leftover furniture records */
+      if (o.type && o.type !== 'room' && o.type !== 'storage' && o.type !== 'bin') return;   /* e.g. leftover furniture records */
       /* Keep any extra fields (e.g. a custom piece's size) instead of silently dropping them. */
       out.push(Object.assign({}, o, {
         id: o.id, type: o.type || 'room', name: o.name != null ? o.name : null,
@@ -6904,20 +7220,17 @@
     if (it.quantity === 0 || it.quantity === '0') return 0;
     return Number(it.quantity) || 1;
   }
-  var quick = {open:false, roomId:null, storageId:'', query:''};
-  function quickRoomItems(roomId){
-    var ids = {}; ids[roomId] = true;
-    locationChildren(roomId).forEach(function(c){ ids[c.id] = true; });
-    return state.items.filter(function(i){ return ids[i.locationId]; });
-  }
+  var quick = {open:false, roomId:null, storageId:'', binId:'', query:''};
+  function quickRoomItems(roomId){ return itemsIn(getLocation(roomId)); }
   function isPhoneLike(){
     try { return window.matchMedia('(max-width: 700px) and (pointer: coarse)').matches; } catch(e){ return false; }
   }
   function openQuick(roomId){
+    if (state.mode === 'shape' && unlockedShapes().length){ guardLeaveEdit(function(){ setMode('view', true); openQuick(roomId); }); return; }
     if (els.qvAdd) els.qvAdd.hidden = true;
     var room = roomId ? getLocation(roomId) : null;
     if (roomId && (!room || room.type !== 'room')){ toast('That room isn’t on this device yet — connect Sync, then scan again', 'error'); roomId = null; }
-    quick.open = true; quick.roomId = roomId || null; quick.storageId = ''; quick.query = '';
+    quick.open = true; quick.roomId = roomId || null; quick.storageId = ''; quick.binId = ''; quick.query = '';
     els.qvSearch.value = '';
     closePanel(); if (inv.open) closeInventoryView();
     document.body.classList.add('quick-open');
@@ -6938,15 +7251,19 @@
     renderCanvas(); renderStats();
   }
   function quickRowMarkup(it){
-    var q = qtyOf(it), used = !!it.usedAt || q === 0, loc = getLocation(it.locationId);
-    var where = loc && loc.type === 'storage' ? displayName(loc) : '';
+    var q = qtyOf(it), used = !!it.usedAt || q === 0, ch = itemPlace(it);
+    /* where inside the current filter: "Closet › Tub" in All, "Tub" inside a storage, nothing inside a bin */
+    var parts = [];
+    if (!quick.storageId && ch.storage) parts.push(displayName(ch.storage));
+    if (!quick.binId && ch.bin) parts.push(displayName(ch.bin));
+    var where = quick.storageId === '__room' ? '' : parts.join(' \u203A ');
     var status = getItemExpiryStatus(it);
     var badge = status === 'expired' ? '<span class="badge badge-bad">Expired ' + fmtDate(it.expirationDate) + '</span>'
               : status === 'expiring' ? '<span class="badge badge-warn">Expires ' + fmtDate(it.expirationDate) + '</span>' : '';
     return '<div class="qv-row' + (used ? ' used' : '') + '" data-item-id="' + it.id + '" style="--cat:' + categoryColor(it.category) + '">' +
       '<div class="qv-info"><div class="qv-name">' + escapeHtml(it.name) + '</div>' +
         '<div class="qv-meta">' + (quick.roomId ? '' : '<span>' + escapeHtml(locationPath(it)) + '</span>') +
-          (where && quick.roomId && !quick.storageId ? '<span>' + escapeHtml(where) + '</span>' : '') +
+          (where && quick.roomId ? '<span>' + escapeHtml(where) + '</span>' : '') +
           '<span>' + escapeHtml(it.category || CATEGORY_FALLBACK) + '</span>' + (used ? '<span class="badge badge-used">Used up</span>' : badge) + '</div></div>' +
       '<div class="qv-qty">' + q + '<small>left</small></div>' +
       '<button type="button" class="qv-btn restock' + (used ? ' wide' : '') + '" data-qv="restock" aria-label="Restock ' + escapeHtml(it.name) + '">' +
@@ -6987,16 +7304,37 @@
     var active = function(list){ return list.filter(function(i){ return !i.usedAt && qtyOf(i) > 0; }).length; };
     var loose = all.filter(function(i){ return i.locationId === room.id; });
     var chips = [{id:'', label:'All', n: active(all)}];
-    stores.forEach(function(st){ chips.push({id: st.id, label: displayName(st), n: active(all.filter(function(i){ return i.locationId === st.id; }))}); });
+    stores.forEach(function(st){ chips.push({id: st.id, label: displayName(st), n: active(itemsIn(st))}); });
     if (loose.length && stores.length) chips.push({id:'__room', label:'Loose in room', n: active(loose)});
     if (quick.storageId && !chips.some(function(c){ return c.id === quick.storageId; })) quick.storageId = '';
     els.qvChips.innerHTML = stores.length ? chips.map(function(c){
       return '<button type="button" class="qv-chip' + (c.id === quick.storageId ? ' active' : '') + '" data-storage="' + c.id + '" role="tab" aria-selected="' + (c.id === quick.storageId) + '">' +
         escapeHtml(c.label) + '<span class="n">' + c.n + '</span></button>';
     }).join('') : '';
+    /* second tier: the bins inside the selected storage (same rules, one level down) */
+    var selStore = quick.storageId && quick.storageId !== '__room' ? getLocation(quick.storageId) : null;
+    var storeItems = selStore ? itemsIn(selStore) : [];
+    var bins = selStore ? binChildren(selStore.id).filter(function(b){ return b.name || storeItems.some(function(i){ return i.locationId === b.id; }); })
+      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); }) : [];
+    var storeLoose = storeItems.filter(function(i){ return selStore && i.locationId === selStore.id; });
+    var binChips = [];
+    if (bins.length){
+      binChips.push({id:'', label:'All in ' + displayName(selStore), n: active(storeItems)});
+      bins.forEach(function(b){ binChips.push({id: b.id, label: displayName(b), n: active(storeItems.filter(function(i){ return i.locationId === b.id; }))}); });
+      if (storeLoose.length) binChips.push({id:'__storage', label:'Loose in ' + displayName(selStore), n: active(storeLoose)});
+    }
+    if (quick.binId && !binChips.some(function(c){ return c.id === quick.binId; })) quick.binId = '';
+    els.qvBinChips.innerHTML = binChips.map(function(c){
+      return '<button type="button" class="qv-chip bin' + (c.id === quick.binId ? ' active' : '') + '" data-bin="' + c.id + '" role="tab" aria-selected="' + (c.id === quick.binId) + '">' +
+        escapeHtml(c.label) + '<span class="n">' + c.n + '</span></button>';
+    }).join('');
     var list = all;
     if (quick.storageId === '__room') list = loose;
-    else if (quick.storageId) list = all.filter(function(i){ return i.locationId === quick.storageId; });
+    else if (selStore){
+      list = storeItems;
+      if (quick.binId === '__storage') list = storeLoose;
+      else if (quick.binId) list = storeItems.filter(function(i){ return i.locationId === quick.binId; });
+    }
     if (q) list = list.filter(function(i){ return itemSearchScore(i, pq) > 0; });
     var inStock = list.filter(function(i){ return !i.usedAt && qtyOf(i) > 0; }), usedUp = list.filter(function(i){ return i.usedAt || qtyOf(i) === 0; });
     var byName = function(a, b){ return String(a.name).localeCompare(String(b.name)); };
@@ -7005,7 +7343,8 @@
       return sa - sb || byName(a, b);
     });
     usedUp.sort(byName);
-    var storeName = quick.storageId === '__room' ? 'Loose in room' : (quick.storageId ? displayName(getLocation(quick.storageId)) : '');
+    var storeName = quick.storageId === '__room' ? 'Loose in room' : (selStore ? displayName(selStore) : '');
+    if (selStore && quick.binId) storeName += ' \u203A ' + (quick.binId === '__storage' ? 'loose' : displayName(getLocation(quick.binId)));
     els.qvSub.textContent = (storeName ? storeName + ' · ' : '') + inStock.length + ' in stock' + (usedUp.length ? ' · ' + usedUp.length + ' used up' : '');
     if (!list.length){
       els.qvBody.innerHTML = '<div class="qv-empty">' + (q ? 'No items match “' + escapeHtml(q) + '” here.' : 'Nothing stored here yet.') + '</div>';
@@ -7084,7 +7423,11 @@
     });
     els.qvChips.addEventListener('click', function(e){
       var c = e.target.closest('[data-storage]'); if (!c) return;
-      quick.storageId = c.getAttribute('data-storage'); renderQuick(); els.qvBody.scrollTop = 0;
+      quick.storageId = c.getAttribute('data-storage'); quick.binId = ''; renderQuick(); els.qvBody.scrollTop = 0;
+    });
+    els.qvBinChips.addEventListener('click', function(e){
+      var c = e.target.closest('[data-bin]'); if (!c) return;
+      quick.binId = c.getAttribute('data-bin'); renderQuick(); els.qvBody.scrollTop = 0;
     });
     els.qvBody.addEventListener('click', function(e){
       var r = e.target.closest('[data-room]');
@@ -7178,7 +7521,14 @@
     var all = quickRoomItems(room.id);
     var stores = locationChildren(room.id).filter(function(st){ return st.name || all.some(function(i){ return i.locationId === st.id; }); })
       .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
-    return stores.map(function(st){ return {id: st.id, label: displayName(st)}; }).concat([{id: room.id, label: stores.length ? 'Loose in room' : displayName(room)}]);
+    var out = [];
+    stores.forEach(function(st){
+      out.push({id: st.id, label: displayName(st)});
+      binChildren(st.id).filter(function(b){ return b.name || all.some(function(i){ return i.locationId === b.id; }); })
+        .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); })
+        .forEach(function(b){ out.push({id: b.id, label: displayName(st) + ' \u203A ' + displayName(b)}); });
+    });
+    return out.concat([{id: room.id, label: stores.length ? 'Loose in room' : displayName(room)}]);
   }
   function quickAddMatch(name, locationId){
     var n = normText(name);
@@ -7191,7 +7541,8 @@
     var spots = quickAddSpots(room);
     els.qvAddTitle.textContent = 'Add to ' + displayName(room);
     els.qvAddWhere.innerHTML = spots.map(function(sp){ return '<option value="' + sp.id + '">' + escapeHtml(sp.label) + '</option>'; }).join('');
-    var pick = (quick.storageId && quick.storageId !== '__room') ? quick.storageId : (quick.storageId === '__room' ? room.id : quickAddWhere[room.id]);
+    var pick = (quick.binId && quick.binId !== '__storage') ? quick.binId :
+               (quick.storageId && quick.storageId !== '__room') ? quick.storageId : (quick.storageId === '__room' ? room.id : quickAddWhere[room.id]);
     els.qvAddWhere.value = spots.some(function(sp){ return sp.id === pick; }) ? pick : spots[0].id;
     var names = categoryNames();
     els.qvAddCat.innerHTML = names.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('');
