@@ -8,6 +8,9 @@
 <title>The S.H.I.T.S.™</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Lucide icons (ISC license) — pinned version so an update can't change or remove icons.
+     If this fails to load (offline, opened without internet), the app falls back to its built-in icons. -->
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.8.0/dist/umd/lucide.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   /* ---------- Tokens ---------- */
@@ -345,7 +348,7 @@
     position:relative;
   }
   .icon-btn svg{width:17px; height:17px;}
-  .icon-btn svg path,.icon-btn svg line,.icon-btn svg polyline{stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .icon-btn svg path,.icon-btn svg line,.icon-btn svg polyline,.icon-btn svg rect,.icon-btn svg circle{stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round;}
   .icon-btn:hover{border-color:var(--accent); color:var(--accent-strong);}
   .icon-btn.danger:hover{border-color:var(--bad); color:var(--bad);}
   .sync-chip{
@@ -1166,7 +1169,7 @@
 
   .location-icon-bg{fill:rgba(255,255,255,0.72); pointer-events:none;}
   .location-icon{color:var(--room-text); opacity:.85; pointer-events:none;}
-  .location-icon rect,.location-icon circle,.location-icon line,.location-icon polyline,.location-icon path{
+  .location-icon *{
     stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;
   }
   .location-label,.location-sublabel,.location-placeholder{
@@ -1217,6 +1220,10 @@
     stroke:#2D6CDF; stroke-width:2.4; stroke-dasharray:none;
     filter:drop-shadow(0 0 3px rgba(45,108,223,0.85));
   }
+  /* The selected shape is drawn on top of everything (so its handles can be grabbed). Keep its
+     fill clear so it doesn't wash over the storage patterns inside it — outline + glow only. */
+  .blueprint-svg.mode-shape .location.shape-selected .location-poly,
+  .blueprint-svg.mode-shape .location.shape-selected .location-poly:hover{fill:transparent !important;}
 
   .shape-vertex{fill:#2D6CDF; stroke:#fff; stroke-width:1.5; cursor:grab;}
   .shape-vertex:hover{fill:#1B4FA8;}
@@ -1224,26 +1231,16 @@
   .shape-vertex-add:hover{opacity:1; fill:#2D6CDF;}
   .shape-rotate-handle{fill:var(--panel-bg); stroke:#7B61A8; stroke-width:1.6; cursor:grab;}
   .shape-rotate-handle:hover{fill:#7B61A8; color:#fff;}
-  .fixture-shape{cursor:move;}
-  .fixture-shape polygon{stroke:#4B5563; stroke-width:1.5;}
-  .fixture-shape.selected polygon{stroke:#7B61A8; stroke-width:2.4; filter:drop-shadow(0 0 4px rgba(123,97,168,.55));}
-  .fixture-label{display:none;}
-  .furniture-library{position:absolute; right:34px; bottom:92px; width:min(430px, calc(100% - 28px)); background:var(--panel-bg); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:12px; display:none; z-index:5;}
-  .furniture-library.open{display:block;}
-  .furniture-library-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
-  .furniture-library-head strong{font-family:var(--font-display); font-size:15px;}
-  .furniture-library-controls{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;}
-  .furniture-library-controls label{display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-soft);}
-  .furniture-library-controls select,.furniture-library-controls input[type=color]{width:100%; height:34px; border:1px solid var(--line); border-radius:8px; background:var(--paper-alt);}
-  .furniture-library-controls input[type=color]{padding:3px;}
-  .fixture-grid{display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:7px; max-height:300px; overflow:auto;}
-  .fixture-pick{min-width:0; aspect-ratio:1.22; border:1px solid var(--line); background:var(--paper-alt); border-radius:9px; padding:5px; cursor:pointer; color:var(--ink); text-align:center; display:flex; align-items:center; justify-content:center; transition:transform .12s ease,border-color .12s ease,background .12s ease;}
-  .fixture-pick:hover{border-color:var(--accent); background:var(--panel-bg); transform:translateY(-1px);}
-  .fixture-pick svg{display:block; width:100%; height:100%; max-height:54px;}
-  .fixture-pick span{display:none;}
-  .fixture-art{filter:drop-shadow(0 1px 1px rgba(27,36,48,.18));}
-  .fixture-shape polygon{vector-effect:non-scaling-stroke;}
-  .fixture-selection-actions{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;}
+
+  /* ---- Review fixes ---- */
+  /* invFlash existed but nothing used it. */
+  .inv-row.flash,.item-card.flash{animation:invFlash 1.6s ease-out;}
+  @keyframes shapeFlash{0%{opacity:.35} 100%{opacity:1}}
+  .location.flash .location-poly{animation:shapeFlash .7s ease-out;}
+  .location.flash .location-poly{stroke:#7B61A8 !important; stroke-width:2.4;}
+  .location.vanishing{opacity:.25; transition:opacity .2s ease;}
+  @keyframes listIn{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+  .list-in > *{animation:listIn .22s ease-out both;}
 
   /* ---------- Side panel ---------- */
   .side-panel{
@@ -1273,9 +1270,28 @@
   .item-card:hover,.item-card:focus-visible{border-color:var(--accent);}
   .item-photo{width:58px; height:58px; border-radius:8px; overflow:hidden; flex:0 0 auto; background:var(--panel-bg); display:flex; align-items:center; justify-content:center; border:1px solid var(--line);}
   .item-photo img{width:100%; height:100%; object-fit:cover;}
-  .item-icon-thumb{width:100%; height:100%; display:flex; align-items:center; justify-content:center;}
-  .item-icon-thumb svg{width:58%; height:58%;}
-  .item-icon-thumb svg *{stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  /* ---- Category color coding ---- */
+  .item-card,.inv-row{border-left:5px solid var(--cat, var(--line)) !important;}
+  .tag.cat-tag{display:inline-flex; align-items:center; gap:5px; color:var(--ink); border-color:color-mix(in srgb, var(--cat) 55%, transparent); background:color-mix(in srgb, var(--cat) 16%, var(--panel-bg));}
+  .cat-dot{width:9px; height:9px; border-radius:50%; background:var(--cat); flex:0 0 auto; display:inline-block;}
+  .inv-row-main.no-thumb{grid-template-columns:minmax(0,1fr) auto;}
+  .inv-detail.no-thumb{padding-left:14px;}
+  .item-used{opacity:.62;}
+  .badge-used{background:var(--paper-alt); color:var(--ink-soft); border:1px solid var(--line);}
+  .cat-legend{display:flex; flex-wrap:wrap; gap:6px; margin:-4px 0 12px;}
+  .cat-chip{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; padding:4px 10px; border-radius:999px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); cursor:pointer;}
+  .cat-chip .n{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-soft);}
+  .cat-chip:hover{border-color:var(--cat, var(--accent));}
+  .cat-chip.active{border-color:var(--cat, var(--accent)); background:color-mix(in srgb, var(--cat, var(--accent)) 18%, var(--panel-bg)); font-weight:600;}
+  .cat-rows{display:flex; flex-direction:column; gap:6px; margin:10px 0 12px; max-height:52vh; overflow:auto;}
+  .cat-row{display:grid; grid-template-columns:42px minmax(0,1fr) auto 32px; gap:8px; align-items:center;}
+  .cat-row input[type=color]{width:42px; height:34px; padding:2px; border:1px solid var(--line); border-radius:8px; background:var(--paper-alt); cursor:pointer;}
+  .cat-row input[type=text]{padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); min-width:0;}
+  .cat-row .cat-count{font-size:12px; color:var(--ink-soft); font-family:var(--font-mono); white-space:nowrap;}
+  .field-row-label{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .small-link{font-size:12px; padding:0; background:none; border:none; color:var(--accent-strong); cursor:pointer; text-decoration:underline;}
+  .visual-preview .no-photo{font-size:11px; color:var(--ink-soft);}
+  .email-card{margin-top:10px;}
   .item-info{flex:1; min-width:0;}
   .item-name{font-weight:600; overflow-wrap:anywhere;}
   .item-qty{color:var(--ink-soft); font-weight:500; font-family:var(--font-mono); font-size:12.5px;}
@@ -1309,6 +1325,8 @@
     position:fixed; inset:0; background:rgba(15,18,22,0.45); display:none; align-items:center; justify-content:center;
     z-index:1000; padding:20px;
   }
+  /* confirmations can be raised from inside another dialog (e.g. Categories), so keep them on top */
+  #confirmModalOverlay{z-index:1010;}
   .modal-overlay.open{display:flex;}
   .modal{
     background:var(--panel-bg); border-radius:14px; width:100%; max-width:480px; max-height:88vh;
@@ -1397,12 +1415,109 @@
   .span-2{grid-column:1 / -1;}
 
   /* ---------- Toast ---------- */
-  .toast-container{position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:100; display:flex; flex-direction:column; gap:8px; align-items:center;}
+  .toast-container{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:1100; max-width:calc(100vw - 24px); display:flex; flex-direction:column; gap:8px; align-items:center;}
   .toast{
     background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:999px; font-size:13.5px;
     opacity:0; transform:translateY(8px); transition:opacity .2s ease, transform .2s ease; box-shadow:var(--shadow);
   }
   .toast.show{opacity:1; transform:translateY(0);}
+  .toast{display:flex; align-items:center; gap:12px;}
+  .toast-action{background:none; border:none; color:var(--accent); font-weight:700; font-size:14px; cursor:pointer; padding:4px 2px; text-decoration:underline;}
+
+  /* ---------- Quick use (phones) ---------- */
+  .quick-view{position:fixed; inset:0; z-index:600; background:var(--paper); display:none; flex-direction:column; color:var(--ink);
+              padding-bottom:env(safe-area-inset-bottom);}
+  .quick-view.open{display:flex;}
+  body.quick-open{overflow:hidden;}
+  .qv-top{display:flex; align-items:center; gap:10px; padding:calc(10px + env(safe-area-inset-top)) 12px 10px; background:var(--panel-bg); border-bottom:1px solid var(--line);}
+  .qv-back{width:44px; height:44px; border-radius:12px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); display:flex; align-items:center; justify-content:center; flex:0 0 auto; cursor:pointer;}
+  .qv-back svg{width:22px; height:22px;} .qv-back polyline{stroke:currentColor; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .qv-title{flex:1; min-width:0;}
+  .qv-title h2{margin:0; font-family:var(--font-display); font-size:20px; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .qv-title p{margin:2px 0 0; font-size:12.5px; color:var(--ink-soft);}
+  .qv-sync{display:flex; align-items:center; gap:6px; height:36px; padding:0 10px; border-radius:999px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink-soft); font-size:12.5px; cursor:pointer; flex:0 0 auto;}
+  .qv-sync .sync-dot{width:8px; height:8px; border-radius:50%; background:var(--ink-soft);}
+  .qv-sync[data-status="synced"] .sync-dot{background:var(--good);}
+  .qv-sync[data-status="pending"] .sync-dot,.qv-sync[data-status="syncing"] .sync-dot{background:var(--accent); animation:syncPulse 1s infinite;}
+  .qv-sync[data-status="disconnected"],.qv-sync[data-status="error"]{border-color:var(--accent); color:var(--accent-strong); font-weight:600;}
+  .qv-sync[data-status="disconnected"] .sync-dot,.qv-sync[data-status="error"] .sync-dot{background:var(--bad);}
+  .qv-search{padding:10px 12px 4px;}
+  .qv-search input{width:100%; height:46px; padding:0 14px; border-radius:12px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-size:16px;}
+  .qv-chips{display:flex; gap:8px; overflow-x:auto; padding:8px 12px 10px; scrollbar-width:none; flex:0 0 auto;}
+  .qv-chips::-webkit-scrollbar{display:none;}
+  .qv-chips:empty{display:none;}
+  .qv-chip{flex:0 0 auto; height:40px; padding:0 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-size:14.5px; cursor:pointer; white-space:nowrap;}
+  .qv-chip .n{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); margin-left:4px;}
+  .qv-chip.active{background:var(--ink); color:var(--paper); border-color:var(--ink);} .qv-chip.active .n{color:inherit; opacity:.75;}
+  .qv-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:4px 12px 16px; display:flex; flex-direction:column; gap:8px;}
+  .qv-row{display:flex; align-items:center; gap:12px; min-height:72px; padding:8px 8px 8px 14px; border-radius:14px; background:var(--panel-bg);
+          border:1px solid var(--line); border-left:6px solid var(--cat, var(--line));}
+  .qv-row.used{opacity:.55;}
+  .qv-info{flex:1; min-width:0;}
+  .qv-name{font-size:17px; font-weight:600; line-height:1.2; overflow-wrap:anywhere;}
+  .qv-meta{font-size:12.5px; color:var(--ink-soft); margin-top:3px; display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center;}
+  .qv-meta .badge{margin-top:0;}
+  .qv-qty{font-family:var(--font-mono); font-size:20px; font-weight:600; min-width:34px; text-align:right;}
+  .qv-qty small{display:block; font-size:10px; font-weight:500; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;}
+  .qv-btn{flex:0 0 auto; width:64px; height:56px; border-radius:14px; border:none; font-size:22px; font-weight:700; font-family:var(--font-display);
+          background:var(--accent); color:#fff; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+          transition:transform .08s ease, filter .12s ease;}
+  .qv-btn:active{transform:scale(.93); filter:brightness(.9);}
+  .qv-btn.plus{background:var(--paper-alt); color:var(--ink); border:1px solid var(--line); font-size:19px;}
+  .qv-row.bump{animation:qvBump .35s ease;}
+  @keyframes qvBump{0%{background:color-mix(in srgb, var(--accent) 22%, var(--panel-bg));} 100%{background:var(--panel-bg);}}
+  .qv-section{font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:10px 2px 0;}
+  .qv-rooms{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:10px;}
+  .qv-room{min-height:84px; border-radius:14px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); text-align:left; padding:12px 14px; cursor:pointer; display:flex; flex-direction:column; justify-content:space-between;}
+  .qv-room b{font-size:17px; font-family:var(--font-display);} .qv-room span{font-size:12.5px; color:var(--ink-soft);}
+  .qv-empty{text-align:center; color:var(--ink-soft); padding:30px 10px; font-size:15px;}
+  .qv-addbtn{margin:0 12px 4px; height:56px; border-radius:14px; border:none; background:var(--ink); color:var(--paper); font-size:17px; font-weight:700; font-family:var(--font-display); cursor:pointer; flex:0 0 auto; touch-action:manipulation;}
+  .qv-addbtn[hidden]{display:none;}
+  .qv-addbtn:active{transform:scale(.98);}
+  .qv-add{position:absolute; inset:0; z-index:5; background:rgba(15,18,22,.45); display:flex; align-items:flex-start; justify-content:center; padding:calc(10px + env(safe-area-inset-top)) 10px 10px; overflow-y:auto;}
+  .qv-add[hidden]{display:none;}
+  .qv-add-panel{width:100%; max-width:520px; background:var(--panel-bg); border-radius:18px; padding:14px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px;}
+  .qv-add-head{display:flex; align-items:center; justify-content:space-between;}
+  .qv-add-head h3{margin:0; font-family:var(--font-display); font-size:19px;}
+  .qv-x{width:40px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); font-size:22px; line-height:1; cursor:pointer;}
+  .qv-in{width:100%; height:48px; padding:0 12px; border-radius:12px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); font-size:16px; font-family:inherit;}
+  #qvAddName{height:54px; font-size:18px;}
+  .qv-hint{font-size:13px; color:var(--good);}
+  .qv-hint:empty{display:none;}
+  .qv-add-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .qv-add-grid label{display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--ink-soft); min-width:0;}
+  .qv-add-grid em{font-style:normal; opacity:.8;}
+  .qv-stepper{display:flex; height:48px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--paper-alt);}
+  .qv-stepper button{width:48px; border:none; background:none; color:var(--ink); font-size:22px; cursor:pointer; touch-action:manipulation;}
+  .qv-stepper input{flex:1; min-width:0; border:none; background:none; text-align:center; font-size:18px; font-weight:600; color:var(--ink); -moz-appearance:textfield;}
+  .qv-stepper input::-webkit-inner-spin-button{display:none;}
+  .qv-exp-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .qv-exp-chips button{height:34px; padding:0 12px; border-radius:999px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); font-size:13px; cursor:pointer;}
+  .qv-exp-chips button.active{border-color:var(--accent); background:var(--warn-bg); color:var(--accent-strong); font-weight:600;}
+  .qv-add-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:2px;}
+  .qv-add-actions .btn{height:48px; font-size:15px; padding:0 16px;}
+  .qv-add-actions .btn-primary{min-width:96px;}
+  .qv-fullapp{border:none; background:none; color:var(--ink-soft); font-size:13px; padding:10px; text-decoration:underline; cursor:pointer;}
+
+  /* ---------- QR stickers ---------- */
+  .qr-controls{display:flex; flex-wrap:wrap; align-items:end; gap:14px; margin:10px 0;}
+  .qr-controls label{display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--ink-soft);}
+  .qr-controls select{padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink);}
+  .qr-pick{display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:8px; max-height:46vh; overflow:auto;}
+  .qr-pick label{display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--paper-alt); font-size:13.5px; cursor:pointer;}
+  .qr-pick svg{width:48px; height:48px; flex:0 0 auto; border-radius:4px;}
+  .print-sheet{display:none;}
+  @media print{
+    @page{margin:0.4in;}
+    body > *:not(#app){display:none !important;}
+    #app > *:not(.print-sheet){display:none !important;}
+    body, #app{background:#fff !important;}
+    .print-sheet{display:flex !important; flex-wrap:wrap; gap:0.2in; color:#000;}
+    .sticker{border:1px dashed #999; border-radius:0.12in; padding:0.1in; display:flex; flex-direction:column; align-items:center; text-align:center; break-inside:avoid; page-break-inside:avoid;}
+    .sticker svg{display:block;}
+    .sticker b{font-family:'Space Grotesk','Segoe UI',sans-serif; margin-top:0.05in; line-height:1.1;}
+    .sticker span{font-family:'IBM Plex Sans','Segoe UI',sans-serif; color:#444; margin-top:0.02in;}
+  }
   .toast-error{background:var(--bad);}
 
   /* ---------- Responsive ---------- */
@@ -1507,13 +1622,19 @@
         <svg viewBox="0 0 24 24"><path d="M12 15 L12 3 M7 8 L12 3 L17 8 M4 19 L20 19"/></svg>
       </label>
       <input type="file" id="importInput" accept="application/json,.json" hidden />
-      <button type="button" class="icon-btn" id="downloadTemplateBtn" title="Download a CSV template with your room and storage names" aria-label="Download CSV template">
+      <button type="button" class="icon-btn" id="exportCsvBtn" title="Download your inventory as a CSV file (opens in Excel/Sheets and can be imported back)" aria-label="Export inventory as CSV">
         <svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="1"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="10" y1="9" x2="10" y2="21"/><path d="M12 1 L12 7 M9 4 L12 7 L15 4"/></svg>
       </button>
       <label class="icon-btn" for="importCsvInput" title="Import items from a CSV file (Room, Storage, Item columns)" aria-label="Import items from CSV">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="10" y1="4" x2="10" y2="20"/></svg>
       </label>
       <input type="file" id="importCsvInput" accept="text/csv,.csv" hidden />
+      <button type="button" class="icon-btn" id="qrStickersBtn" title="Print QR stickers for your rooms (scan with a phone to log what you use)" aria-label="Print room QR stickers">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14 H17 V17 M21 14 V21 H17 M14 21 V18"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="quickOpenBtn" title="Quick use: tap −1 as you use things (made for phones)" aria-label="Open quick use">
+        <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      </button>
     </div>
   </header>
 
@@ -1929,7 +2050,6 @@
   </g>
 </g>
         <g id="roomsGroup"></g>
-        <g id="fixturesGroup"></g>
         <g id="labelsGroup"></g>
       </g>
     </svg>
@@ -1959,6 +2079,10 @@
             <option value="value">Value</option><option value="expiring">Expiring soonest</option><option value="updated">Recently changed</option>
           </select>
           <label class="inv-check"><input type="checkbox" id="invExpiring" /> Expiring soon</label>
+          <label class="inv-check"><input type="checkbox" id="invHideUsed" /> Hide used</label>
+          <button type="button" class="btn btn-ghost btn-sm" id="invCategoriesBtn">Categories…</button>
+        </div>
+        <div class="cat-legend" id="invLegend" aria-label="Filter by category">
         </div>
         <div class="inv-list" id="invList" role="list"></div>
       </div>
@@ -1974,30 +2098,9 @@
       </div>
       <button type="button" class="btn btn-primary btn-sm" id="addRoomShapeBtn">+ Add room</button>
       <button type="button" class="btn btn-primary btn-sm" id="addStorageShapeBtn">+ Add storage</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="furnitureLibraryBtn">Furniture</button>
       <button type="button" class="btn btn-ghost danger btn-sm" id="deleteShapeBtn" style="display:none">Delete selected</button>
     </div>
 
-    <section class="furniture-library" id="furnitureLibrary" aria-label="Furniture and appliance library">
-      <div class="furniture-library-head">
-        <strong>Furniture &amp; appliances</strong>
-        <button type="button" class="icon-btn" id="furnitureLibraryClose" aria-label="Close furniture library">×</button>
-      </div>
-      <div class="furniture-library-controls">
-        <label>Texture
-          <select id="fixtureTextureSelect"><option value="solid">Solid</option><option value="wood">Wood</option><option value="fabric">Fabric</option><option value="leather">Leather</option><option value="metal">Metal</option><option value="stainless">Brushed stainless</option><option value="porcelain">Porcelain</option><option value="tile">Square tile</option><option value="marble">Marble</option><option value="glass">Glass</option><option value="carpet">Carpet</option></select>
-        </label>
-        <label>Color
-          <input id="fixtureColorInput" type="color" value="#6B7280" aria-label="Furniture color" />
-        </label>
-      </div>
-      <div class="fixture-grid" id="fixtureGrid"></div>
-      <div class="fixture-selection-actions">
-        <button type="button" class="btn btn-ghost btn-sm" id="fixtureRotateLeft">↶ Rotate 15°</button>
-        <button type="button" class="btn btn-ghost btn-sm" id="fixtureRotateRight">↷ Rotate 15°</button>
-        <button type="button" class="btn btn-ghost btn-sm" id="fixtureApplyStyle">Apply style</button>
-      </div>
-    </section>
   </main>
 
   <aside class="side-panel" id="sidePanel" aria-hidden="true">
@@ -2100,6 +2203,10 @@
       </div>
       <div class="modal-body">
         <div id="notifyPermissionSection"></div>
+        <div class="permission-card email-card">
+          <div class="permission-text"><strong>Email reminders</strong>
+            <span>A weekly list every Sunday at 7 AM of anything expiring in the next 7 days, plus a final reminder the morning before each item expires. They're sent by a small script in your own Google account that reads your synced Drive data, so they arrive even when this app is closed. Items you mark as used are skipped.</span></div>
+        </div>
         <h3 class="rules-heading">Warning windows</h3>
         <p class="rules-hint">Set how many days before an item's expiration date it should start counting as "expiring soon." There's one default for everything, plus optional overrides per category.</p>
         <div id="ruleRows"></div>
@@ -2125,28 +2232,19 @@
         <div class="visual-field">
           <div class="visual-preview" id="itemVisualPreview"></div>
           <div class="visual-controls">
-            <div class="visual-tabs" role="tablist">
-              <button type="button" class="visual-tab" id="visualTabIcon" data-mode="icon" role="tab">Icon</button>
-              <button type="button" class="visual-tab" id="visualTabPhoto" data-mode="photo" role="tab">Photo</button>
-            </div>
-            <div id="iconPanel">
-              <div class="icon-grid" id="itemIconGrid"></div>
-              <div class="color-row" id="itemColorRow" style="margin-top:8px"></div>
-            </div>
-            <div id="photoPanel" style="display:none">
-              <div class="photo-actions">
-                <label class="btn btn-ghost btn-sm" for="itemPhotoInput">Upload photo</label>
-                <input type="file" id="itemPhotoInput" accept="image/*" hidden />
-                <button type="button" class="btn btn-ghost btn-sm" id="itemPhotoRemoveBtn" style="display:none">Remove</button>
-              </div>
+            <span class="field-label" style="margin:0">Photo <em class="field-hint">optional</em></span>
+            <div class="photo-actions">
+              <label class="btn btn-ghost btn-sm" for="itemPhotoInput">Upload photo</label>
+              <input type="file" id="itemPhotoInput" accept="image/*" hidden />
+              <button type="button" class="btn btn-ghost btn-sm" id="itemPhotoRemoveBtn" style="display:none">Remove</button>
             </div>
           </div>
         </div>
         <div class="form-grid">
           <label class="field span-2"><span>Name</span><input type="text" id="itemNameInput" maxlength="80" placeholder="e.g. Cordless drill" /></label>
-          <label class="field"><span>Category</span><select id="itemCategorySelect"></select></label>
-          <label class="field" id="itemCustomCategoryWrap" style="display:none"><span>Custom category</span><input type="text" id="itemCustomCategoryInput" maxlength="30" /></label>
-          <label class="field"><span>Quantity</span><input type="number" id="itemQtyInput" min="1" value="1" /></label>
+          <label class="field"><span class="field-row-label">Category <button type="button" class="link-btn small-link" id="itemEditCategoriesBtn">Edit list</button></span><select id="itemCategorySelect"></select></label>
+          <label class="field" id="itemCustomCategoryWrap" style="display:none"><span>New category name</span><input type="text" id="itemCustomCategoryInput" maxlength="30" placeholder="e.g. Camping" /></label>
+          <label class="field"><span>Quantity</span><input type="number" id="itemQtyInput" min="0" value="1" /></label>
           <label class="field"><span>Value ($)</span><input type="number" id="itemValueInput" min="0" step="0.01" placeholder="0.00" /></label>
           <label class="field"><span>Where in the room</span><input type="text" id="itemSubLocationInput" maxlength="60" placeholder="e.g. Top shelf, bin 3" /></label>
           <label class="field"><span>Purchased</span><input type="date" id="itemPurchaseInput" /></label>
@@ -2156,6 +2254,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost danger" id="itemDeleteBtn" style="display:none">Delete item</button>
+        <button type="button" class="btn btn-ghost" id="itemUsedBtn" style="display:none">Mark as used</button>
         <div class="spacer"></div>
         <button type="button" class="btn btn-ghost" data-close-modal="itemModalOverlay">Cancel</button>
         <button type="button" class="btn btn-primary" id="itemSaveBtn">Add item</button>
@@ -2173,6 +2272,28 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" data-close-modal="confirmModalOverlay">Cancel</button>
         <button type="button" class="btn btn-primary" id="confirmBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories modal -->
+  <div class="modal-overlay" id="catModalOverlay">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="catModalTitle">
+      <div class="modal-header">
+        <h2 id="catModalTitle">Categories</h2>
+        <button type="button" class="icon-btn" data-close-modal="catModalOverlay" aria-label="Close">
+          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="rules-hint">Each category's color is used to mark its items in the inventory. Renaming a category updates every item in it; removing one moves its items to “Other”.</p>
+        <div id="catRows" class="cat-rows"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="catAddBtn">+ Add category</button>
+      </div>
+      <div class="modal-footer">
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-ghost" data-close-modal="catModalOverlay">Cancel</button>
+        <button type="button" class="btn btn-primary" id="catSaveBtn">Save categories</button>
       </div>
     </div>
   </div>
@@ -2199,6 +2320,76 @@
       </div>
     </div>
   </div>
+
+  <!-- Quick use (phones): pick a room, tap −1 as you use things -->
+  <section class="quick-view" id="quickView" aria-label="Quick use" aria-hidden="true">
+    <div class="qv-top">
+      <button type="button" class="qv-back" id="qvBack" aria-label="Back">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15,5 8,12 15,19"/></svg>
+      </button>
+      <div class="qv-title"><h2 id="qvTitle">Quick use</h2><p id="qvSub"></p></div>
+      <button type="button" class="qv-sync" id="qvSync" data-status="off"><span class="sync-dot"></span><span id="qvSyncLabel">Sync</span></button>
+    </div>
+    <div class="qv-search"><input type="search" id="qvSearch" placeholder="Find an item…" autocomplete="off" aria-label="Find an item" /></div>
+    <div class="qv-chips" id="qvChips" role="tablist" aria-label="Storage in this room"></div>
+    <div class="qv-body" id="qvBody"></div>
+    <button type="button" class="qv-addbtn" id="qvAddBtn" hidden>+ Add item</button>
+    <button type="button" class="qv-fullapp" id="qvFullApp">Open the full map</button>
+    <div class="qv-add" id="qvAdd" hidden>
+      <form class="qv-add-panel" id="qvAddForm" autocomplete="off">
+        <div class="qv-add-head"><h3 id="qvAddTitle">Add to room</h3>
+          <button type="button" class="qv-x" id="qvAddClose" aria-label="Close">×</button></div>
+        <input type="text" id="qvAddName" class="qv-in" placeholder="What is it? e.g. Milk" maxlength="80" enterkeyhint="next" aria-label="Item name" />
+        <div class="qv-hint" id="qvAddHint"></div>
+        <div class="qv-add-grid">
+          <label>Where<select id="qvAddWhere" class="qv-in"></select></label>
+          <label>How many
+            <span class="qv-stepper"><button type="button" data-step="-1" aria-label="One less">−</button><input type="number" id="qvAddQty" inputmode="numeric" min="1" value="1" aria-label="Quantity" /><button type="button" data-step="1" aria-label="One more">+</button></span>
+          </label>
+          <label>Category<select id="qvAddCat" class="qv-in"></select></label>
+          <label>Expires<input type="date" id="qvAddExp" class="qv-in" /></label>
+        </div>
+        <div class="qv-exp-chips" id="qvExpChips">
+          <button type="button" data-days="3">3 days</button><button type="button" data-days="7">1 week</button>
+          <button type="button" data-days="14">2 weeks</button><button type="button" data-days="30">1 month</button><button type="button" data-days="0">No date</button>
+        </div>
+        <div class="qv-add-actions">
+          <button type="button" class="btn btn-ghost" id="qvAddNext">Add &amp; add another</button>
+          <button type="submit" class="btn btn-primary" id="qvAddSave">Add</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- QR sticker sheet -->
+  <div class="modal-overlay" id="qrModalOverlay">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
+      <div class="modal-header">
+        <h2 id="qrModalTitle">Room QR stickers</h2>
+        <button type="button" class="icon-btn" data-close-modal="qrModalOverlay" aria-label="Close">
+          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="rules-hint" id="qrIntro">Stick one in each room. Scanning it with a phone camera (Android or iPhone) opens that room’s storage and items: tap −1 when you use something, or + Add item when you put something away.</p>
+        <div id="qrWarn"></div>
+        <div class="qr-controls">
+          <label>Sticker size
+            <select id="qrSize"><option value="1.5">Small — 1.5 in</option><option value="2" selected>Medium — 2 in</option><option value="3">Large — 3 in</option></select>
+          </label>
+          <button type="button" class="link-btn small-link" id="qrAll">Select all</button>
+          <button type="button" class="link-btn small-link" id="qrNone">Select none</button>
+        </div>
+        <div class="qr-pick" id="qrPick"></div>
+      </div>
+      <div class="modal-footer">
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-ghost" data-close-modal="qrModalOverlay">Cancel</button>
+        <button type="button" class="btn btn-primary" id="qrPrintBtn">Print stickers</button>
+      </div>
+    </div>
+  </div>
+  <div class="print-sheet" id="printSheet" aria-hidden="true"></div>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 </div>
@@ -2281,114 +2472,105 @@
   ];
   STORAGE_ICONS.other = ROOM_ICONS.other;
 
-  var FIXTURE_LIBRARY = [
-    {key:'sofa',label:'Sofa',shape:[[0,17],[6,8],[22,4],[78,4],[94,10],[100,19],[100,60],[76,60],[76,52],[24,52],[24,60],[0,60]]},
-    {key:'sectional',label:'Sectional',shape:[[0,8],[58,8],[58,0],[100,0],[100,68],[58,68],[58,60],[0,60]]},
-    {key:'bed',label:'Bed',shape:[[4,4],[96,4],[96,66],[4,66]]},
-    {key:'dining-table',label:'Dining table',shape:[[12,6],[88,6],[88,56],[12,56]]},
-    {key:'desk',label:'Desk',shape:[[4,5],[96,5],[96,18],[61,18],[61,64],[4,64]]},
-    {key:'coffee-table',label:'Coffee table',shape:[[8,8],[92,8],[92,50],[8,50]]},
-    {key:'chair',label:'Chair',shape:[[20,2],[68,2],[84,14],[84,60],[16,60],[16,14]]},
-    {key:'dresser',label:'Dresser',shape:[[4,8],[96,8],[96,60],[4,60]]},
-    {key:'bookshelf',label:'Bookshelf',shape:[[8,3],[92,3],[92,67],[8,67]]},
-    {key:'cabinet',label:'Cabinet',shape:[[4,6],[96,6],[96,64],[4,64]]},
-    {key:'counter',label:'Counter',shape:[[2,8],[98,8],[98,60],[2,60]]},
-    {key:'refrigerator',label:'Refrigerator',shape:[[12,2],[88,2],[88,68],[12,68]]},
-    {key:'range',label:'Range',shape:[[10,3],[90,3],[90,67],[10,67]]},
-    {key:'dishwasher',label:'Dishwasher',shape:[[8,8],[92,8],[92,62],[8,62]]},
-    {key:'washer',label:'Washer/Dryer',shape:[[7,3],[93,3],[93,67],[7,67]]},
-    {key:'toilet',label:'Toilet',shape:[[26,3],[74,3],[80,18],[72,32],[68,48],[84,58],[82,68],[18,68],[16,58],[32,48],[28,32],[20,18]]},
-    {key:'tub',label:'Bathtub',shape:[[2,8],[98,8],[98,48],[88,61],[12,61],[2,48]]},
-    {key:'sink',label:'Sink',shape:[[8,8],[92,8],[92,60],[8,60]]},
-    {key:'shower',label:'Shower',shape:[[8,8],[92,8],[92,92],[8,92]]},
-    {key:'rug',label:'Rug',shape:[[3,3],[97,3],[97,67],[3,67]]},
-    {key:'workbench',label:'Workbench',shape:[[2,7],[98,7],[98,61],[2,61]]}
+  /* ---------------- Item categories ----------------
+     Each category has a color used to mark its items. The list is editable in the app
+     (Inventory > Categories) and syncs with Google Drive like the rest of your data. */
+  var DEFAULT_CATEGORIES = [
+    {name:'Perishable',          color:'#C0392B'},
+    {name:'Tools',               color:'#E67E22'},
+    {name:'Electronics',         color:'#2E86C1'},
+    {name:'Kitchenware',         color:'#16A085'},
+    {name:'Clothing',            color:'#8E44AD'},
+    {name:'Seasonal & Holiday',  color:'#C2185B'},
+    {name:'Documents & Records', color:'#5D6D7E'},
+    {name:'Sports & Outdoor',    color:'#27AE60'},
+    {name:'Cleaning Supplies',   color:'#00ACC1'},
+    {name:'Furniture',           color:'#8D6E63'},
+    {name:'Toys & Games',        color:'#F4B400'},
+    {name:'Automotive',          color:'#34495E'},
+    {name:'Garden & Yard',       color:'#7CB342'},
+    {name:'Pantry & Food',       color:'#D35400'},
+    {name:'Hardware',            color:'#7F8C8D'},
+    {name:'Other',               color:'#A0A7AD'}
   ];
-
-  /* Detailed bird's-eye furniture/appliance artwork.  These are deliberately kept as
-     clean vector details so the same shapes look good at small and large zoom levels. */
-  var FIXTURE_ICON_ART = {
-    sofa:'<path d="M10 31 C10 22 17 17 27 17 H73 C84 17 91 22 91 31 V48 H78 V35 H22 V48 H10 Z" fill="rgba(255,255,255,.10)" stroke="rgba(27,36,48,.52)" stroke-width="2"/><path d="M22 35 H78" stroke="rgba(255,255,255,.72)" stroke-width="2"/><line x1="27" y1="17" x2="27" y2="33" stroke="rgba(255,255,255,.42)" stroke-width="1.8"/><line x1="73" y1="17" x2="73" y2="33" stroke="rgba(255,255,255,.42)" stroke-width="1.8"/>',
-    sectional:'<path d="M10 12 H59 V7 H90 V63 H59 V58 H10 Z" fill="rgba(255,255,255,.10)" stroke="rgba(27,36,48,.52)" stroke-width="2"/><path d="M16 20 H53 V51 H16 Z" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.58)" stroke-width="1.8"/><line x1="59" y1="13" x2="59" y2="57" stroke="rgba(255,255,255,.58)" stroke-width="1.8"/>',
-    bed:'<rect x="8" y="9" width="84" height="52" rx="5" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.52)" stroke-width="2"/><rect x="13" y="14" width="74" height="18" rx="4" fill="rgba(255,255,255,.25)" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/><line x1="13" y1="34" x2="87" y2="34" stroke="rgba(27,36,48,.38)" stroke-width="1.6"/><path d="M20 40 Q50 31 80 40" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.4"/>',
-    'dining-table':'<rect x="15" y="10" width="70" height="46" rx="8" fill="rgba(255,255,255,.10)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><circle cx="27" cy="22" r="5" fill="rgba(255,255,255,.34)"/><circle cx="73" cy="22" r="5" fill="rgba(255,255,255,.34)"/><circle cx="27" cy="44" r="5" fill="rgba(255,255,255,.34)"/><circle cx="73" cy="44" r="5" fill="rgba(255,255,255,.34)"/><line x1="24" y1="14" x2="76" y2="52" stroke="rgba(255,255,255,.20)" stroke-width="1"/>',
-    desk:'<rect x="7" y="8" width="86" height="17" rx="2" fill="rgba(255,255,255,.10)" stroke="rgba(27,36,48,.52)" stroke-width="2"/><rect x="66" y="26" width="20" height="31" rx="2" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.55)" stroke-width="1.6"/><line x1="70" y1="34" x2="82" y2="34" stroke="rgba(255,255,255,.45)" stroke-width="1.4"/><line x1="70" y1="42" x2="82" y2="42" stroke="rgba(255,255,255,.45)" stroke-width="1.4"/>',
-    'coffee-table':'<rect x="9" y="8" width="82" height="44" rx="8" fill="rgba(255,255,255,.11)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><rect x="19" y="18" width="62" height="24" rx="4" fill="rgba(255,255,255,.13)" stroke="rgba(255,255,255,.46)" stroke-width="1.4"/>',
-    chair:'<rect x="24" y="12" width="52" height="40" rx="10" fill="rgba(255,255,255,.11)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><rect x="31" y="19" width="38" height="24" rx="8" fill="rgba(255,255,255,.18)"/><path d="M31 19 Q50 8 69 19" fill="none" stroke="rgba(255,255,255,.48)" stroke-width="2"/>',
-    dresser:'<rect x="8" y="8" width="84" height="52" rx="3" fill="rgba(255,255,255,.10)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><path d="M8 25 H92 M8 43 H92" stroke="rgba(255,255,255,.46)" stroke-width="1.6"/><circle cx="50" cy="17" r="2" fill="rgba(255,255,255,.75)"/><circle cx="50" cy="34" r="2" fill="rgba(255,255,255,.75)"/><circle cx="50" cy="51" r="2" fill="rgba(255,255,255,.75)"/>',
-    bookshelf:'<rect x="10" y="6" width="80" height="58" rx="2" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><path d="M12 23 H88 M12 41 H88 M12 59 H88" stroke="rgba(255,255,255,.52)" stroke-width="1.8"/><path d="M20 9 V20 M31 9 V20 M46 9 V20 M65 9 V20 M78 9 V20 M19 26 V38 M27 26 V38 M39 26 V38 M56 26 V38 M71 26 V38 M19 44 V56 M34 44 V56 M49 44 V56 M61 44 V56 M78 44 V56" stroke="rgba(255,255,255,.62)" stroke-width="3"/>',
-    cabinet:'<rect x="8" y="8" width="84" height="52" rx="3" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><line x1="50" y1="8" x2="50" y2="60" stroke="rgba(255,255,255,.52)" stroke-width="1.7"/><circle cx="46" cy="34" r="2.2" fill="rgba(255,255,255,.75)"/><circle cx="54" cy="34" r="2.2" fill="rgba(255,255,255,.75)"/>',
-    counter:'<rect x="5" y="9" width="90" height="48" rx="3" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><ellipse cx="28" cy="31" rx="15" ry="11" fill="rgba(255,255,255,.16)" stroke="rgba(255,255,255,.62)" stroke-width="1.8"/><path d="M28 20 V15 C28 12 33 12 35 15" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="2"/><circle cx="73" cy="22" r="6" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8"/><circle cx="73" cy="40" r="6" fill="none" stroke="rgba(255,255,255,.58)" stroke-width="1.8"/>',
-    refrigerator:'<rect x="16" y="5" width="68" height="60" rx="4" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.56)" stroke-width="2"/><line x1="16" y1="35" x2="84" y2="35" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/><line x1="69" y1="14" x2="69" y2="29" stroke="rgba(255,255,255,.7)" stroke-width="2.4"/><line x1="69" y1="41" x2="69" y2="57" stroke="rgba(255,255,255,.7)" stroke-width="2.4"/>',
-    range:'<rect x="14" y="5" width="72" height="60" rx="4" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.56)" stroke-width="2"/><circle cx="32" cy="22" r="9" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="2"/><circle cx="68" cy="22" r="9" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="2"/><circle cx="32" cy="47" r="9" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="2"/><circle cx="68" cy="47" r="9" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="2"/>',
-    dishwasher:'<rect x="9" y="8" width="82" height="54" rx="3" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.56)" stroke-width="2"/><line x1="14" y1="19" x2="86" y2="19" stroke="rgba(255,255,255,.55)" stroke-width="1.8"/><circle cx="76" cy="14" r="2" fill="rgba(255,255,255,.75)"/><path d="M28 31 H72 M28 40 H72 M28 49 H72" stroke="rgba(255,255,255,.34)" stroke-width="1.4"/>',
-    washer:'<rect x="8" y="5" width="84" height="60" rx="5" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.56)" stroke-width="2"/><circle cx="50" cy="37" r="20" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.65)" stroke-width="2"/><circle cx="50" cy="37" r="11" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1.4"/><circle cx="75" cy="14" r="2" fill="rgba(255,255,255,.75)"/>',
-    toilet:'<ellipse cx="50" cy="24" rx="23" ry="12" fill="rgba(255,255,255,.16)" stroke="rgba(27,36,48,.52)" stroke-width="2"/><path d="M31 32 C32 50 40 60 50 60 C60 60 68 50 69 32" fill="rgba(255,255,255,.20)" stroke="rgba(255,255,255,.7)" stroke-width="2"/><ellipse cx="50" cy="25" rx="12" ry="6" fill="none" stroke="rgba(27,36,48,.32)" stroke-width="1.4"/>',
-    tub:'<path d="M10 17 H90 V43 C90 54 79 61 65 61 H35 C20 61 10 53 10 43 Z" fill="rgba(255,255,255,.13)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><path d="M18 31 H82" stroke="rgba(255,255,255,.58)" stroke-width="1.8"/><circle cx="24" cy="23" r="3" fill="rgba(255,255,255,.7)"/>',
-    sink:'<rect x="9" y="9" width="82" height="52" rx="6" fill="rgba(255,255,255,.10)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><rect x="19" y="19" width="62" height="30" rx="10" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.58)" stroke-width="1.8"/><path d="M50 17 V12 C50 8 58 8 60 12" fill="none" stroke="rgba(255,255,255,.68)" stroke-width="2"/>',
-    shower:'<rect x="10" y="10" width="80" height="50" rx="2" fill="rgba(255,255,255,.06)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><path d="M18 18 H82 V52 H18 Z" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="1.6"/><circle cx="71" cy="23" r="5" fill="none" stroke="rgba(255,255,255,.68)" stroke-width="2"/><path d="M67 31 L63 43 M73 31 L69 43 M79 31 L75 43" stroke="rgba(255,255,255,.56)" stroke-width="1.6"/>',
-    rug:'<rect x="6" y="6" width="88" height="58" rx="4" fill="rgba(255,255,255,.07)" stroke="rgba(27,36,48,.52)" stroke-width="2"/><rect x="13" y="13" width="74" height="44" rx="2" fill="none" stroke="rgba(255,255,255,.46)" stroke-width="1.6" stroke-dasharray="4 3"/><path d="M18 18 H82 M18 52 H82" stroke="rgba(255,255,255,.24)" stroke-width="1.2"/>',
-    workbench:'<rect x="7" y="9" width="86" height="48" rx="2" fill="rgba(255,255,255,.08)" stroke="rgba(27,36,48,.54)" stroke-width="2"/><line x1="8" y1="27" x2="92" y2="27" stroke="rgba(255,255,255,.45)" stroke-width="1.6"/><rect x="14" y="32" width="22" height="18" rx="2" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.38)" stroke-width="1.3"/><rect x="64" y="32" width="22" height="18" rx="2" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.38)" stroke-width="1.3"/>'
-  };
-
-  var FIXTURE_TEXTURES = {solid:'Solid',wood:'Wood',fabric:'Fabric',leather:'Leather',metal:'Metal',stainless:'Brushed stainless',porcelain:'Porcelain',tile:'Square tile',marble:'Marble',glass:'Glass',carpet:'Carpet'};
-
-  var CATEGORIES = ['Tools','Electronics','Kitchenware','Clothing','Seasonal & Holiday','Documents & Records','Sports & Outdoor','Cleaning Supplies','Furniture','Toys & Games','Automotive','Garden & Yard','Pantry & Food','Hardware','Other'];
-
-  var ITEM_ICONS = {
-    other: '<rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/>',
-    tool: '<rect x="7" y="3" width="10" height="6" rx="1"/><rect x="10.5" y="9" width="3" height="12" rx="1"/>',
-    electronics: '<rect x="3" y="5" width="18" height="12" rx="1"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/>',
-    kitchenware: '<rect x="5" y="11" width="14" height="8" rx="2"/><line x1="3" y1="13" x2="5" y2="13"/><line x1="19" y1="13" x2="21" y2="13"/><line x1="9" y1="11" x2="9" y2="7"/><line x1="15" y1="11" x2="15" y2="7"/>',
-    book: '<rect x="4" y="4" width="16" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/>',
-    document: '<rect x="5" y="3" width="14" height="18" rx="1"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/>',
-    clothing: '<polyline points="8,4 12,7 16,4 20,8 17,11 17,20 7,20 7,11 4,8"/>',
-    shoe: '<polyline points="2,17 2,14 5,14 8,11 19,11 21,13 21,17"/><line x1="2" y1="17" x2="21" y2="17"/><line x1="8" y1="11" x2="8" y2="14"/>',
-    jewelry: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="12" x2="12" y2="9"/><line x1="12" y1="12" x2="14" y2="12"/><rect x="10" y="2" width="4" height="4" rx="1"/><rect x="10" y="18" width="4" height="4" rx="1"/>',
-    bag: '<rect x="4" y="8" width="16" height="12" rx="2"/><rect x="9" y="4" width="6" height="4" rx="1"/><line x1="4" y1="14" x2="20" y2="14"/>',
-    furniture: '<line x1="6" y1="3" x2="6" y2="21"/><line x1="6" y1="13" x2="19" y2="13"/><line x1="19" y1="13" x2="19" y2="21"/><line x1="6" y1="7" x2="14" y2="7"/>',
-    lamp: '<line x1="12" y1="2" x2="12" y2="6"/><polyline points="7,6 17,6 15,13 9,13"/><line x1="12" y1="13" x2="12" y2="15"/><circle cx="12" cy="16" r="1"/>',
-    plant: '<polyline points="7,16 9,21 15,21 17,16"/><line x1="7" y1="16" x2="17" y2="16"/><line x1="12" y1="16" x2="12" y2="5"/><line x1="12" y1="9" x2="8" y2="4"/><line x1="12" y1="9" x2="16" y2="4"/><line x1="12" y1="13" x2="9" y2="10"/><line x1="12" y1="13" x2="15" y2="10"/>',
-    toy: '<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="8" y="13" width="8" height="7" rx="1"/>',
-    sports: '<circle cx="12" cy="12" r="8"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="6.3" y1="6.3" x2="17.7" y2="17.7"/><line x1="17.7" y1="6.3" x2="6.3" y2="17.7"/>',
-    bicycle: '<circle cx="6" cy="17" r="4"/><circle cx="18" cy="17" r="4"/><polyline points="6,17 10,9 16,9 18,17"/><line x1="10" y1="9" x2="13" y2="17"/><line x1="13" y1="9" x2="13" y2="6"/><line x1="11" y1="6" x2="15" y2="6"/>',
-    camera: '<rect x="3" y="7" width="18" height="13" rx="2"/><rect x="8" y="4" width="6" height="4" rx="1"/><circle cx="12" cy="13.5" r="4"/>',
-    key: '<circle cx="7" cy="12" r="4"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="17" y1="12" x2="17" y2="16"/><line x1="21" y1="12" x2="21" y2="16"/>',
-    paint: '<rect x="6" y="8" width="12" height="12" rx="1"/><rect x="5" y="5" width="14" height="3" rx="1"/><line x1="9" y1="5" x2="9" y2="3"/><line x1="15" y1="5" x2="15" y2="3"/>',
-    cleaning: '<rect x="9" y="9" width="7" height="12" rx="1"/><rect x="8" y="5" width="4" height="4" rx="1"/><line x1="6" y1="5" x2="8" y2="5"/><line x1="6" y1="5" x2="6" y2="3"/>',
-    automotive: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="4" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="20"/><line x1="4" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="20" y2="12"/>',
-    holiday: '<polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>',
-    gift: '<rect x="4" y="8" width="16" height="13" rx="1"/><rect x="3" y="5" width="18" height="4" rx="1"/><line x1="12" y1="5" x2="12" y2="21"/>',
-    battery: '<rect x="3" y="8" width="16" height="8" rx="1"/><rect x="19" y="10" width="2" height="4"/><line x1="7" y1="8" x2="7" y2="16"/>',
-    lightbulb: '<circle cx="12" cy="9" r="6"/><rect x="9" y="15" width="6" height="4" rx="1"/><line x1="9" y1="19" x2="15" y2="19"/>'
-  };
-
-  var ITEM_ICON_KEYS = ['other','tool','electronics','kitchenware','book','document','clothing','shoe','jewelry','bag','furniture','lamp','plant','toy','sports','bicycle','camera','key','paint','cleaning','automotive','holiday','gift','battery','lightbulb'];
-
-  var ITEM_ICON_LABELS = {
-    other:'Other', tool:'Tool', electronics:'Electronics', kitchenware:'Kitchenware', book:'Book',
-    document:'Document', clothing:'Clothing', shoe:'Shoe', jewelry:'Jewelry / watch', bag:'Bag',
-    furniture:'Furniture', lamp:'Lamp', plant:'Plant', toy:'Toy', sports:'Sports', bicycle:'Bicycle',
-    camera:'Camera', key:'Key', paint:'Paint', cleaning:'Cleaning', automotive:'Automotive',
-    holiday:'Holiday', gift:'Gift', battery:'Battery', lightbulb:'Lightbulb'
-  };
-
-  var DEFAULT_ICON_COLORS = ['#C17F3E','#4A7856','#3B6B8F','#B14A3D','#8C6BB1','#5B6370','#D4A73B','#6E8C3F','#B5638C','#2F6F6B'];
-
-  var CATEGORY_ICON_MAP = {
-    'Tools':'tool','Electronics':'electronics','Kitchenware':'kitchenware','Clothing':'clothing',
-    'Seasonal & Holiday':'holiday','Documents & Records':'document','Sports & Outdoor':'sports',
-    'Cleaning Supplies':'cleaning','Furniture':'furniture','Toys & Games':'toy','Automotive':'automotive',
-    'Garden & Yard':'plant','Pantry & Food':'kitchenware','Hardware':'tool','Other':'other'
-  };
-
-  function defaultIconForCategory(cat){ return CATEGORY_ICON_MAP[cat] || 'other'; }
-  function defaultColorForCategory(cat){
-    var s = String(cat || '');
-    var h = 0;
-    for (var i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
-    return DEFAULT_ICON_COLORS[Math.abs(h) % DEFAULT_ICON_COLORS.length];
+  /* Colors handed out, in order, to categories you add. */
+  var CATEGORY_PALETTE = ['#1E88E5','#43A047','#FB8C00','#8E24AA','#E53935','#00897B','#6D4C41','#3949AB','#C0CA33','#D81B60','#546E7A','#FDD835'];
+  var CATEGORY_FALLBACK = 'Other';
+  function isHexColor(c){ return /^#[0-9a-f]{6}$/i.test(String(c || '')); }
+  function categoryList(){ return state.categories && state.categories.length ? state.categories : DEFAULT_CATEGORIES; }
+  function categoryNames(){ return categoryList().map(function(c){ return c.name; }); }
+  function findCategory(name){
+    var n = String(name || '').trim().toLowerCase();
+    return categoryList().find(function(c){ return c.name.toLowerCase() === n; }) || null;
   }
+  function categoryColor(name){
+    var c = findCategory(name);
+    if (c && isHexColor(c.color)) return c.color;
+    var s = String(name || ''), h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return CATEGORY_PALETTE[Math.abs(h) % CATEGORY_PALETTE.length];
+  }
+  function nextCategoryColor(list){
+    var used = list.map(function(c){ return String(c.color).toUpperCase(); });
+    return CATEGORY_PALETTE.find(function(c){ return used.indexOf(c.toUpperCase()) === -1; }) || CATEGORY_PALETTE[list.length % CATEGORY_PALETTE.length];
+  }
+  function categoryTag(name){
+    var n = name || CATEGORY_FALLBACK;
+    return '<span class="tag cat-tag" style="--cat:' + categoryColor(n) + '"><span class="cat-dot"></span>' + escapeHtml(n) + '</span>';
+  }
+
+  /* ---------------- Lucide icon set (rooms & storage) ----------------
+     Each key lists Lucide names in order of preference; the first one the loaded library has wins.
+     Anything missing (or the whole library, if the CDN can't be reached) keeps the built-in drawing,
+     so the app never ends up with blank icons. Browse names at https://lucide.dev/icons
+     (use the PascalCase form, e.g. "washing-machine" -> "WashingMachine"). */
+  var LUCIDE_ROOM_MAP = {
+    kitchen:['CookingPot','ChefHat'], garage:['Warehouse','Car'], bedroom:['BedDouble','Bed'], office:['Monitor','Laptop'],
+    bathroom:['Bath'], closet:['Shirt'], pantry:['Archive','Package'], laundry:['WashingMachine'], shed:['House','Home'],
+    basement:['Stairs','Layers'], living:['Sofa'], deck:['Fence','TreePalm','Trees'], other:['Box'],
+    dining:['UtensilsCrossed','Utensils'], entry:['DoorOpen'], mudroom:['Footprints'], media:['Tv','MonitorPlay'],
+    hallway:['DoorClosed','MoveHorizontal'], nursery:['Baby'], guest:['BedSingle','Bed']
+  };
+  var LUCIDE_STORAGE_MAP = {
+    cabinet:['Archive'], shelf:['LibraryBig','Library','Layers'], bin:['Package','Box'], closet:['Shirt'],
+    locker:['LockKeyhole','Lock'], garage:['Warehouse','Car'], other:['Box']
+  };
+  function lucideAttrs(attrs){
+    return Object.keys(attrs || {}).filter(function(k){ return k !== 'key'; }).map(function(k){
+      return ' ' + k + '="' + escapeHtml(attrs[k]) + '"';
+    }).join('');
+  }
+  function lucideNodeToSvg(nodes){
+    return (nodes || []).map(function(n){
+      if (!Array.isArray(n)) return '';
+      return '<' + n[0] + lucideAttrs(n[1]) + '>' + (Array.isArray(n[2]) ? lucideNodeToSvg(n[2]) : '') + '</' + n[0] + '>';
+    }).join('');
+  }
+  /* Returns the inner SVG markup (24x24 grid) for the first available name, or null. */
+  function lucideInner(candidates){
+    var lib = window.lucide && window.lucide.icons;
+    if (!lib) return null;
+    for (var i = 0; i < candidates.length; i++){
+      var node = lib[candidates[i]];
+      if (!node) continue;
+      if (node.length === 3 && node[0] === 'svg') node = node[2];   /* older Lucide builds wrap icons in an <svg> node */
+      var markup = lucideNodeToSvg(node);
+      if (markup) return markup;
+    }
+    return null;
+  }
+  var usingLucide = false;
+  function applyLucideIcons(){
+    if (!(window.lucide && window.lucide.icons)) return;
+    [[ROOM_ICONS, LUCIDE_ROOM_MAP], [STORAGE_ICONS, LUCIDE_STORAGE_MAP]].forEach(function(pair){
+      Object.keys(pair[1]).forEach(function(key){
+        var inner = lucideInner(pair[1][key]);
+        if (inner){ pair[0][key] = inner; usingLucide = true; }
+      });
+    });
+  }
+  applyLucideIcons();
+
   function hexToRgba(hex, alpha){
     var h = String(hex||'').replace('#','');
     if (h.length===3) h = h.split('').map(function(c){return c+c;}).join('');
@@ -2455,7 +2637,9 @@
     tombstones: {},        /* itemId -> deletion time, so deletions sync */
     rulesUpdatedAt: 0,
     floorPlan: null,       /* {dataUrl, updatedAt, fileId, needsUpload} */
-    lineOverlay: null      /* same shape: a transparent line drawing laid over the patterns */
+    lineOverlay: null,     /* same shape: a transparent line drawing laid over the patterns */
+    categories: [],        /* [{name, color}] — empty means the defaults */
+    categoriesUpdatedAt: 0
   };
 
   var workingLocation = null;
@@ -2464,10 +2648,6 @@
   var editingItem = null;
   var activeLocationIdForNewItem = null;
   var currentPhotoDataUrl = null;
-  var currentVisualMode = 'icon';
-  var currentIconKey = 'other';
-  var currentIconColor = DEFAULT_ICON_COLORS[0];
-  var iconManuallyChosen = false;
   var pendingConfirmAction = null;
   var searchDebounce = null;
   var workingRules = null;
@@ -2476,9 +2656,6 @@
   var shapeSubmode = 'box';
   var lastVertexTap = null;
   var zoomPanX = 0, zoomPanY = 0, zoomFocusX = VIEW_X + VIEW_W/2, zoomFocusY = VIEW_Y + VIEW_H/2;
-  var fixtureLibraryOpen = false;
-  var currentFixtureTexture = 'solid';
-  var currentFixtureColor = '#6B7280';
 
   /* ---------------- Element cache ---------------- */
   var els = {};
@@ -2486,16 +2663,18 @@
     var ids = ['searchWrap','searchInput','searchSuggest','statRooms','statItems','statValue',
       'expiringBanner','expiringBannerText','expiringBannerBtn','modeViewBtn','modeLabelBtn','modeShapeBtn',
       'exportBtn','importInput','importCsvInput','csvModalOverlay','csvModalTitle','csvSummary',
-      'csvIssuesWrap','csvIssuesList','csvConfirmBtn','downloadTemplateBtn',
-      'canvasSvg','zoomGroup','roomsGroup','fixturesGroup','editHint','backBtn','shapeToolbar',
-      'addRoomShapeBtn','addStorageShapeBtn','deleteShapeBtn','submodeBoxBtn','submodePointsBtn','undoShapeBtn','furnitureLibraryBtn','furnitureLibraryClose','furnitureLibrary','fixtureGrid','fixtureTextureSelect','fixtureColorInput','fixtureRotateLeft','fixtureRotateRight','fixtureApplyStyle',
+      'csvIssuesWrap','csvIssuesList','csvConfirmBtn','exportCsvBtn',
+      'canvasSvg','zoomGroup','roomsGroup','editHint','backBtn','shapeToolbar',
+      'addRoomShapeBtn','addStorageShapeBtn','deleteShapeBtn','submodeBoxBtn','submodePointsBtn','undoShapeBtn',
       'canvasWrap','sidePanel','panelTitle','panelSubtitle','panelRoomActions','panelEditRoomBtn',
       'panelDeleteRoomBtn','panelCloseBtn','panelSearchInput','panelCategorySelect','panelSortSelect',
       'panelAddBtn','panelBody','roomModalOverlay','roomModalTitle','roomTypeGrid','roomTypeGridWrap',
       'storageParentWrap','storageParentSelect','roomNameFieldLabel','locationIconLabel','roomNameInput',
       'locTypeRoomTab','locTypeStorageTab',
       'roomSaveBtn','roomDeleteBtn','itemModalOverlay','itemModalTitle','itemVisualPreview',
-      'visualTabIcon','visualTabPhoto','iconPanel','photoPanel','itemIconGrid','itemColorRow',
+      'quickView','qvAddBtn','qvAdd','qvAddForm','qvAddTitle','qvAddClose','qvAddName','qvAddHint','qvAddWhere','qvAddQty','qvAddCat','qvAddExp','qvExpChips','qvAddNext','qvAddSave','qvBack','qvTitle','qvSub','qvSync','qvSyncLabel','qvSearch','qvChips','qvBody','qvFullApp','quickOpenBtn',
+      'qrModalOverlay','qrWarn','qrSize','qrAll','qrNone','qrPick','qrPrintBtn','printSheet','qrStickersBtn',
+      'itemUsedBtn','itemEditCategoriesBtn','invHideUsed','invLegend','invCategoriesBtn','catModalOverlay','catRows','catAddBtn','catSaveBtn',
       'itemPhotoInput','itemPhotoRemoveBtn','itemNameInput','itemCategorySelect','itemCustomCategoryWrap',
       'itemCustomCategoryInput','itemQtyInput','itemValueInput','itemSubLocationInput','itemPurchaseInput',
       'itemExpiresInput','itemNotesInput','itemSaveBtn','itemDeleteBtn','confirmModalOverlay',
@@ -2541,6 +2720,26 @@
       el.classList.remove('show');
       setTimeout(function(){ el.remove(); }, 250);
     }, 2600);
+  }
+
+  /* Fade a freshly rendered list in. (Was called in three places but never defined, which threw
+     a ReferenceError every time a room panel or the Inventory view opened.) */
+  function animateList(container){
+    if (!container) return;
+    container.classList.remove('list-in');
+    void container.offsetWidth;
+    var kids = container.children;
+    for (var i = 0; i < kids.length && i < 24; i++) kids[i].style.animationDelay = (i * 18) + 'ms';
+    container.classList.add('list-in');
+    setTimeout(function(){ container.classList.remove('list-in'); }, 24 * 18 + 260);
+  }
+  /* Briefly highlight a shape on the map, e.g. after an undo. (Also previously undefined.) */
+  function flashShape(id){
+    if (!id) return;
+    var el = document.querySelector('#roomsGroup [data-loc-id="' + id + '"]');
+    if (!el) return;
+    el.classList.remove('flash'); void el.getBoundingClientRect(); el.classList.add('flash');
+    setTimeout(function(){ el.classList.remove('flash'); }, 800);
   }
 
   /* ---------------- IndexedDB ---------------- */
@@ -2765,7 +2964,7 @@
   function computeLocationCount(id){
     var count = 0;
     for (var i=0;i<state.items.length;i++){
-      if (state.items[i].locationId === id) count += (Number(state.items[i].quantity) || 1);
+      if (state.items[i].locationId === id) count += qtyOf(state.items[i]);
     }
     return count;
   }
@@ -2827,11 +3026,6 @@
         if (state.selectedRoomId === entry.locId || state.selectedStorageId === entry.locId) deselectAll();
         done();
       }, failed);
-    } else if (entry.type === 'fixture-style'){
-      var f = getShapeTarget(entry.locId);
-      if (!f){ toast('That furniture no longer exists', 'error'); return; }
-      f.texture = entry.old.texture; f.color = entry.old.color;
-      idbPut('locations', f).then(done, failed);
     } else if (entry.type === 'delete'){
       Promise.all(entry.locations.map(function(l){ return idbPut('locations', JSON.parse(JSON.stringify(l))); }))
         .then(function(){ return Promise.all(entry.items.map(function(i){ return idbPut('items', JSON.parse(JSON.stringify(i))); })); })
@@ -2846,9 +3040,6 @@
   }
 
   function getShapeTarget(id){ return getLocation(id); }
-  function isFixture(shape){ return !!shape && shape.type === 'fixture'; }
-  function shapeLabel(shape){ return isFixture(shape) ? (shape.name || 'Furniture') : displayName(shape); }
-  function fixtureRotation(shape){ return Number(shape.rotation || 0); }
 
   /* ---------------- Shape editing: add / delete ---------------- */
   function centerNewShape(w,h){
@@ -2871,64 +3062,6 @@
       renderCanvas(); renderStats(); updateBackBtn();
       toast((type === 'room' ? 'Room' : 'Storage') + ' shape added — drag to position, resize, or reshape it');
     }).catch(function(err){ console.error(err); toast('Could not add shape', 'error'); });
-  }
-
-  function fixtureSpecFor(shape){
-    if (!shape) return null;
-    if (shape.fixtureKind){
-      var direct = FIXTURE_LIBRARY.find(function(f){ return f.key === shape.fixtureKind; });
-      if (direct) return direct;
-    }
-    var n = normText(shape.name || '');
-    return FIXTURE_LIBRARY.find(function(f){ return normText(f.label) === n; }) || FIXTURE_LIBRARY[FIXTURE_LIBRARY.length - 1];
-  }
-  function fixtureIconArt(kind){ return FIXTURE_ICON_ART[kind] || FIXTURE_ICON_ART.workbench; }
-  function renderFixtureLibrary(){
-    if (!els.fixtureGrid) return;
-    els.fixtureTextureSelect.value = currentFixtureTexture;
-    els.fixtureColorInput.value = currentFixtureColor;
-    els.fixtureGrid.innerHTML = FIXTURE_LIBRARY.map(function(f){
-      var pts = f.shape.map(function(p){ return p[0]+','+p[1]; }).join(' ');
-      var label = escapeHtml(f.label);
-      var art = fixtureIconArt(f.key);
-      return '<button type="button" class="fixture-pick" data-fixture-kind="' + f.key + '" title="Add ' + label + '"><svg viewBox="0 0 100 70" style="color:' + currentFixtureColor + '"><polygon points="' + pts + '" fill="currentColor" opacity=".32" stroke="rgba(27,36,48,.6)" stroke-width="2"></polygon>' + art + '</svg></button>';
-    }).join('');
-  }
-  function setFurnitureLibraryOpen(open){
-    fixtureLibraryOpen = !!open;
-    if (els.furnitureLibrary) els.furnitureLibrary.classList.toggle('open', fixtureLibraryOpen && state.mode === 'shape');
-    if (fixtureLibraryOpen) renderFixtureLibrary();
-  }
-  function addFixture(kind){
-    var spec = FIXTURE_LIBRARY.find(function(f){ return f.key === kind; });
-    if (!spec) return;
-    var bb = polygonBBox(spec.shape), w = bb.w, h = bb.h, pos = centerNewShape(w,h);
-    var pts = spec.shape.map(function(p){ return [p[0]-bb.minX+pos.x, p[1]-bb.minY+pos.y]; });
-    var fixture = {id:'fixture_' + uid(), type:'fixture', name:spec.label, fixtureKind:spec.key, iconKey:null, parentId:null, points:pts, rotation:0, texture:currentFixtureTexture, color:currentFixtureColor};
-    idbPut('locations', fixture).then(function(){
-      state.locations.push(fixture);
-      pushShapeHistory('adding ' + spec.label, {type:'add', locId:fixture.id});
-      state.selectedShapeId = fixture.id;
-      softZoomToShape(fixture,.56);
-      renderCanvas(); updateBackBtn();
-      toast(spec.label + ' added');
-    }).catch(function(err){ console.error(err); toast('Could not add furniture', 'error'); });
-  }
-  function rotateFixtureBy(delta){
-    var f = state.selectedShapeId ? getShapeTarget(state.selectedShapeId) : null;
-    if (!f || !isFixture(f)) { toast('Select furniture first'); return; }
-    var bb = polygonBBox(f.points), a = delta * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a), orig = clonePoints(f.points);
-    pushShapeHistory('rotating ' + shapeLabel(f), {type:'points', locId:f.id, points:orig});
-    f.points = orig.map(function(pt){ var x=pt[0]-bb.cx, y=pt[1]-bb.cy; return [clamp(bb.cx+x*c-y*sn,LOT_MIN_X,LOT_MAX_X), clamp(bb.cy+x*sn+y*c,LOT_MIN_Y,LOT_MAX_Y)]; });
-    idbPut('locations', f).then(function(){ softZoomToShape(f,.56); renderCanvas(); }).catch(function(err){ console.error(err); toast('Could not rotate furniture','error'); });
-  }
-  function applyFixtureStyle(){
-    var f = state.selectedShapeId ? getShapeTarget(state.selectedShapeId) : null;
-    if (!f || !isFixture(f)) { toast('Select furniture first'); return; }
-    var old = {texture:f.texture || 'solid', color:f.color || '#6B7280'};
-    f.texture = currentFixtureTexture; f.color = currentFixtureColor;
-    pushShapeHistory('changing furniture style', {type:'fixture-style', locId:f.id, old:old});
-    idbPut('locations', f).then(function(){ renderCanvas(); }).catch(function(err){ console.error(err); toast('Could not save furniture style','error'); });
   }
 
   function deleteShapeAction(loc){
@@ -3007,9 +3140,7 @@
 
   function locationMarkup(loc){
     var isRoom = loc.type === 'room';
-    var count = computeLocationTotalCount(loc);
     var bbox = polygonBBox(loc.points);
-    var centroid = polygonCentroid(loc.points);
     var icon = isRoom ? (ROOM_ICONS[loc.iconKey] || ROOM_ICONS.other) : (STORAGE_ICONS[loc.iconKey] || STORAGE_ICONS.other);
     var roomSelected = state.selectedRoomId === loc.id;
     var storageSelected = state.selectedStorageId === loc.id;
@@ -3025,25 +3156,13 @@
       classes.push('storage-lit');
       if (computeLocationCount(loc.id) === 0) classes.push('storage-empty');
     }
-    var labelY = centroid.y + 5;
-    var showIcon = bbox.h > 60 && bbox.w > 50;
-    var iz = Math.max(1, currentZoom);
-    var iconG = showIcon
-      ? '<rect class="location-icon-bg" x="' + (centroid.x - 13/iz) + '" y="' + (bbox.minY + 6/iz) + '" width="' + (26/iz) + '" height="' + (20/iz) + '" rx="' + (4/iz) + '"></rect>' +
-        '<g class="location-icon" transform="translate(' + (centroid.x - 11/iz) + ',' + (bbox.minY + 7/iz) + ') scale(' + (0.72/iz) + ')" style="stroke-width:' + (1.6*iz) + '">' + icon + '</g>'
-      : '';
-    var tinyPoly = (bbox.w < 70 || bbox.h < 32);
-    var isSelected = roomSelected || storageSelected;
-    var showNameOverlay = !loc.name || state.mode === 'label' || state.mode === 'shape' || isSelected;
-    var nameText = '';
-    if (showNameOverlay){
-      nameText = loc.name
-        ? '<text class="location-label" x="' + centroid.x + '" y="' + labelY + '" text-anchor="middle">' + escapeHtml(loc.name) + '</text>'
-        : (tinyPoly ? '' : '<text class="location-placeholder" x="' + centroid.x + '" y="' + labelY + '" text-anchor="middle">' + (isRoom ? 'Unnamed room' : 'Unnamed storage') + '</text>');
+    /* Icon sits in the middle of the shape; the name label is placed below it (see placeLabel). */
+    var ir = locationIconRect(loc), iconG = '';
+    if (ir){
+      var iz = Math.max(1, currentZoom), glyph = ICON_GLYPH / iz;
+      iconG = '<rect class="location-icon-bg" x="' + ir.x + '" y="' + ir.y + '" width="' + ir.w + '" height="' + ir.h + '" rx="' + (5/iz) + '"></rect>' +
+        '<g class="location-icon" transform="translate(' + (ir.cx - glyph/2) + ',' + (ir.cy - glyph/2) + ') scale(' + (glyph/24) + ')" style="stroke-width:' + (1.6*iz) + '">' + icon + '</g>';
     }
-    var countText = (loc.name && isRoom && bbox.h > 40 && (isSelected || state.mode === 'label'))
-      ? '<text class="location-sublabel" x="' + centroid.x + '" y="' + (labelY+14) + '" text-anchor="middle">' + count + ' item' + (count===1?'':'s') + '</text>'
-      : '';
     var handles = shapeSelected
       ? (shapeSubmode === 'points' ? shapeVertexHandlesMarkup(loc.points) : shapeResizeHandlesMarkup(bbox))
       : '';
@@ -3052,52 +3171,6 @@
       '<polygon class="location-poly" data-role="body" points="' + pointsAttr(loc.points) + '"></polygon>' +
       iconG + handles +
     '</g>';
-  }
-
-  function buildFixturePatternDefs(){
-    return '' +
-      '<pattern id="fixtureWood" width="36" height="36" patternUnits="userSpaceOnUse"><rect width="36" height="36" fill="#B88352"/><path d="M0 9 H36 M0 27 H36" stroke="#8E5F3E" stroke-width="1.3" opacity=".55"/><path d="M5 0 C17 7 0 15 12 23 C23 30 12 32 20 36" fill="none" stroke="#D7A674" stroke-width="1.4" opacity=".58"/></pattern>' +
-      '<pattern id="fixtureFabric" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#8C7B71"/><path d="M0 3 H12 M0 9 H12 M3 0 V12 M9 0 V12" stroke="#D7CCC4" stroke-width="1" opacity=".26"/></pattern>' +
-      '<pattern id="fixtureLeather" width="26" height="26" patternUnits="userSpaceOnUse"><rect width="26" height="26" fill="#6B4A39"/><circle cx="4" cy="5" r=".8" fill="#D6B09A" opacity=".26"/><circle cx="15" cy="11" r=".7" fill="#D6B09A" opacity=".20"/><circle cx="21" cy="20" r=".9" fill="#3E2A22" opacity=".35"/><path d="M0 18 C7 14 14 23 26 18" fill="none" stroke="#C28C70" stroke-width=".7" opacity=".18"/></pattern>' +
-      '<pattern id="fixtureMetal" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="#8F969D"/><path d="M0 2 H20 M0 7 H20 M0 12 H20 M0 17 H20" stroke="#EDF0F2" stroke-width="1" opacity=".35"/><path d="M3 0 V20 M12 0 V20" stroke="#565D63" stroke-width=".5" opacity=".22"/></pattern>' +
-      '<pattern id="fixtureStainless" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="#B8BDC1"/><path d="M0 4 H22 M0 9 H22 M0 14 H22 M0 19 H22" stroke="#F8FAFB" stroke-width="1.1" opacity=".52"/><path d="M0 6 H22 M0 16 H22" stroke="#6E757B" stroke-width=".55" opacity=".28"/></pattern>' +
-      '<pattern id="fixturePorcelain" width="30" height="30" patternUnits="userSpaceOnUse"><rect width="30" height="30" fill="#F1F0EA"/><circle cx="7" cy="9" r=".9" fill="#C7CCD0" opacity=".34"/><circle cx="21" cy="15" r=".7" fill="#C7CCD0" opacity=".28"/><circle cx="12" cy="25" r=".8" fill="#BFC5CA" opacity=".24"/><path d="M3 5 C10 1 20 7 27 4" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity=".56"/></pattern>' +
-      '<pattern id="fixtureTile" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#D8D5CC"/><rect x="1" y="1" width="22" height="22" fill="#EAE7DF"/><path d="M0 0 H24 M0 24 H24 M0 0 V24 M24 0 V24" stroke="#9B9A96" stroke-width="1.25" opacity=".55"/></pattern>' +
-      '<pattern id="fixtureMarble" width="90" height="90" patternUnits="userSpaceOnUse"><rect width="90" height="90" fill="#E9E8E3"/><path d="M-10 62 C18 42 34 67 54 48 C72 31 77 48 102 28" fill="none" stroke="#A3A6AB" stroke-width="2" opacity=".38"/><path d="M-8 18 C21 4 29 27 49 14 C65 4 75 10 99 -2" fill="none" stroke="#C7C9CC" stroke-width="1" opacity=".5"/></pattern>' +
-      '<pattern id="fixtureGlass" width="30" height="30" patternUnits="userSpaceOnUse"><rect width="30" height="30" fill="#9BC5D7" fill-opacity=".44"/><path d="M0 30L30 0" stroke="#F5FBFF" stroke-width="2.1" opacity=".62"/><path d="M-8 19L19 -8 M11 38L38 11" stroke="#FFFFFF" stroke-width="1" opacity=".34"/></pattern>' +
-      '<pattern id="fixtureCarpet" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#8B7A69"/><path d="M0 2 H14 M0 6 H14 M0 10 H14 M0 14 H14" stroke="#C9BAAA" stroke-width=".8" opacity=".24"/></pattern>';
-  }
-
-  function fixtureFill(f){
-    var texture = f.texture || 'solid';
-    if (texture === 'solid') return f.color || '#6B7280';
-    return 'url(#fixture' + texture.charAt(0).toUpperCase() + texture.slice(1) + ')';
-  }
-  function fixtureMarkup(f){
-    var bb = polygonBBox(f.points), selected = state.mode === 'shape' && state.selectedShapeId === f.id;
-    var spec = fixtureSpecFor(f), kind = spec ? spec.key : 'workbench';
-    var handles = selected ? (shapeSubmode === 'points' ? shapeVertexHandlesMarkup(f.points) : shapeResizeHandlesMarkup(bb)) : '';
-    var fill = fixtureFill(f);
-    var art = fixtureIconArt(kind);
-    var base = '<polygon points="' + pointsAttr(f.points) + '" data-role="body" fill="' + (f.color || '#6B7280') + '" fill-opacity=".92"></polygon>';
-    if ((f.texture || 'solid') !== 'solid') base += '<polygon points="' + pointsAttr(f.points) + '" fill="' + fill + '" fill-opacity=".76" pointer-events="none"></polygon>';
-    var sx = Math.max(bb.w, 1) / 100, sy = Math.max(bb.h, 1) / 70;
-    return '<g class="fixture-shape' + (selected ? ' selected' : '') + '" data-fixture-id="' + f.id + '" data-loc-id="' + f.id + '" tabindex="0" style="color:' + (f.color || '#6B7280') + '">' +
-      base +
-      '<g class="fixture-art" transform="translate(' + bb.minX + ',' + bb.minY + ') scale(' + sx.toFixed(5) + ',' + sy.toFixed(5) + ')" pointer-events="none">' + art + '</g>' +
-      handles +
-    '</g>';
-  }
-
-  function renderFixtures(){
-    if (!els.fixturesGroup) return;
-    var fixtures = state.locations.filter(function(l){ return l.type === 'fixture'; });
-    if (state.mode === 'shape' && state.selectedShapeId){
-      var selected = null;
-      fixtures = fixtures.filter(function(f){ if (f.id === state.selectedShapeId){ selected = f; return false; } return true; });
-      if (selected) fixtures.push(selected);
-    }
-    els.fixturesGroup.innerHTML = fixtures.map(fixtureMarkup).join('');
   }
 
   function renderCanvas(){
@@ -3114,12 +3187,14 @@
       });
       if (sel) ordered.push(sel);
     }
-    els.patternsGroup.innerHTML = ordered.filter(function(l){ return l.pattern && PATTERN_BY_KEY[l.pattern]; }).map(function(l){
+    /* Patterns always stack rooms first, then storage on top. (They used to follow the edit order,
+       which moves the selected shape last — so selecting a room laid its floor pattern over the
+       storage patterns inside it.) */
+    els.patternsGroup.innerHTML = rooms.concat(storages).filter(function(l){ return l.pattern && PATTERN_BY_KEY[l.pattern]; }).map(function(l){
       return '<polygon class="location-pattern" data-loc-id="' + l.id + '" points="' + pointsAttr(l.points) + '" fill="url(#pat-' + l.pattern + ')" fill-opacity="' +
              (l.patternOpacity != null ? l.patternOpacity : 0.9) + '"></polygon>';
     }).join('');
     els.roomsGroup.innerHTML = ordered.map(locationMarkup).join('');
-    renderFixtures();
     renderLabels();
     els.canvasSvg.classList.toggle('mode-view', state.mode === 'view');
     els.canvasSvg.classList.toggle('mode-label', state.mode === 'label');
@@ -3310,7 +3385,7 @@
     els.statRooms.textContent = state.locations.filter(function(l){ return l.type==='room'; }).length;
     var totalQty = 0, totalValue = 0;
     state.items.forEach(function(i){
-      var q = Number(i.quantity) || 1;
+      var q = qtyOf(i);
       totalQty += q;
       totalValue += (Number(i.value) || 0) * q;
     });
@@ -3516,24 +3591,30 @@
     els.invRoom.innerHTML = '<option value="">All rooms</option>' + rooms.map(function(r){
       return '<option value="' + r.id + '"' + (r.id === roomVal ? ' selected' : '') + '>' + escapeHtml(displayName(r)) + '</option>';
     }).join('');
-    var cats = [];
-    state.items.forEach(function(i){ var c = i.category || 'Other'; if (cats.indexOf(c) === -1) cats.push(c); });
-    cats.sort();
+    var counts = {}, cats = categoryNames().slice();
+    state.items.forEach(function(i){ var c = i.category || CATEGORY_FALLBACK; counts[c] = (counts[c] || 0) + 1; if (cats.indexOf(c) === -1) cats.push(c); });
     els.invCategory.innerHTML = '<option value="">All categories</option>' + cats.map(function(c){
       return '<option value="' + escapeHtml(c) + '"' + (c === catVal ? ' selected' : '') + '>' + escapeHtml(c) + '</option>';
     }).join('');
+    /* color legend: one chip per category that has items; click to filter */
+    els.invLegend.innerHTML = cats.filter(function(c){ return counts[c]; }).map(function(c){
+      return '<button type="button" class="cat-chip' + (c === catVal ? ' active' : '') + '" data-cat="' + escapeHtml(c) + '" style="--cat:' + categoryColor(c) + '">' +
+        '<span class="cat-dot"></span>' + escapeHtml(c) + ' <span class="n">' + counts[c] + '</span></button>';
+    }).join('');
   }
   function invRowMarkup(r, pq){
-    var it = r.item, expanded = inv.expandedId === it.id, qty = Number(it.quantity) || 1, val = Number(it.value) || 0;
+    var it = r.item, expanded = inv.expandedId === it.id, qty = qtyOf(it), val = Number(it.value) || 0;
     var status = getItemExpiryStatus(it);
-    var badge = status === 'expired' ? '<span class="badge badge-bad">Expired ' + fmtDate(it.expirationDate) + '</span>'
+    var badge = it.usedAt ? usedBadge(it)
+              : status === 'expired' ? '<span class="badge badge-bad">Expired ' + fmtDate(it.expirationDate) + '</span>'
               : status === 'expiring' ? '<span class="badge badge-warn">Expires ' + fmtDate(it.expirationDate) + '</span>' : '';
-    return '<div class="inv-row' + (expanded ? ' expanded' : '') + (inv.flashId === it.id ? ' flash' : '') + '" data-item-id="' + it.id + '" role="listitem">' +
-      '<button type="button" class="inv-row-main" aria-expanded="' + expanded + '">' +
-        '<span class="item-photo inv-thumb">' + itemThumbMarkup(it) + '</span>' +
-        '<span class="inv-mid"><span class="inv-name">' + highlightMatches(it.name, pq) + (qty > 1 ? ' <span class="item-qty">\u00d7' + qty + '</span>' : '') + '</span>' +
+    var cat = it.category || CATEGORY_FALLBACK, thumb = !!it.photo;
+    return '<div class="inv-row' + (expanded ? ' expanded' : '') + (it.usedAt ? ' item-used' : '') + (inv.flashId === it.id ? ' flash' : '') + '" data-item-id="' + it.id + '" role="listitem" style="--cat:' + categoryColor(cat) + '">' +
+      '<button type="button" class="inv-row-main' + (thumb ? '' : ' no-thumb') + '" aria-expanded="' + expanded + '">' +
+        (thumb ? '<span class="item-photo inv-thumb">' + itemThumbMarkup(it) + '</span>' : '') +
+        '<span class="inv-mid"><span class="inv-name">' + highlightMatches(it.name, pq) + (qty !== 1 ? ' <span class="item-qty">×' + qty + '</span>' : '') + '</span>' +
           '<span class="inv-sub"><span class="inv-path">' + highlightMatches(locationPath(it), pq) + '</span>' +
-          '<span class="tag">' + highlightMatches(it.category || 'Other', pq) + '</span>' + badge + '</span></span>' +
+          '<span class="tag cat-tag" style="--cat:' + categoryColor(cat) + '"><span class="cat-dot"></span>' + highlightMatches(cat, pq) + '</span>' + badge + '</span></span>' +
         '<span class="inv-right">' + (val ? '<span class="item-value">' + money(val * qty) + '</span>' : '') +
           '<svg class="inv-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="8,10 12,14 16,10"/></svg></span>' +
       '</button>' + (expanded ? invDetailMarkup(it, pq) : '') + '</div>';
@@ -3541,29 +3622,32 @@
   function invDetailMarkup(it, pq){
     var f = [
       ['Location', escapeHtml(locationPath(it))],
-      ['Spot in room', it.subLocation ? highlightMatches(it.subLocation, pq) : '\u2014'],
-      ['Quantity', String(Number(it.quantity) || 1)],
-      ['Value each', (Number(it.value) || 0) ? money(it.value) : '\u2014'],
-      ['Purchased', it.purchaseDate ? fmtDate(it.purchaseDate) : '\u2014'],
-      ['Expires', it.expirationDate ? fmtDate(it.expirationDate) : '\u2014']
+      ['Spot in room', it.subLocation ? highlightMatches(it.subLocation, pq) : '—'],
+      ['Quantity', String(qtyOf(it))],
+      ['Value each', (Number(it.value) || 0) ? money(it.value) : '—'],
+      ['Purchased', it.purchaseDate ? fmtDate(it.purchaseDate) : '—'],
+      ['Expires', it.expirationDate ? fmtDate(it.expirationDate) : '—']
     ];
-    return '<div class="inv-detail"><dl class="inv-detail-grid">' +
+    if (it.usedAt) f.push(['Used', fmtDate(it.usedAt)]);
+    return '<div class="inv-detail' + (it.photo ? '' : ' no-thumb') + '"><dl class="inv-detail-grid">' +
       f.map(function(x){ return '<div><dt>' + x[0] + '</dt><dd>' + x[1] + '</dd></div>'; }).join('') + '</dl>' +
       (it.notes ? '<p class="inv-notes">' + highlightMatches(it.notes, pq) + '</p>' : '') +
       '<div class="inv-actions"><button type="button" class="btn btn-primary btn-sm" data-inv-action="map">Show on map</button>' +
-      '<button type="button" class="btn btn-ghost btn-sm" data-inv-action="edit">Edit item</button></div></div>';
+      '<button type="button" class="btn btn-ghost btn-sm" data-inv-action="edit">Edit item</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-inv-action="used">' + (it.usedAt ? 'Mark as not used' : 'Mark as used') + '</button></div></div>';
   }
   function renderInventoryView(){
     if (!inv.open) return;
     renderInvFilters();
     var q = els.invSearch.value.trim(), pq = prepareQuery(q);
-    var roomF = els.invRoom.value, catF = els.invCategory.value, expOnly = els.invExpiring.checked, sort = els.invSort.value;
+    var roomF = els.invRoom.value, catF = els.invCategory.value, expOnly = els.invExpiring.checked, hideUsed = els.invHideUsed.checked, sort = els.invSort.value;
     var rows = state.items.map(function(it){ return {item: it, score: pq.tokens.length ? itemSearchScore(it, pq) : 1}; })
       .filter(function(r){
         if (r.score <= 0) return false;
         if (roomF){ var p = itemPlace(r.item); if (!p.room || p.room.id !== roomF) return false; }
         if (catF && (r.item.category || 'Other') !== catF) return false;
         if (expOnly && getItemExpiryStatus(r.item) === null) return false;
+        if (hideUsed && r.item.usedAt) return false;
         return true;
       });
     if (sort === 'relevance' && !pq.tokens.length) sort = 'name';
@@ -3571,7 +3655,7 @@
     rows.sort(function(a, b){
       if (sort === 'relevance') return (b.score - a.score) || byName(a, b);
       if (sort === 'location') return locationPath(a.item).localeCompare(locationPath(b.item)) || byName(a, b);
-      if (sort === 'value') return ((Number(b.item.value)||0)*(Number(b.item.quantity)||1) - (Number(a.item.value)||0)*(Number(a.item.quantity)||1)) || byName(a, b);
+      if (sort === 'value') return ((Number(b.item.value)||0)*qtyOf(b.item) - (Number(a.item.value)||0)*qtyOf(a.item)) || byName(a, b);
       if (sort === 'expiring'){
         var ax = a.item.expirationDate ? new Date(a.item.expirationDate).getTime() : Infinity;
         var bx = b.item.expirationDate ? new Date(b.item.expirationDate).getTime() : Infinity;
@@ -3581,7 +3665,7 @@
       return byName(a, b);
     });
     var qtyTotal = 0, valTotal = 0;
-    rows.forEach(function(r){ var n = Number(r.item.quantity) || 1; qtyTotal += n; valTotal += (Number(r.item.value) || 0) * n; });
+    rows.forEach(function(r){ var n = qtyOf(r.item); qtyTotal += n; valTotal += (Number(r.item.value) || 0) * n; });
     var filtered = rows.length !== state.items.length;
     els.invSummary.textContent = rows.length + ' item' + (rows.length === 1 ? '' : 's') + (filtered ? ' of ' + state.items.length : '') +
       (qtyTotal !== rows.length ? ' \u00b7 ' + qtyTotal + ' total pieces' : '') + (valTotal ? ' \u00b7 ' + money(valTotal) : '');
@@ -3620,7 +3704,14 @@
       if (els.invSearch.value.trim() && els.invSort.value === 'name') els.invSort.value = 'relevance';
       clearTimeout(debounce); debounce = setTimeout(function(){ inv.expandedId = null; renderInventoryView(); }, 120);
     });
-    [els.invRoom, els.invCategory, els.invSort, els.invExpiring].forEach(function(el){ el.addEventListener('change', renderInventoryView); });
+    [els.invRoom, els.invCategory, els.invSort, els.invExpiring, els.invHideUsed].forEach(function(el){ el.addEventListener('change', renderInventoryView); });
+    els.invLegend.addEventListener('click', function(e){
+      var chip = e.target.closest('[data-cat]'); if (!chip) return;
+      var c = chip.getAttribute('data-cat');
+      els.invCategory.value = els.invCategory.value === c ? '' : c;
+      renderInventoryView();
+    });
+    els.invCategoriesBtn.addEventListener('click', openCategoriesModal);
     els.invList.addEventListener('click', function(e){
       var near = e.target.closest('[data-near-name]');
       if (near){ els.invSearch.value = near.getAttribute('data-near-name'); els.searchInput.value = els.invSearch.value; renderInventoryView(); return; }
@@ -3629,7 +3720,9 @@
       if (!item) return;
       var act = e.target.closest('[data-inv-action]');
       if (act){
-        if (act.getAttribute('data-inv-action') === 'map') showItemOnMap(item);
+        var a = act.getAttribute('data-inv-action');
+        if (a === 'map') showItemOnMap(item);
+        else if (a === 'used') setItemUsed(item, !item.usedAt);
         else openItemModal(item, item.locationId);
         return;
       }
@@ -3651,7 +3744,7 @@
     var copy = items.slice();
     copy.sort(function(a,b){
       if (sort === 'relevance' && query) return itemSearchScore(b, query) - itemSearchScore(a, query);
-      if (sort === 'value') return ((b.value||0)*(b.quantity||1)) - ((a.value||0)*(a.quantity||1));
+      if (sort === 'value') return ((b.value||0)*qtyOf(b)) - ((a.value||0)*qtyOf(a));
       if (sort === 'newest') return (b.createdAt||0) - (a.createdAt||0);
       if (sort === 'expiring'){
         var ax = a.expirationDate ? new Date(a.expirationDate).getTime() : Infinity;
@@ -3673,7 +3766,7 @@
     return r ? r.warnDays : getDefaultRule().warnDays;
   }
   function getItemExpiryStatus(item){
-    if (!item.expirationDate) return null;
+    if (!item.expirationDate || item.usedAt) return null;
     var days = daysUntil(item.expirationDate);
     if (days < 0) return 'expired';
     var warnDays = getWarnDaysForCategory(item.category);
@@ -3688,27 +3781,25 @@
     return '';
   }
 
+  /* Photo thumbnail if the item has one; otherwise nothing (items are marked by category color). */
   function itemThumbMarkup(item){
-    if (item.photo) return '<img src="' + item.photo + '" alt="" />';
-    var key = ITEM_ICONS[item.iconKey] ? item.iconKey : 'other';
-    var color = item.iconColor || DEFAULT_ICON_COLORS[0];
-    return '<div class="item-icon-thumb" style="background:' + hexToRgba(color, 0.16) + '">' +
-      '<svg viewBox="0 0 24 24" style="color:' + color + '">' + ITEM_ICONS[key] + '</svg>' +
-    '</div>';
+    return item.photo ? '<img src="' + escapeHtml(item.photo) + '" alt="" />' : '';
+  }
+  function usedBadge(item){
+    return item.usedAt ? '<span class="badge badge-used">Used ' + fmtDate(item.usedAt) + '</span>' : '';
   }
 
   function itemCardMarkup(item, showRoom){
-    var expBadge = expirationBadge(item);
+    var expBadge = item.usedAt ? usedBadge(item) : expirationBadge(item);
     var loc = showRoom ? getLocation(item.locationId) : null;
-    var photo = itemThumbMarkup(item);
     var value = (Number(item.value) || 0) > 0 ? '<span class="item-value">' + money(item.value) + '</span>' : '';
     return '' +
-      '<button type="button" class="item-card" data-item-id="' + item.id + '">' +
-        '<div class="item-photo">' + photo + '</div>' +
+      '<button type="button" class="item-card' + (item.usedAt ? ' item-used' : '') + '" data-item-id="' + item.id + '" style="--cat:' + categoryColor(item.category) + '">' +
+        (item.photo ? '<div class="item-photo">' + itemThumbMarkup(item) + '</div>' : '') +
         '<div class="item-info">' +
-          '<div class="item-name">' + escapeHtml(item.name) + (item.quantity > 1 ? ' <span class="item-qty">×' + item.quantity + '</span>' : '') + '</div>' +
+          '<div class="item-name">' + escapeHtml(item.name) + (qtyOf(item) !== 1 ? ' <span class="item-qty">×' + qtyOf(item) + '</span>' : '') + '</div>' +
           '<div class="item-meta">' +
-            '<span class="tag">' + escapeHtml(item.category) + '</span>' +
+            categoryTag(item.category) +
             (loc ? '<span class="tag tag-room">' + escapeHtml(displayName(loc)) + '</span>' : '') +
             value +
           '</div>' +
@@ -3751,7 +3842,7 @@
     items = sortItems(items, ap.sort, ap.query);
 
     var totalValue = 0;
-    items.forEach(function(i){ totalValue += (Number(i.value)||0) * (Number(i.quantity)||1); });
+    items.forEach(function(i){ totalValue += (Number(i.value)||0) * qtyOf(i); });
 
     els.panelTitle.textContent = title;
     var parentBit = '';
@@ -3907,43 +3998,24 @@
   }
 
   /* ---------------- Item modal ---------------- */
-  function renderIconGrid(){
-    els.itemIconGrid.innerHTML = ITEM_ICON_KEYS.map(function(key){
-      var label = ITEM_ICON_LABELS[key] || key;
-      return '<button type="button" class="icon-pick' + (key===currentIconKey?' active':'') + '" data-icon="' + key + '" title="' + label + '" aria-label="' + label + '">' +
-        '<svg viewBox="0 0 24 24">' + ITEM_ICONS[key] + '</svg>' +
-      '</button>';
-    }).join('');
-  }
-
-  function renderColorRow(){
-    els.itemColorRow.innerHTML = DEFAULT_ICON_COLORS.map(function(c){
-      return '<button type="button" class="color-pick' + (c===currentIconColor?' active':'') + '" data-color="' + c + '" style="background:' + c + '" aria-label="Color ' + c + '"></button>';
-    }).join('');
-  }
-
   function renderVisualPreview(){
-    if (currentVisualMode === 'photo'){
-      els.itemPhotoRemoveBtn.style.display = currentPhotoDataUrl ? 'inline-flex' : 'none';
-      els.itemVisualPreview.style.background = '';
-      els.itemVisualPreview.innerHTML = currentPhotoDataUrl
-        ? '<img src="' + currentPhotoDataUrl + '" alt="" />'
-        : '<span>No photo</span>';
-    } else {
-      var color = currentIconColor || DEFAULT_ICON_COLORS[0];
-      var key = ITEM_ICONS[currentIconKey] ? currentIconKey : 'other';
-      els.itemVisualPreview.style.background = hexToRgba(color, 0.16);
-      els.itemVisualPreview.innerHTML = '<svg viewBox="0 0 24 24" style="color:' + color + '">' + ITEM_ICONS[key] + '</svg>';
-    }
+    els.itemPhotoRemoveBtn.style.display = currentPhotoDataUrl ? 'inline-flex' : 'none';
+    els.itemVisualPreview.style.background = '';
+    els.itemVisualPreview.innerHTML = currentPhotoDataUrl
+      ? '<img src="' + escapeHtml(currentPhotoDataUrl) + '" alt="" />'
+      : '<span class="no-photo">No photo</span>';
   }
 
-  function setVisualMode(mode){
-    currentVisualMode = mode;
-    els.visualTabIcon.classList.toggle('active', mode === 'icon');
-    els.visualTabPhoto.classList.toggle('active', mode === 'photo');
-    els.iconPanel.style.display = mode === 'icon' ? '' : 'none';
-    els.photoPanel.style.display = mode === 'photo' ? '' : 'none';
-    renderVisualPreview();
+  var lastUsedCategory = null;
+  function renderItemCategorySelect(selected){
+    var names = categoryNames().slice();
+    if (selected && names.indexOf(selected) === -1) names.push(selected);   /* legacy/imported category not in the list */
+    els.itemCategorySelect.innerHTML = names.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('') +
+      '<option value="__custom">+ New category…</option>';
+    /* new items start in the last category you used (handy when adding several groceries), else "Other" */
+    els.itemCategorySelect.value = selected || (lastUsedCategory && names.indexOf(lastUsedCategory) !== -1 ? lastUsedCategory : (names.indexOf(CATEGORY_FALLBACK) !== -1 ? CATEGORY_FALLBACK : names[0]));
+    els.itemCustomCategoryWrap.style.display = 'none';
+    els.itemCustomCategoryInput.value = '';
   }
 
   function openItemModal(item, locationId){
@@ -3952,36 +4024,18 @@
     els.itemModalTitle.textContent = item ? 'Edit item' : 'Add an item';
     els.itemSaveBtn.textContent = item ? 'Save changes' : 'Add item';
     els.itemDeleteBtn.style.display = item ? 'inline-flex' : 'none';
+    els.itemUsedBtn.style.display = item ? 'inline-flex' : 'none';
+    els.itemUsedBtn.textContent = item && item.usedAt ? 'Mark as not used' : 'Mark as used';
     els.itemNameInput.value = item ? item.name : '';
-
-    els.itemCategorySelect.innerHTML = CATEGORIES.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('') + '<option value="__custom">Custom…</option>';
-    var isPreset = item && CATEGORIES.indexOf(item.category) !== -1;
-    if (item && item.category && !isPreset){
-      els.itemCategorySelect.value = '__custom';
-      els.itemCustomCategoryInput.value = item.category;
-      els.itemCustomCategoryWrap.style.display = '';
-    } else {
-      els.itemCategorySelect.value = (item && item.category) ? item.category : CATEGORIES[0];
-      els.itemCustomCategoryWrap.style.display = 'none';
-      els.itemCustomCategoryInput.value = '';
-    }
-
-    els.itemQtyInput.value = item && item.quantity ? item.quantity : 1;
+    renderItemCategorySelect(item && item.category ? item.category : null);
+    els.itemQtyInput.value = item ? qtyOf(item) : 1;
     els.itemValueInput.value = (item && item.value != null) ? item.value : '';
     els.itemSubLocationInput.value = item ? (item.subLocation || '') : '';
     els.itemPurchaseInput.value = item ? (item.purchaseDate || '') : '';
     els.itemExpiresInput.value = item ? (item.expirationDate || '') : '';
     els.itemNotesInput.value = item ? (item.notes || '') : '';
-
-    var categoryForDefaults = (item && item.category) || els.itemCategorySelect.value;
-    iconManuallyChosen = !!(item && item.iconKey);
-    currentIconKey = (item && item.iconKey) || defaultIconForCategory(categoryForDefaults);
-    currentIconColor = (item && item.iconColor) || defaultColorForCategory(categoryForDefaults);
     currentPhotoDataUrl = item ? (item.photo || null) : null;
-    renderIconGrid();
-    renderColorRow();
-    setVisualMode(item && item.photo ? 'photo' : 'icon');
-
+    renderVisualPreview();
     openModalEl(els.itemModalOverlay);
     setTimeout(function(){ els.itemNameInput.focus(); }, 0);
   }
@@ -3990,8 +4044,11 @@
     var name = els.itemNameInput.value.trim();
     if (!name){ toast('Give the item a name', 'error'); els.itemNameInput.focus(); return; }
     var category = els.itemCategorySelect.value;
-    if (category === '__custom') category = els.itemCustomCategoryInput.value.trim() || 'Other';
-    var qty = Math.max(1, parseInt(els.itemQtyInput.value, 10) || 1);
+    if (category === '__custom'){
+      category = els.itemCustomCategoryInput.value.trim();
+      if (!category){ toast('Type a name for the new category', 'error'); els.itemCustomCategoryInput.focus(); return; }
+    }
+    var qv = parseInt(els.itemQtyInput.value, 10), qty = isNaN(qv) ? 1 : Math.max(0, qv);
     var value = els.itemValueInput.value === '' ? null : Math.max(0, parseFloat(els.itemValueInput.value));
 
     var payload = {
@@ -4000,15 +4057,20 @@
       purchaseDate: els.itemPurchaseInput.value || null,
       expirationDate: els.itemExpiresInput.value || null,
       notes: els.itemNotesInput.value.trim(),
-      photo: currentVisualMode === 'photo' ? (currentPhotoDataUrl || null) : null,
-      iconKey: currentIconKey || 'other',
-      iconColor: currentIconColor || DEFAULT_ICON_COLORS[0],
+      photo: currentPhotoDataUrl || null,
       updatedAt: Date.now()
     };
+    ensureCategories([category]);
+    lastUsedCategory = category;
 
     if (editingItem){
-      Object.keys(payload).forEach(function(k){ editingItem[k] = payload[k]; });
-      idbPut('items', editingItem).then(function(){
+      var copy = JSON.parse(JSON.stringify(editingItem));
+      Object.keys(payload).forEach(function(k){ copy[k] = payload[k]; });
+      delete copy.iconKey; delete copy.iconColor;               /* item icons were retired */
+      if (qty > 0 && qtyOf(editingItem) === 0) delete copy.usedAt;   /* restocked */
+      if (qty === 0 && !copy.usedAt) copy.usedAt = localDateStr();   /* none left = used up */
+      idbPut('items', copy).then(function(){
+        replaceItemInState(copy);
         closeModal('itemModalOverlay');
         renderCanvas(); renderStats(); refreshActivePanel();
         toast('Item updated');
@@ -4023,6 +4085,132 @@
         toast('Item added');
       }).catch(function(err){ console.error(err); toast('Could not save item — the photo may be too large', 'error'); });
     }
+  }
+  function replaceItemInState(it){
+    var idx = state.items.findIndex(function(x){ return x.id === it.id; });
+    if (idx === -1) state.items.push(it); else state.items[idx] = it;
+    if (editingItem && editingItem.id === it.id) editingItem = it;
+  }
+
+  /* ---------------- Used items ----------------
+     Marking an item as used keeps it in the inventory (so you have a record) but takes it out
+     of every expiration warning, including the email reminders. */
+  function localDateStr(d){ d = d || new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function setItemUsed(item, used){
+    var copy = JSON.parse(JSON.stringify(item));
+    if (used) copy.usedAt = localDateStr(); else { delete copy.usedAt; if (qtyOf(copy) === 0) copy.quantity = 1; }
+    return idbPut('items', copy).then(function(){
+      replaceItemInState(copy);
+      renderCanvas(); renderStats(); refreshActivePanel();
+      toast(used ? '“' + copy.name + '” marked as used — no more expiration reminders' : '“' + copy.name + '” marked as not used');
+      return copy;
+    }).catch(function(err){ console.error(err); toast('Could not update the item', 'error'); });
+  }
+
+  /* ---------------- Categories ---------------- */
+  function saveCategories(list){
+    state.categories = list.map(function(c){ return {name: c.name, color: c.color}; });
+    state.categoriesUpdatedAt = Date.now();
+    return idbPutRaw('meta', {key:'categories', value: state.categories, updatedAt: state.categoriesUpdatedAt})
+      .then(function(){ noteLocalChange(); });
+  }
+  /* Adds any category names that aren't in the list yet (from a new item or a CSV import). */
+  function ensureCategories(names){
+    var list = categoryList().map(function(c){ return {name: c.name, color: c.color}; }), added = false;
+    names.forEach(function(n){
+      n = String(n || '').trim();
+      if (!n || list.some(function(c){ return c.name.toLowerCase() === n.toLowerCase(); })) return;
+      list.push({name: n, color: nextCategoryColor(list)}); added = true;
+    });
+    if (added) saveCategories(list).catch(function(err){ console.error(err); });
+    return added;
+  }
+  var workingCats = null;
+  function openCategoriesModal(){
+    workingCats = categoryList().map(function(c){ return {name: c.name, color: c.color, orig: c.name}; });
+    renderCategoryRows();
+    openModalEl(els.catModalOverlay);
+  }
+  function renderCategoryRows(){
+    var counts = {};
+    state.items.forEach(function(i){ var c = (i.category || CATEGORY_FALLBACK).toLowerCase(); counts[c] = (counts[c] || 0) + 1; });
+    els.catRows.innerHTML = workingCats.map(function(c, idx){
+      var n = c.orig ? (counts[c.orig.toLowerCase()] || 0) : 0, locked = c.orig === CATEGORY_FALLBACK;
+      return '<div class="cat-row" data-idx="' + idx + '">' +
+        '<input type="color" value="' + (isHexColor(c.color) ? c.color : '#A0A7AD') + '" data-field="color" aria-label="Color for ' + escapeHtml(c.name) + '">' +
+        '<input type="text" value="' + escapeHtml(c.name) + '" maxlength="30" data-field="name" aria-label="Category name"' + (locked ? ' disabled title="“Other” is where items go when their category is removed"' : '') + '>' +
+        '<span class="cat-count">' + n + ' item' + (n === 1 ? '' : 's') + '</span>' +
+        (locked ? '<span></span>' : '<button type="button" class="icon-btn danger" data-cat-del="' + idx + '" aria-label="Remove ' + escapeHtml(c.name) + '"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>') +
+      '</div>';
+    }).join('');
+  }
+  function saveCategoriesFromModal(){
+    var seen = {}, list = [];
+    for (var i = 0; i < workingCats.length; i++){
+      var c = workingCats[i], name = String(c.name || '').trim();
+      if (!name){ toast('Every category needs a name', 'error'); return; }
+      if (seen[name.toLowerCase()]){ toast('“' + name + '” is listed twice', 'error'); return; }
+      seen[name.toLowerCase()] = true;
+      list.push({name: name, color: isHexColor(c.color) ? c.color : nextCategoryColor(list), orig: c.orig});
+    }
+    if (!seen[CATEGORY_FALLBACK.toLowerCase()]) list.push({name: CATEGORY_FALLBACK, color: '#A0A7AD', orig: CATEGORY_FALLBACK});
+    /* renames and removals carry over to the items (and expiration rules) that use them */
+    var renames = {}, keep = {};
+    list.forEach(function(c){ if (c.orig) keep[c.orig.toLowerCase()] = c.name; if (c.orig && c.orig !== c.name) renames[c.orig.toLowerCase()] = c.name; });
+    var removed = categoryList().filter(function(c){ return !keep[c.name.toLowerCase()]; }).map(function(c){ return c.name.toLowerCase(); });
+    var changedItems = [];
+    state.items.forEach(function(it){
+      var k = String(it.category || CATEGORY_FALLBACK).toLowerCase(), to = null;
+      if (renames[k]) to = renames[k]; else if (removed.indexOf(k) !== -1) to = CATEGORY_FALLBACK;
+      if (to && to !== it.category){ var copy = JSON.parse(JSON.stringify(it)); copy.category = to; changedItems.push(copy); }
+    });
+    var ruleChanged = false;
+    state.rules.forEach(function(r){
+      if (r.category == null) return;
+      var k = r.category.toLowerCase();
+      if (renames[k]){ r.category = renames[k]; ruleChanged = true; }
+      else if (removed.indexOf(k) !== -1){ r.category = '__removed'; ruleChanged = true; }
+    });
+    if (ruleChanged) state.rules = state.rules.filter(function(r){ return r.category !== '__removed'; });
+    var go = function(){
+      return saveCategories(list)
+        .then(function(){ return Promise.all(changedItems.map(function(it){ return idbPut('items', it).then(function(){ replaceItemInState(it); }); })); })
+        .then(function(){ if (ruleChanged) return idbClear('rules').then(function(){ return Promise.all(state.rules.map(function(r){ return idbPut('rules', r); })); }); })
+        .then(function(){
+          closeModal('catModalOverlay');
+          renderCanvas(); renderStats(); refreshActivePanel(); if (inv.open) renderInventoryView();
+          if (els.itemModalOverlay.classList.contains('open')) renderItemCategorySelect(els.itemCategorySelect.value !== '__custom' ? els.itemCategorySelect.value : null);
+          toast('Categories saved' + (changedItems.length ? ' — ' + changedItems.length + ' item' + (changedItems.length === 1 ? '' : 's') + ' updated' : ''));
+        }).catch(function(err){ console.error(err); toast('Could not save categories', 'error'); });
+    };
+    var movedCount = state.items.filter(function(it){ return removed.indexOf(String(it.category || '').toLowerCase()) !== -1; }).length;
+    if (movedCount){
+      openConfirm(movedCount + ' item' + (movedCount === 1 ? '' : 's') + ' will move to “' + CATEGORY_FALLBACK + '” because ' + (movedCount === 1 ? 'its' : 'their') + ' category is being removed.', go, {confirmLabel:'Save categories'});
+    } else go();
+  }
+  function bindCategoriesModal(){
+    els.catRows.addEventListener('input', function(e){
+      var row = e.target.closest('.cat-row'); if (!row) return;
+      var c = workingCats[Number(row.getAttribute('data-idx'))], f = e.target.getAttribute('data-field');
+      if (c && f) c[f] = e.target.value;
+    });
+    els.catRows.addEventListener('click', function(e){
+      var del = e.target.closest('[data-cat-del]'); if (!del) return;
+      workingCats.splice(Number(del.getAttribute('data-cat-del')), 1);
+      renderCategoryRows();
+    });
+    els.catAddBtn.addEventListener('click', function(){
+      workingCats.push({name: '', color: nextCategoryColor(workingCats), orig: null});
+      renderCategoryRows();
+      var inputs = els.catRows.querySelectorAll('input[data-field="name"]');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+    els.catSaveBtn.addEventListener('click', saveCategoriesFromModal);
+    els.itemEditCategoriesBtn.addEventListener('click', openCategoriesModal);
+    els.itemUsedBtn.addEventListener('click', function(){
+      if (!editingItem) return;
+      setItemUsed(editingItem, !editingItem.usedAt).then(function(){ closeModal('itemModalOverlay'); });
+    });
   }
 
   function deleteItemAction(){
@@ -4126,7 +4314,9 @@
         '<span class="rule-unit">days before</span>' +
       '</div>';
     }
-    var options = CATEGORIES.map(function(c){
+    var names = categoryNames().slice();
+    if (rule.category && names.indexOf(rule.category) === -1) names.push(rule.category);
+    var options = names.map(function(c){
       var disabled = (usedCategories.indexOf(c) !== -1 && c !== rule.category) ? ' disabled' : '';
       return '<option value="' + escapeHtml(c) + '"' + (c===rule.category?' selected':'') + disabled + '>' + escapeHtml(c) + '</option>';
     }).join('');
@@ -4148,7 +4338,7 @@
     if (defaultRule) html += ruleRowMarkup(defaultRule, usedCategories);
     catRules.forEach(function(r){ html += ruleRowMarkup(r, usedCategories); });
     els.ruleRows.innerHTML = html;
-    els.addRuleBtn.style.display = catRules.length >= CATEGORIES.length ? 'none' : 'inline-flex';
+    els.addRuleBtn.style.display = catRules.length >= categoryNames().length ? 'none' : 'inline-flex';
   }
 
   function openNotificationsModal(){
@@ -4239,14 +4429,26 @@
     });
   }
 
+  /* A backup holds everything needed to rebuild this device: rooms/storage (with timestamps and
+     deletions), items, categories, expiration rules, and the floor-plan and line-overlay images. */
+  var BACKUP_FILE_NAME = 'the-SHIT-backup.json';
+  function imageForBackup(a){ return assetLoaded(a) ? {dataUrl: a.dataUrl, updatedAt: a.updatedAt || 0} : null; }
+  function buildBackup(){
+    return idbGetAll('locations').then(function(rawLocations){
+      return {app:'The S.H.I.T.S.', version:3, exportedAt: new Date().toISOString(),
+              locations: rawLocations, items: state.items, tombstones: state.tombstones,
+              rules: state.rules, rulesUpdatedAt: state.rulesUpdatedAt,
+              categories: categoryList(), categoriesUpdatedAt: state.categoriesUpdatedAt || 0,
+              lineOverlay: imageForBackup(state.lineOverlay), floorPlan: imageForBackup(state.floorPlan)};
+    });
+  }
   function exportBackup(){
-    var data = {version:2, exportedAt: new Date().toISOString(), locations: state.locations, items: state.items};
-    var json = JSON.stringify(data, null, 2);
-    getDownloadsCapability().then(function(dl){
-      if (!dl){ toast('Backups aren\'t available in this view', 'error'); return; }
-      var stamp = new Date().toISOString().slice(0,10);
-      return dl.save({filename: 'the-SHIT-backup-' + stamp + '.json', data: json}).then(function(){
-        toast('Backup saved');
+    buildBackup().then(function(data){
+      var json = JSON.stringify(data);
+      return getDownloadsCapability().then(function(dl){
+        if (!dl){ toast('Backups aren\'t available in this view', 'error'); return; }
+        /* Same name every time so it can simply replace the copy the site restores from. */
+        return dl.save({filename: BACKUP_FILE_NAME, data: json}).then(function(){ toast('Backup saved (includes your images)'); });
       });
     }).catch(function(err){
       if (err && err.code === 'declined') return;
@@ -4254,45 +4456,59 @@
       toast('Could not save backup', 'error');
     });
   }
+  /* Restores the images and category list carried in a backup (used by manual and automatic restore). */
+  function restoreBackupExtras(parsed, onlyIfMissing){
+    var jobs = [];
+    [['lineOverlay', parsed.lineOverlay], ['floorPlan', parsed.floorPlan]].forEach(function(pair){
+      var key = pair[0], img = pair[1];
+      if (!img || typeof img.dataUrl !== 'string' || !/^data:image\//.test(img.dataUrl)) return;
+      if (onlyIfMissing && (assetLoaded(state[key]) || (state[key] && state[key].removed))) return;
+      var prev = state[key] || {};
+      jobs.push(saveImageAssetLocal(key, {dataUrl: img.dataUrl, updatedAt: Date.now(), fileId: prev.fileId || null, needsUpload: true}));
+    });
+    return Promise.all(jobs).then(function(){ return jobs.length; });
+  }
 
   function csvEscapeField(v){
     var s = String(v == null ? '' : v);
-    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    if (/[",\r\n]/.test(s) || /^\s|\s$/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
     return s;
   }
 
-  function generateCsvTemplate(){
-    var headers = ['Room','Storage','Item','Category','Quantity','Value','SubLocation','Notes','PurchaseDate','ExpirationDate'];
-    var rows = [headers];
-    var rooms = state.locations.filter(function(l){ return l.type === 'room' && l.name; })
-      .sort(function(a,b){ return a.name.localeCompare(b.name); });
-    rooms.forEach(function(room){
-      rows.push([room.name,'','','','','','','','','']);
-      var children = locationChildren(room.id).filter(function(c){ return c.name; })
-        .sort(function(a,b){ return a.name.localeCompare(b.name); });
-      children.forEach(function(child){
-        rows.push([room.name, child.name,'','','','','','','','']);
-      });
+  /* ---- Inventory CSV export ----
+     One row per item. The same file can be imported back: the ID column lets an import update
+     the items it came from instead of duplicating them, and LocationID finds the right room even
+     if it is unnamed or two rooms share a name. Photos are not included (too large for CSV). */
+  var CSV_COLUMNS = ['Room','Storage','Item','Category','Quantity','Value','SubLocation','Notes','PurchaseDate','ExpirationDate','Used','ID','LocationID'];
+  function generateInventoryCsv(){
+    var rows = [CSV_COLUMNS];
+    var list = state.items.slice().sort(function(a, b){
+      return locationPath(a).localeCompare(locationPath(b)) || String(a.name).localeCompare(String(b.name));
     });
-    return rows.map(function(r){ return r.map(csvEscapeField).join(','); }).join('\r\n');
+    list.forEach(function(it){
+      var place = itemPlace(it);
+      rows.push([
+        place.room ? (place.room.name || '') : '', place.storage ? (place.storage.name || '') : '',
+        it.name, it.category || 'Other', qtyOf(it), it.value != null && it.value !== '' ? it.value : '',
+        it.subLocation || '', it.notes || '', it.purchaseDate || '', it.expirationDate || '',
+        it.usedAt || '', it.id, it.locationId || ''
+      ]);
+    });
+    return '﻿' + rows.map(function(r){ return r.map(csvEscapeField).join(','); }).join('\r\n') + '\r\n';
   }
-
-  function downloadCsvTemplate(){
-    var namedRoomCount = state.locations.filter(function(l){ return l.type === 'room' && l.name; }).length;
-    if (!namedRoomCount){
-      toast('Label at least one room first, then download the template', 'error');
-      return;
-    }
-    var csv = generateCsvTemplate();
+  function downloadInventoryCsv(){
+    if (!state.items.length){ toast('There are no items to export yet', 'error'); return; }
+    var csv = generateInventoryCsv();
     getDownloadsCapability().then(function(dl){
       if (!dl){ toast('Downloads aren\'t available in this view', 'error'); return; }
-      return dl.save({filename: 'the-SHIT-import-template.csv', data: csv}).then(function(){
-        toast('Template saved');
+      var stamp = new Date().toISOString().slice(0,10);
+      return dl.save({filename: 'the-SHIT-inventory-' + stamp + '.csv', data: csv}).then(function(){
+        toast('Exported ' + state.items.length + ' item' + (state.items.length === 1 ? '' : 's') + ' to CSV');
       });
     }).catch(function(err){
       if (err && err.code === 'declined') return;
       console.error(err);
-      toast('Could not save template', 'error');
+      toast('Could not save the CSV file', 'error');
     });
   }
 
@@ -4302,7 +4518,8 @@
       try { parsed = JSON.parse(text); } catch(e){ throw new Error('bad json'); }
       if (!parsed || !Array.isArray(parsed.locations) || !Array.isArray(parsed.items)) throw new Error('bad format');
       openConfirm(
-        'This will replace all current labels and items with the ' + parsed.locations.length + ' location(s) and ' + parsed.items.length + ' item(s) in this backup. This can\'t be undone.',
+        'This will replace all current labels and items with the ' + parsed.locations.filter(function(l){ return !l.deleted; }).length + ' location(s) and ' + parsed.items.length + ' item(s) in this backup' +
+          (parsed.lineOverlay || parsed.floorPlan ? ', and load its floor-plan images' : '') + '. This can\'t be undone.',
         function(){
           var keep = {}; parsed.items.forEach(function(i){ keep[i.id] = true; });
           var removedIds = state.items.filter(function(i){ return !keep[i.id]; }).map(function(i){ return i.id; });
@@ -4315,8 +4532,16 @@
               .then(function(){ return Promise.all(parsed.items.map(function(i){ return idbPut('items', i); })); });
           }).then(function(){
             state.locations = mergeLocations(allLocs); state.items = parsed.items;
+            var extras = [restoreBackupExtras(parsed, false)];
+            if (Array.isArray(parsed.categories) && parsed.categories.length) extras.push(saveCategories(parsed.categories));
+            if (Array.isArray(parsed.rules) && parsed.rules.length){
+              state.rules = parsed.rules.map(function(r){ return {id:r.id, category:r.category, warnDays:r.warnDays}; });
+              extras.push(idbClear('rules').then(function(){ return Promise.all(state.rules.map(function(r){ return idbPut('rules', r); })); }));
+            }
+            return Promise.all(extras);
+          }).then(function(){
             deselectAll();
-            renderCanvas(); renderStats();
+            renderCanvas(); renderStats(); showFloorPlan();
             toast('Backup restored');
           }).catch(function(err){ console.error(err); toast('Could not restore backup', 'error'); });
         },
@@ -4363,7 +4588,10 @@
     sublocation: ['sublocation','locationdetail','detail','where','position','spot'],
     notes: ['notes','note','description','desc'],
     purchasedate: ['purchasedate','purchased','datepurchased','purchaseddate'],
-    expirationdate: ['expirationdate','expires','expiration','expirydate','bestby','expdate']
+    expirationdate: ['expirationdate','expires','expiration','expirydate','bestby','expdate'],
+    used: ['used','useddate','usedon','usedat'],
+    id: ['id','itemid'],
+    locationid: ['locationid','locid']
   };
 
   function buildCsvColumnMap(headerRow){
@@ -4396,27 +4624,30 @@
   }
 
   function processCsvImport(rows){
-    if (!rows.length) return {ok:[], errors:[{row:0, message:'The file is empty'}]};
+    if (!rows.length) return {ok:[], errors:[{row:0, message:'The file is empty'}], added:0, updated:0, unchanged:0};
     var colMap = buildCsvColumnMap(rows[0]);
-    if (colMap.room === undefined || colMap.item === undefined){
-      return {ok:[], errors:[{row:0, message:'Could not find "Room" and "Item" columns in the header row'}]};
+    if (colMap.item === undefined || (colMap.room === undefined && colMap.locationid === undefined)){
+      return {ok:[], errors:[{row:0, message:'Could not find "Room" and "Item" columns in the header row'}], added:0, updated:0, unchanged:0};
     }
     var roomsByName = {}, storageByRoomAndName = {}, storageByNameOnly = {};
     state.locations.forEach(function(l){
       if (!l.name) return;
       var key = l.name.trim().toLowerCase();
       if (l.type === 'room') roomsByName[key] = l;
-      else {
+      else if (l.type === 'storage') {
         storageByRoomAndName[(l.parentId || '') + '::' + key] = l;
         if (!storageByNameOnly[key]) storageByNameOnly[key] = [];
         storageByNameOnly[key].push(l);
       }
     });
+    var itemsById = {};
+    state.items.forEach(function(i){ itemsById[i.id] = i; });
+    var norm = function(v){ return String(v || '').trim().toLowerCase(); };
 
-    var ok = [], errors = [];
+    var ok = [], errors = [], seenIds = {}, added = 0, updated = 0, unchanged = 0;
     for (var r = 1; r < rows.length; r++){
       var cells = rows[r];
-      if (!cells || (cells.length === 1 && cells[0].trim() === '')) continue;
+      if (!cells || cells.every(function(c){ return !String(c || '').trim(); })) continue;
       var get = function(field){
         var idx = colMap[field];
         return (idx === undefined || idx >= cells.length) ? '' : String(cells[idx] || '').trim();
@@ -4424,48 +4655,85 @@
       var roomName = get('room'), storageName = get('storage'), itemName = get('item');
       var rowNum = r + 1;
 
-      if (!itemName){ errors.push({row:rowNum, message:'Row ' + rowNum + ': missing item name'}); continue; }
-      if (!roomName){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" has no room'}); continue; }
-      var room = roomsByName[roomName.toLowerCase()];
-      if (!room){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — room "' + roomName + '" not found'}); continue; }
-
-      var locationId = room.id;
-      if (storageName){
-        var storLoc = storageByRoomAndName[room.id + '::' + storageName.toLowerCase()];
-        if (!storLoc){
-          var candidates = storageByNameOnly[storageName.toLowerCase()];
-          if (candidates && candidates.length === 1) storLoc = candidates[0];
-        }
-        if (!storLoc){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — storage "' + storageName + '" not found in "' + roomName + '"'}); continue; }
-        locationId = storLoc.id;
+      if (!itemName){
+        /* rows with only a room/storage name (the old template layout) are just skipped */
+        if (!get('category') && !get('quantity') && !get('value') && !get('notes') && !get('id')) continue;
+        errors.push({row:rowNum, message:'Row ' + rowNum + ': missing item name'}); continue;
       }
 
-      var category = get('category') || 'Other';
-      var qty = parseInt(get('quantity'), 10); if (!qty || qty < 1) qty = 1;
-      var rawValue = get('value');
-      var value = null;
+      /* 1. LocationID from an export, as long as the Room/Storage names in the row still agree with it
+            (so moving an item by editing its Room column in a spreadsheet still works). */
+      var locationId = null, byId = get('locationid') ? getLocation(get('locationid')) : null;
+      if (byId && (byId.type === 'room' || byId.type === 'storage')){
+        var idRoom = byId.type === 'room' ? byId : getLocation(byId.parentId), idStorage = byId.type === 'storage' ? byId : null;
+        var roomAgrees = !roomName || (idRoom && norm(idRoom.name) === norm(roomName));
+        var storageAgrees = idStorage ? (!storageName || norm(idStorage.name) === norm(storageName)) : !storageName;
+        if (roomAgrees && storageAgrees) locationId = byId.id;
+      }
+      /* 2. Otherwise match by name, as before. */
+      if (!locationId){
+        if (!roomName){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" has no room'}); continue; }
+        var room = roomsByName[roomName.toLowerCase()];
+        if (!room){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — room "' + roomName + '" not found'}); continue; }
+        locationId = room.id;
+        if (storageName){
+          var storLoc = storageByRoomAndName[room.id + '::' + storageName.toLowerCase()];
+          if (!storLoc){
+            var candidates = storageByNameOnly[storageName.toLowerCase()];
+            if (candidates && candidates.length === 1) storLoc = candidates[0];
+          }
+          if (!storLoc){ errors.push({row:rowNum, message:'Row ' + rowNum + ': "' + itemName + '" — storage "' + storageName + '" not found in "' + roomName + '"'}); continue; }
+          locationId = storLoc.id;
+        }
+      }
+
+      var category = get('category') || CATEGORY_FALLBACK;
+      var known = findCategory(category); if (known) category = known.name;      /* match the list's spelling/case */
+      var qty = parseInt(get('quantity'), 10); if (isNaN(qty) || qty < 0) qty = 1;
+      var rawValue = get('value'), value = null;
       if (rawValue){
         var parsedVal = parseFloat(rawValue.replace(/[^0-9.\-]/g, ''));
         if (!isNaN(parsedVal)) value = Math.max(0, parsedVal);
       }
+      /* Used: a date, or yes/x/true for "used today"; blank means not used */
+      var usedRaw = get('used'), usedAt = null;
+      if (usedRaw){ usedAt = /^(y|yes|x|true|used)$/i.test(usedRaw) ? localDateStr() : normalizeDateStr(usedRaw); }
 
-      ok.push({
-        id: uid(), locationId: locationId, name: itemName, category: category, quantity: qty, value: value,
+      var fields = {
+        locationId: locationId, name: itemName, category: category, quantity: qty, value: value,
         subLocation: get('sublocation'), notes: get('notes'),
         purchaseDate: normalizeDateStr(get('purchasedate')), expirationDate: normalizeDateStr(get('expirationdate')),
-        iconKey: defaultIconForCategory(category), iconColor: defaultColorForCategory(category),
-        photo: null, createdAt: Date.now()
-      });
+        usedAt: usedAt
+      };
+      /* An ID that matches an item you already have updates that item instead of adding a copy. */
+      var rowId = get('id');
+      if (rowId && !/^[A-Za-z0-9_\-]{4,64}$/.test(rowId)) rowId = '';
+      if (rowId && seenIds[rowId]) rowId = '';                 /* same ID twice in one file: treat the repeat as new */
+      if (rowId) seenIds[rowId] = true;
+      var existing = rowId ? itemsById[rowId] : null;
+      if (existing){
+        var changed = Object.keys(fields).some(function(k){ return String(existing[k] == null ? '' : existing[k]) !== String(fields[k] == null ? '' : fields[k]); });
+        if (!changed){ unchanged++; continue; }
+        ok.push({existing: existing, fields: fields}); updated++;
+      } else {
+        var item = {id: rowId || uid(), photo: null, createdAt: Date.now()};
+        Object.keys(fields).forEach(function(k){ if (fields[k] != null || k !== 'usedAt') item[k] = fields[k]; });
+        ok.push({item: item}); added++;
+      }
     }
-    return {ok: ok, errors: errors};
+    return {ok: ok, errors: errors, added: added, updated: updated, unchanged: unchanged};
   }
 
   var pendingCsvImport = null;
 
   function openCsvResultsModal(result){
     pendingCsvImport = result;
-    var okCount = result.ok.length, errCount = result.errors.length;
-    els.csvSummary.textContent = okCount + ' item' + (okCount===1?'':'s') + ' ready to import' + (errCount ? ', ' + errCount + ' row' + (errCount===1?'':'s') + ' couldn\'t be matched:' : '.');
+    var okCount = result.ok.length, errCount = result.errors.length, parts = [];
+    if (result.added) parts.push(result.added + ' new item' + (result.added === 1 ? '' : 's'));
+    if (result.updated) parts.push(result.updated + ' existing item' + (result.updated === 1 ? '' : 's') + ' to update');
+    if (result.unchanged) parts.push(result.unchanged + ' already up to date');
+    els.csvSummary.textContent = (parts.length ? parts.join(', ') : 'Nothing to import') +
+      (errCount ? '. ' + errCount + ' row' + (errCount===1?'':'s') + ' couldn\'t be matched:' : '.');
     if (errCount){
       els.csvIssuesWrap.style.display = '';
       var shown = result.errors.slice(0, 25);
@@ -4475,21 +4743,39 @@
       els.csvIssuesWrap.style.display = 'none';
       els.csvIssuesList.innerHTML = '';
     }
-    els.csvConfirmBtn.textContent = okCount ? 'Import ' + okCount + ' item' + (okCount===1?'':'s') : 'Nothing to import';
+    els.csvConfirmBtn.textContent = okCount ? (result.updated ? 'Import & update ' : 'Import ') + okCount + ' item' + (okCount===1?'':'s') : 'Nothing to import';
     els.csvConfirmBtn.disabled = okCount === 0;
     openModalEl(els.csvModalOverlay);
   }
 
   function confirmCsvImport(){
     if (!pendingCsvImport || !pendingCsvImport.ok.length) return;
-    var items = pendingCsvImport.ok;
-    Promise.all(items.map(function(i){ return idbPut('items', i); })).then(function(){
-      state.items = state.items.concat(items);
+    var result = pendingCsvImport;
+    var writes = result.ok.map(function(entry){
+      if (entry.existing){
+        var copy = JSON.parse(JSON.stringify(entry.existing));    /* keeps photo and createdAt */
+        Object.keys(entry.fields).forEach(function(k){ copy[k] = entry.fields[k]; });
+        if (copy.usedAt == null) delete copy.usedAt;
+        delete copy.iconKey; delete copy.iconColor;
+        return idbPut('items', copy);
+      }
+      delete state.tombstones[entry.item.id];                       /* re-importing a deleted item brings it back */
+      return idbPut('items', entry.item);
+    });
+    ensureCategories(result.ok.map(function(e){ return (e.item || e.fields).category; }));
+    Promise.all(writes).then(function(saved){
+      var byId = {};
+      saved.forEach(function(it){ byId[it.id] = it; });
+      state.items = state.items.map(function(it){ return byId[it.id] ? byId[it.id] : it; });
+      saved.forEach(function(it){ if (!state.items.some(function(x){ return x.id === it.id; })) state.items.push(it); });
+      idbPutRaw('meta', {key:'tombstones', value: state.tombstones}).catch(function(){});
       closeModal('csvModalOverlay');
       renderCanvas(); renderStats(); refreshActivePanel();
-      var skipped = pendingCsvImport.errors.length;
       pendingCsvImport = null;
-      toast('Imported ' + items.length + ' item' + (items.length===1?'':'s') + (skipped ? ' (' + skipped + ' skipped)' : ''));
+      var msg = [];
+      if (result.added) msg.push(result.added + ' added');
+      if (result.updated) msg.push(result.updated + ' updated');
+      toast('Imported: ' + msg.join(', ') + (result.errors.length ? ' (' + result.errors.length + ' skipped)' : ''));
     }).catch(function(err){ console.error(err); toast('Could not import items', 'error'); });
   }
 
@@ -4541,7 +4827,6 @@
   }
   function setMode(mode){
     if (inv.open) closeInventoryView();
-    setFurnitureLibraryOpen(false);
     if (state.mode === 'shape' && state.selectedShapeId) applyZoomTransform(state.selectedRoomId ? getLocation(state.selectedRoomId) : null);
 
     state.mode = mode;
@@ -4582,7 +4867,7 @@
     els.notifyBtn.addEventListener('click', openNotificationsModal);
     els.addRuleBtn.addEventListener('click', function(){
       var used = workingRules.filter(function(r){ return r.category != null; }).map(function(r){ return r.category; });
-      var next = CATEGORIES.find(function(c){ return used.indexOf(c) === -1; });
+      var next = categoryNames().find(function(c){ return used.indexOf(c) === -1; });
       if (!next) return;
       var def = workingRules.find(function(r){ return r.category == null; });
       workingRules.push({id:newRuleId(), category:next, warnDays: def ? def.warnDays : DEFAULT_WARN_DAYS});
@@ -4610,7 +4895,7 @@
     els.rulesSaveBtn.addEventListener('click', saveRules);
 
     els.exportBtn.addEventListener('click', exportBackup);
-    els.downloadTemplateBtn.addEventListener('click', downloadCsvTemplate);
+    els.exportCsvBtn.addEventListener('click', downloadInventoryCsv);
     els.importInput.addEventListener('change', function(e){
       var file = e.target.files[0];
       e.target.value = '';
@@ -4698,46 +4983,16 @@
     els.roomSaveBtn.addEventListener('click', saveLocation);
     els.roomDeleteBtn.addEventListener('click', resetLocationLabel);
 
-    /* Furniture / appliance library */
-    els.furnitureLibraryBtn.addEventListener('click', function(){ setFurnitureLibraryOpen(!fixtureLibraryOpen); });
-    els.furnitureLibraryClose.addEventListener('click', function(){ setFurnitureLibraryOpen(false); });
-    els.fixtureTextureSelect.addEventListener('change', function(){ currentFixtureTexture = els.fixtureTextureSelect.value; });
-    els.fixtureColorInput.addEventListener('input', function(){ currentFixtureColor = els.fixtureColorInput.value; });
-    els.fixtureGrid.addEventListener('click', function(e){
-      var btn = e.target.closest('.fixture-pick'); if (!btn) return;
-      addFixture(btn.getAttribute('data-fixture-kind'));
-    });
-    els.fixtureRotateLeft.addEventListener('click', function(){ rotateFixtureBy(-15); });
-    els.fixtureRotateRight.addEventListener('click', function(){ rotateFixtureBy(15); });
-    els.fixtureApplyStyle.addEventListener('click', applyFixtureStyle);
-    renderFixtureLibrary();
-
     /* Item modal */
     els.itemCategorySelect.addEventListener('change', function(){
-      var val = els.itemCategorySelect.value;
-      els.itemCustomCategoryWrap.style.display = val === '__custom' ? '' : 'none';
-      if (!iconManuallyChosen && val !== '__custom'){
-        currentIconKey = defaultIconForCategory(val);
-        currentIconColor = defaultColorForCategory(val);
-        renderIconGrid(); renderColorRow(); renderVisualPreview();
-      }
+      var isNew = els.itemCategorySelect.value === '__custom';
+      els.itemCustomCategoryWrap.style.display = isNew ? '' : 'none';
+      if (isNew) setTimeout(function(){ els.itemCustomCategoryInput.focus(); }, 0);
     });
-    els.visualTabIcon.addEventListener('click', function(){ setVisualMode('icon'); });
-    els.visualTabPhoto.addEventListener('click', function(){ setVisualMode('photo'); });
-    els.itemIconGrid.addEventListener('click', function(e){
-      var btn = e.target.closest('.icon-pick');
-      if (!btn) return;
-      currentIconKey = btn.getAttribute('data-icon');
-      iconManuallyChosen = true;
-      renderIconGrid(); renderVisualPreview();
-    });
-    els.itemColorRow.addEventListener('click', function(e){
-      var btn = e.target.closest('.color-pick');
-      if (!btn) return;
-      currentIconColor = btn.getAttribute('data-color');
-      iconManuallyChosen = true;
-      renderColorRow(); renderVisualPreview();
-    });
+    bindCategoriesModal();
+    bindQuick();
+    bindQuickAdd();
+    bindQrStickers();
     els.itemPhotoInput.addEventListener('change', function(e){
       var file = e.target.files[0];
       e.target.value = '';
@@ -4803,20 +5058,15 @@
       if (state.mode !== 'shape') return;
       var target = e.target;
       var role = target.getAttribute('data-role');
-      var shapeEl = target.closest('.location,.fixture-shape');
+      var shapeEl = target.closest('.location');
 
       if (!shapeEl){
         if (state.selectedShapeId){ state.selectedShapeId = null; resetEditZoomCycle(); applyZoomTransform(null); renderCanvas(); updateBackBtn(); }
         return;
       }
-      var shapeId = shapeEl.getAttribute('data-loc-id') || shapeEl.getAttribute('data-fixture-id');
+      var shapeId = shapeEl.getAttribute('data-loc-id');
       var shape = getShapeTarget(shapeId);
       if (!shape) return;
-      if (isFixture(shape)){
-        currentFixtureTexture = shape.texture || 'solid';
-        currentFixtureColor = shape.color || '#6B7280';
-        if (fixtureLibraryOpen) renderFixtureLibrary();
-      }
       var p = svgPoint(e);
       var selected = state.selectedShapeId === shape.id;
 
@@ -4918,7 +5168,16 @@
       if (!shape) return;
 
       if (!ds.moved){
-        clickZoomToShape(shape);
+        /* A plain click on the added-point marker already inserted a point in memory — save it.
+           (Before, it was never written to the database, so it vanished on reload/sync.) */
+        if (ds.historyPushed){
+          idbPut('locations', shape).then(function(){ renderCanvas(); })
+            .catch(function(err){ console.error(err); toast('Could not add point', 'error'); });
+          return;
+        }
+        /* Only a click on the shape body cycles the zoom. Zooming on a handle/point tap moved the
+           point out from under the cursor, so double-click-to-remove rarely worked. */
+        if (ds.type === 'selectOrMove') clickZoomToShape(shape);
         renderCanvas(); updateBackBtn();
         return;
       }
@@ -5065,6 +5324,7 @@
           doc.rules.forEach(function(x){ R.put(x); });
           M.put({key:'tombstones', value: doc.tombstones});
           M.put({key:'rulesUpdatedAt', value: doc.rulesUpdatedAt});
+          if (doc.categories && doc.categories.length) M.put({key:'categories', value: doc.categories, updatedAt: doc.categoriesUpdatedAt || 0});
           tx.oncomplete = function(){ resolve(); };
           tx.onerror = function(){ reject(tx.error); };
         } catch(err){ reject(err); }
@@ -5100,8 +5360,10 @@
       return {fileId: a.fileId || null, updatedAt: a.updatedAt || 0, removed: !!a.removed};
     };
     var fp = asset(d.floorPlan), lo = asset(d.lineOverlay);
+    var cats = Array.isArray(d.categories) ? d.categories.filter(function(c){ return c && c.name; }).map(function(c){ return {name: String(c.name), color: String(c.color || '')}; }) : [];
     return {schema:1, locations: sortById(d.locations || []), items: sortById(d.items || []), tombstones: tomb,
-            rules: sortById(d.rules || []), rulesUpdatedAt: d.rulesUpdatedAt || 0, floorPlan: fp, lineOverlay: lo};
+            rules: sortById(d.rules || []), rulesUpdatedAt: d.rulesUpdatedAt || 0, floorPlan: fp, lineOverlay: lo,
+            categories: cats, categoriesUpdatedAt: d.categoriesUpdatedAt || 0};
   }
   function canonical(d){ return stableStringify(normalizeDoc(d)); }
   function mergeDocs(local, remote){
@@ -5122,8 +5384,14 @@
     }
     var newerAsset = function(a, b){ return !a ? b : (!b ? a : (b.updatedAt > a.updatedAt ? b : a)); };
     var floorPlan = newerAsset(L.floorPlan, R.floorPlan), lineOverlay = newerAsset(L.lineOverlay, R.lineOverlay);
+    /* category list: whole list, newest edit wins; an empty list (older app version) never wins */
+    var cats, catsAt;
+    if (!R.categories.length || (L.categories.length && L.categoriesUpdatedAt > R.categoriesUpdatedAt)){ cats = L.categories; catsAt = L.categoriesUpdatedAt; }
+    else if (!L.categories.length || R.categoriesUpdatedAt > L.categoriesUpdatedAt){ cats = R.categories; catsAt = R.categoriesUpdatedAt; }
+    else { cats = stableStringify(L.categories) >= stableStringify(R.categories) ? L.categories : R.categories; catsAt = L.categoriesUpdatedAt; }
     return normalizeDoc({locations: mergeById(L.locations.concat(R.locations)), items: items, tombstones: tomb,
-                         rules: rules, rulesUpdatedAt: rulesAt, floorPlan: floorPlan, lineOverlay: lineOverlay});
+                         rules: rules, rulesUpdatedAt: rulesAt, floorPlan: floorPlan, lineOverlay: lineOverlay,
+                         categories: cats, categoriesUpdatedAt: catsAt});
   }
   function buildLocalDoc(){
     return Promise.all([idbGetAll('locations'), idbGetAll('items')]).then(function(r){
@@ -5133,6 +5401,7 @@
       };
       return normalizeDoc({locations: r[0], items: r[1], tombstones: state.tombstones, rules: state.rules,
                            rulesUpdatedAt: state.rulesUpdatedAt,
+                           categories: categoryList(), categoriesUpdatedAt: state.categoriesUpdatedAt || 0,
                            floorPlan: ref(state.floorPlan), lineOverlay: ref(state.lineOverlay)});
     });
   }
@@ -5145,6 +5414,7 @@
       state.locations = mergeLocations(doc.locations);
       state.items = doc.items.slice();
       state.rules = doc.rules.slice();
+      if (doc.categories && doc.categories.length){ state.categories = doc.categories.slice(); state.categoriesUpdatedAt = doc.categoriesUpdatedAt || 0; }
       if (!state.rules.some(function(r){ return r.category == null; })){
         state.rules.push({id:newRuleId(), category:null, warnDays:DEFAULT_WARN_DAYS});
       }
@@ -5159,6 +5429,7 @@
           (state.selectedStorageId && !getLocation(state.selectedStorageId))) deselectAll();
       if (state.selectedShapeId && !getLocation(state.selectedShapeId)) state.selectedShapeId = null;
       renderCanvas(); renderStats(); refreshActivePanel(); checkExpirationNotifications();
+      if (quick.open) renderQuick();
     });
   }
 
@@ -5598,6 +5869,7 @@
         s === 'error' ? (sync.lastError || 'Sync problem') : 'Syncing with Google Drive';
     }
     if (els.syncModalOverlay && els.syncModalOverlay.classList.contains('open')) renderSyncDialog();
+    if (quick.open) renderQuickSync();
   }
   function setupLink(){ return location.origin + location.pathname + '#clientId=' + encodeURIComponent(getClientId()); }
   function renderSyncDialog(){
@@ -5819,12 +6091,41 @@
     var y = Math.min(a.y + a.h + m, b.y + b.h + m) - Math.max(a.y - m, b.y - m);
     return (x > 0 && y > 0) ? x * y : 0;
   }
-  function roomIconRect(loc){
-    if (loc.type !== 'room') return null;
+  /* ---- Icon placement: centered in the room/storage shape ---- */
+  var ICON_BOX = 28, ICON_GLYPH = 19;   /* on-screen px: plate size and glyph size */
+  function pointInPolygon(x, y, pts){
+    var inside = false;
+    for (var i = 0, j = pts.length - 1; i < pts.length; j = i++){
+      var xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  /* Visual middle of a shape: the centroid, or for odd shapes (L, U) whose centroid falls outside,
+     the midpoint of the widest inside span through the middle row. */
+  function shapeCenter(pts){
+    var c = polygonCentroid(pts);
+    if (pointInPolygon(c.x, c.y, pts)) return c;
+    var bb = polygonBBox(pts), best = null;
+    for (var k = 1; k < 20; k++){
+      var y = bb.minY + bb.h * k / 20, xs = [];
+      for (var i = 0, j = pts.length - 1; i < pts.length; j = i++){
+        var a = pts[j], b = pts[i];
+        if ((a[1] > y) !== (b[1] > y)) xs.push(a[0] + (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1]));
+      }
+      xs.sort(function(p, q){ return p - q; });
+      for (var n = 0; n + 1 < xs.length; n += 2){
+        var w = xs[n + 1] - xs[n], score = w - Math.abs(y - c.y) * 0.5;
+        if (!best || score > best.score) best = {x: (xs[n] + xs[n + 1]) / 2, y: y, score: score};
+      }
+    }
+    return best ? {x: best.x, y: best.y} : {x: bb.cx, y: bb.cy};
+  }
+  function locationIconRect(loc){
     var bb = polygonBBox(loc.points);
     if (!(bb.h > 60 && bb.w > 50)) return null;
-    var c = polygonCentroid(loc.points), z = Math.max(1, currentZoom);
-    return {x: c.x - 13 / z, y: bb.minY + 6 / z, w: 26 / z, h: 20 / z};
+    var c = shapeCenter(loc.points), z = Math.max(1, currentZoom), s = ICON_BOX / z;
+    return {x: c.x - s/2, y: c.y - s/2, w: s, h: s, cx: c.x, cy: c.y};
   }
   var LABEL_OFFSETS = (function(){
     var o = [];
@@ -5832,7 +6133,10 @@
     return o.sort(function(a, b){ return (a[0]*a[0]*0.6 + a[1]*a[1]) - (b[0]*b[0]*0.6 + b[1]*b[1]); });
   })();
   function placeLabel(s, obstacles){
-    var c = polygonCentroid(s.loc.points), bb = polygonBBox(s.loc.points);
+    var bb = polygonBBox(s.loc.points), ir = locationIconRect(s.loc), c;
+    /* Start just below the shape's own icon so name and icon read as one unit without touching. */
+    if (ir) c = {x: ir.cx, y: ir.y + ir.h + 4 / s.z + s.h / 2};
+    else c = shapeCenter(s.loc.points);
     var stepX = Math.max(10, s.w * 0.34), stepY = Math.max(8, s.h * 0.5);
     var best = null;
     for (var k = 0; k < LABEL_OFFSETS.length; k++){
@@ -5873,7 +6177,8 @@
     var areaDesc = function(a, b){ var A = polygonBBox(a.points), B = polygonBBox(b.points); return B.w*B.h - A.w*A.h; };
     var rooms = state.locations.filter(function(l){ return l.type === 'room'; }).sort(areaDesc);
     var storages = state.locations.filter(function(l){ return l.type === 'storage'; }).sort(areaDesc);
-    var fixed = state.locations.map(roomIconRect).filter(Boolean);
+    /* every visible icon (rooms and storage) is an obstacle labels must not cover */
+    var fixed = state.locations.filter(function(l){ return l.type === 'room' || l.type === 'storage'; }).map(locationIconRect).filter(Boolean);
     var placedRooms = [], placedStorages = [], specs = [];
     rooms.forEach(function(loc){
       var s = labelSpec(loc); specs.push(s);
@@ -6111,20 +6416,583 @@
       if (seedIds[o.id]) return;
       if (o.deleted) return;
       if (!o.points || o.points.length < 3) return;
-      out.push({
+      if (o.type && o.type !== 'room' && o.type !== 'storage') return;   /* e.g. leftover furniture records */
+      /* Keep any extra fields (e.g. a custom piece's size) instead of silently dropping them. */
+      out.push(Object.assign({}, o, {
         id: o.id, type: o.type || 'room', name: o.name != null ? o.name : null,
         iconKey: o.iconKey != null ? o.iconKey : null, parentId: o.parentId !== undefined ? o.parentId : null,
         points: o.points,
-        pattern: o.pattern || null, patternOpacity: o.patternOpacity != null ? o.patternOpacity : null,
-        rotation: o.rotation != null ? Number(o.rotation) : 0,
-        fixtureKind: o.fixtureKind || null, texture: o.texture || null, color: o.color || null
-      });
+        pattern: o.pattern || null, patternOpacity: o.patternOpacity != null ? o.patternOpacity : null
+      }));
     });
     return out;
   }
 
+  /* ---------------- Tiny QR code generator ----------------
+     Byte mode, error correction level M, versions 1–10 (up to 213 characters — plenty for a link).
+     Built in so sticker sheets work without loading anything from the internet. */
+  var QR = (function(){
+    /* [ecc codewords per block, [data codewords per block, ...]] for level M */
+    var BLOCKS_M = [null,
+      [10,[16]], [16,[28]], [26,[44]], [18,[32,32]], [24,[43,43]],
+      [16,[27,27,27,27]], [18,[31,31,31,31]], [22,[38,38,39,39]], [22,[36,36,36,37,37]], [26,[43,43,43,43,44]]];
+    var ALIGN = [null, [], [6,18], [6,22], [6,26], [6,30], [6,34], [6,22,38], [6,24,42], [6,26,46], [6,28,50]];
+    function gfMul(x, y){ var z = 0; for (var i = 7; i >= 0; i--){ z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; } return z & 0xFF; }
+    function rsDivisor(degree){
+      var r = []; for (var i = 0; i < degree - 1; i++) r.push(0); r.push(1);
+      var root = 1;
+      for (var k = 0; k < degree; k++){
+        for (var j = 0; j < r.length; j++){ r[j] = gfMul(r[j], root); if (j + 1 < r.length) r[j] ^= r[j + 1]; }
+        root = gfMul(root, 0x02);
+      }
+      return r;
+    }
+    function rsRemainder(data, div){
+      var r = div.map(function(){ return 0; });
+      data.forEach(function(b){
+        var f = b ^ r.shift(); r.push(0);
+        for (var i = 0; i < div.length; i++) r[i] ^= gfMul(div[i], f);
+      });
+      return r;
+    }
+    function utf8(str){
+      var out = [], s = unescape(encodeURIComponent(str));
+      for (var i = 0; i < s.length; i++) out.push(s.charCodeAt(i));
+      return out;
+    }
+    function encode(text){
+      var bytes = utf8(text), ver = 0, spec;
+      for (var v = 1; v <= 10; v++){
+        spec = BLOCKS_M[v];
+        var cap = spec[1].reduce(function(a, b){ return a + b; }, 0);
+        if (4 + (v < 10 ? 8 : 16) + bytes.length * 8 <= cap * 8){ ver = v; break; }
+      }
+      if (!ver) throw new Error('Text too long for a QR sticker');
+      var dataLen = spec[1].reduce(function(a, b){ return a + b; }, 0);
+      /* data bits */
+      var bits = [];
+      function put(val, n){ for (var i = n - 1; i >= 0; i--) bits.push((val >>> i) & 1); }
+      put(4, 4); put(bytes.length, ver < 10 ? 8 : 16); bytes.forEach(function(b){ put(b, 8); });
+      put(0, Math.min(4, dataLen * 8 - bits.length));
+      while (bits.length % 8) bits.push(0);
+      var data = [];
+      for (var i = 0; i < bits.length; i += 8){ var b = 0; for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; data.push(b); }
+      for (var pad = 0xEC; data.length < dataLen; pad ^= 0xEC ^ 0x11) data.push(pad);
+      /* blocks + error correction, interleaved */
+      var div = rsDivisor(spec[0]), blocks = [], eccs = [], k = 0;
+      spec[1].forEach(function(n){ var blk = data.slice(k, k + n); k += n; blocks.push(blk); eccs.push(rsRemainder(blk, div)); });
+      var cw = [], maxLen = Math.max.apply(null, spec[1]);
+      for (i = 0; i < maxLen; i++) blocks.forEach(function(blk){ if (i < blk.length) cw.push(blk[i]); });
+      for (i = 0; i < spec[0]; i++) eccs.forEach(function(e){ cw.push(e[i]); });
+      /* matrix */
+      var size = ver * 4 + 17, mod = [], fn = [];
+      for (i = 0; i < size; i++){ mod.push(new Array(size).fill(false)); fn.push(new Array(size).fill(false)); }
+      function setF(x, y, dark){ mod[y][x] = dark; fn[y][x] = true; }
+      for (i = 0; i < size; i++){ setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+      [[3, 3], [size - 4, 3], [3, size - 4]].forEach(function(c){
+        for (var dy = -4; dy <= 4; dy++) for (var dx = -4; dx <= 4; dx++){
+          var x = c[0] + dx, y = c[1] + dy, d = Math.max(Math.abs(dx), Math.abs(dy));
+          if (x >= 0 && x < size && y >= 0 && y < size) setF(x, y, d !== 2 && d !== 4);
+        }
+      });
+      var al = ALIGN[ver], last = al.length - 1;
+      al.forEach(function(ay, a){ al.forEach(function(ax, b){
+        if ((a === 0 && b === 0) || (a === 0 && b === last) || (a === last && b === 0)) return;
+        for (var dy = -2; dy <= 2; dy++) for (var dx = -2; dx <= 2; dx++) setF(ax + dx, ay + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+      }); });
+      function drawFormat(mask){
+        var d = (0 << 3) | mask, r = d;                       /* level M = 00 */
+        for (var i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+        var fb = ((d << 10) | r) ^ 0x5412;
+        var bit = function(i){ return ((fb >>> i) & 1) !== 0; };
+        for (i = 0; i <= 5; i++) setF(8, i, bit(i));
+        setF(8, 7, bit(6)); setF(8, 8, bit(7)); setF(7, 8, bit(8));
+        for (i = 9; i < 15; i++) setF(14 - i, 8, bit(i));
+        for (i = 0; i < 8; i++) setF(size - 1 - i, 8, bit(i));
+        for (i = 8; i < 15; i++) setF(8, size - 15 + i, bit(i));
+        setF(8, size - 8, true);
+      }
+      drawFormat(0);
+      if (ver >= 7){
+        var r = ver;
+        for (i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1F25);
+        var vb = (ver << 12) | r;
+        for (i = 0; i < 18; i++){
+          var on = ((vb >>> i) & 1) !== 0, a2 = size - 11 + i % 3, b2 = Math.floor(i / 3);
+          setF(a2, b2, on); setF(b2, a2, on);
+        }
+      }
+      /* codewords, zigzag */
+      var bi = 0, total = cw.length * 8;
+      for (var right = size - 1; right >= 1; right -= 2){
+        if (right === 6) right = 5;
+        for (var vert = 0; vert < size; vert++) for (j = 0; j < 2; j++){
+          var x = right - j, up = ((right + 1) & 2) === 0, y = up ? size - 1 - vert : vert;
+          if (!fn[y][x] && bi < total){ mod[y][x] = ((cw[bi >>> 3] >>> (7 - (bi & 7))) & 1) !== 0; bi++; }
+        }
+      }
+      /* mask: try all 8, keep the lowest penalty */
+      function maskHit(m, x, y){
+        switch (m){
+          case 0: return (x + y) % 2 === 0; case 1: return y % 2 === 0; case 2: return x % 3 === 0;
+          case 3: return (x + y) % 3 === 0; case 4: return (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0;
+          case 5: return x * y % 2 + x * y % 3 === 0; case 6: return (x * y % 2 + x * y % 3) % 2 === 0;
+          default: return ((x + y) % 2 + x * y % 3) % 2 === 0;
+        }
+      }
+      function applyMask(m){ for (var y = 0; y < size; y++) for (var x = 0; x < size; x++) if (!fn[y][x] && maskHit(m, x, y)) mod[y][x] = !mod[y][x]; }
+      function penalty(){
+        var p = 0, dark = 0, x, y, run;
+        for (y = 0; y < size; y++){ run = 1; for (x = 1; x < size; x++){ if (mod[y][x] === mod[y][x - 1]){ run++; if (run === 5) p += 3; else if (run > 5) p++; } else run = 1; } }
+        for (x = 0; x < size; x++){ run = 1; for (y = 1; y < size; y++){ if (mod[y][x] === mod[y - 1][x]){ run++; if (run === 5) p += 3; else if (run > 5) p++; } else run = 1; } }
+        for (y = 0; y < size - 1; y++) for (x = 0; x < size - 1; x++){ var c = mod[y][x]; if (c === mod[y][x + 1] && c === mod[y + 1][x] && c === mod[y + 1][x + 1]) p += 3; }
+        for (y = 0; y < size; y++) for (x = 0; x < size; x++) if (mod[y][x]) dark++;
+        return p + Math.floor(Math.abs(dark * 20 - size * size * 10) / (size * size)) * 10;
+      }
+      var best = 0, bestP = Infinity;
+      for (var m = 0; m < 8; m++){
+        applyMask(m); drawFormat(m);
+        var pen = penalty(); if (pen < bestP){ bestP = pen; best = m; }
+        applyMask(m);
+      }
+      applyMask(best); drawFormat(best);
+      return mod;
+    }
+    /* SVG with a 4-module quiet zone */
+    function svg(text, px){
+      var m = encode(text), n = m.length, q = 4, d = '';
+      for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) if (m[y][x]) d += 'M' + (x + q) + ' ' + (y + q) + 'h1v1h-1z';
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + (n + 2 * q) + ' ' + (n + 2 * q) + '"' + (px ? ' width="' + px + '" height="' + px + '"' : '') +
+             ' shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+    }
+    return {encode: encode, svg: svg};
+  })();
+
+  /* ======================= Quick use (phones) =======================
+     A phone-sized screen for logging what you use: pick a room (or scan its QR sticker),
+     optionally a storage area, and tap −1. At 0 an item is marked used, so it drops out of
+     expiration reminders; +1 puts it back. Opens from:
+       #quick            → room list          #quick=<roomId>   → that room (the QR stickers)
+     On a phone, opening the app's plain address also starts here ("Open the full map" leaves). */
+  function qtyOf(it){
+    if (it.quantity === 0 || it.quantity === '0') return 0;
+    return Number(it.quantity) || 1;
+  }
+  var quick = {open:false, roomId:null, storageId:'', query:''};
+  function quickRoomItems(roomId){
+    var ids = {}; ids[roomId] = true;
+    locationChildren(roomId).forEach(function(c){ ids[c.id] = true; });
+    return state.items.filter(function(i){ return ids[i.locationId]; });
+  }
+  function isPhoneLike(){
+    try { return window.matchMedia('(max-width: 700px) and (pointer: coarse)').matches; } catch(e){ return false; }
+  }
+  function openQuick(roomId){
+    if (els.qvAdd) els.qvAdd.hidden = true;
+    var room = roomId ? getLocation(roomId) : null;
+    if (roomId && (!room || room.type !== 'room')){ toast('That room isn’t on this device yet — connect Sync, then scan again', 'error'); roomId = null; }
+    quick.open = true; quick.roomId = roomId || null; quick.storageId = ''; quick.query = '';
+    els.qvSearch.value = '';
+    closePanel(); if (inv.open) closeInventoryView();
+    document.body.classList.add('quick-open');
+    els.quickView.classList.add('open'); els.quickView.setAttribute('aria-hidden', 'false');
+    var want = '#quick' + (quick.roomId ? '=' + encodeURIComponent(quick.roomId) : '');
+    if (location.hash !== want){ try { history.replaceState(null, '', location.pathname + location.search + want); } catch(e){} }
+    if (typeof window.__shitsSkipSplash === 'function') window.__shitsSkipSplash();
+    renderQuick();
+    els.qvBody.scrollTop = 0;
+  }
+  function closeQuick(){
+    quick.open = false;
+    els.qvAdd.hidden = true;
+    document.body.classList.remove('quick-open');
+    els.quickView.classList.remove('open'); els.quickView.setAttribute('aria-hidden', 'true');
+    try { sessionStorage.setItem('shits.fullApp', '1'); } catch(e){}
+    if (/^#quick/.test(location.hash)){ try { history.replaceState(null, '', location.pathname + location.search); } catch(e){} }
+    renderCanvas(); renderStats();
+  }
+  function quickRowMarkup(it){
+    var q = qtyOf(it), used = !!it.usedAt || q === 0, loc = getLocation(it.locationId);
+    var where = loc && loc.type === 'storage' ? displayName(loc) : '';
+    var status = getItemExpiryStatus(it);
+    var badge = status === 'expired' ? '<span class="badge badge-bad">Expired ' + fmtDate(it.expirationDate) + '</span>'
+              : status === 'expiring' ? '<span class="badge badge-warn">Expires ' + fmtDate(it.expirationDate) + '</span>' : '';
+    return '<div class="qv-row' + (used ? ' used' : '') + '" data-item-id="' + it.id + '" style="--cat:' + categoryColor(it.category) + '">' +
+      '<div class="qv-info"><div class="qv-name">' + escapeHtml(it.name) + '</div>' +
+        '<div class="qv-meta">' + (quick.roomId ? '' : '<span>' + escapeHtml(locationPath(it)) + '</span>') +
+          (where && quick.roomId && !quick.storageId ? '<span>' + escapeHtml(where) + '</span>' : '') +
+          '<span>' + escapeHtml(it.category || CATEGORY_FALLBACK) + '</span>' + (used ? '<span class="badge badge-used">Used up</span>' : badge) + '</div></div>' +
+      '<div class="qv-qty">' + q + '<small>left</small></div>' +
+      (used ? '<button type="button" class="qv-btn plus" data-qv="plus" aria-label="Add one ' + escapeHtml(it.name) + '">+1</button>'
+            : '<button type="button" class="qv-btn" data-qv="minus" aria-label="Used one ' + escapeHtml(it.name) + '">−1</button>') +
+    '</div>';
+  }
+  function renderQuick(){
+    if (!quick.open) return;
+    var q = quick.query.trim(), pq = prepareQuery(q), room = quick.roomId ? getLocation(quick.roomId) : null;
+    if (quick.roomId && !room){ quick.roomId = null; }
+    renderQuickSync();
+    els.qvAddBtn.hidden = !room;
+    if (!room){
+      els.qvTitle.textContent = 'Quick use';
+      els.qvChips.innerHTML = '';
+      if (q){
+        var hits = state.items.map(function(i){ return {i:i, s:itemSearchScore(i, pq)}; }).filter(function(x){ return x.s > 0; })
+          .sort(function(a, b){ return b.s - a.s; }).map(function(x){ return x.i; });
+        els.qvSub.textContent = hits.length + ' match' + (hits.length === 1 ? '' : 'es');
+        els.qvBody.innerHTML = hits.length ? hits.slice(0, 60).map(quickRowMarkup).join('') : '<div class="qv-empty">No items match “' + escapeHtml(q) + '”</div>';
+        return;
+      }
+      var rooms = state.locations.filter(function(l){ return l.type === 'room' && l.name; })
+        .sort(function(a, b){ return a.name.localeCompare(b.name); });
+      els.qvSub.textContent = 'Pick a room, or search everything';
+      els.qvBody.innerHTML = rooms.length ? '<div class="qv-rooms">' + rooms.map(function(r){
+        var n = quickRoomItems(r.id).filter(function(i){ return !i.usedAt && qtyOf(i) > 0; }).length;
+        return '<button type="button" class="qv-room" data-room="' + r.id + '"><b>' + escapeHtml(r.name) + '</b><span>' + n + ' item' + (n === 1 ? '' : 's') + '</span></button>';
+      }).join('') + '</div>' : '<div class="qv-empty">Name your rooms in the full app (Label mode) and they’ll show up here.</div>';
+      return;
+    }
+    /* a room: storage chips, then items */
+    els.qvTitle.textContent = displayName(room);
+    var all = quickRoomItems(room.id), stores = locationChildren(room.id)
+      .filter(function(st){ return st.name || all.some(function(i){ return i.locationId === st.id; }); })   /* skip unnamed, empty spots */
+      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
+    var active = function(list){ return list.filter(function(i){ return !i.usedAt && qtyOf(i) > 0; }).length; };
+    var loose = all.filter(function(i){ return i.locationId === room.id; });
+    var chips = [{id:'', label:'All', n: active(all)}];
+    stores.forEach(function(st){ chips.push({id: st.id, label: displayName(st), n: active(all.filter(function(i){ return i.locationId === st.id; }))}); });
+    if (loose.length && stores.length) chips.push({id:'__room', label:'Loose in room', n: active(loose)});
+    if (quick.storageId && !chips.some(function(c){ return c.id === quick.storageId; })) quick.storageId = '';
+    els.qvChips.innerHTML = stores.length ? chips.map(function(c){
+      return '<button type="button" class="qv-chip' + (c.id === quick.storageId ? ' active' : '') + '" data-storage="' + c.id + '" role="tab" aria-selected="' + (c.id === quick.storageId) + '">' +
+        escapeHtml(c.label) + '<span class="n">' + c.n + '</span></button>';
+    }).join('') : '';
+    var list = all;
+    if (quick.storageId === '__room') list = loose;
+    else if (quick.storageId) list = all.filter(function(i){ return i.locationId === quick.storageId; });
+    if (q) list = list.filter(function(i){ return itemSearchScore(i, pq) > 0; });
+    var inStock = list.filter(function(i){ return !i.usedAt && qtyOf(i) > 0; }), usedUp = list.filter(function(i){ return i.usedAt || qtyOf(i) === 0; });
+    var byName = function(a, b){ return String(a.name).localeCompare(String(b.name)); };
+    inStock.sort(function(a, b){
+      var sa = getItemExpiryStatus(a) ? 0 : 1, sb = getItemExpiryStatus(b) ? 0 : 1;   /* expiring first */
+      return sa - sb || byName(a, b);
+    });
+    usedUp.sort(byName);
+    var storeName = quick.storageId === '__room' ? 'Loose in room' : (quick.storageId ? displayName(getLocation(quick.storageId)) : '');
+    els.qvSub.textContent = (storeName ? storeName + ' · ' : '') + inStock.length + ' in stock' + (usedUp.length ? ' · ' + usedUp.length + ' used up' : '');
+    if (!list.length){
+      els.qvBody.innerHTML = '<div class="qv-empty">' + (q ? 'No items match “' + escapeHtml(q) + '” here.' : 'Nothing stored here yet.') + '</div>';
+      return;
+    }
+    els.qvBody.innerHTML = inStock.map(quickRowMarkup).join('') +
+      (usedUp.length ? '<div class="qv-section">Used up</div>' + usedUp.map(quickRowMarkup).join('') : '');
+  }
+  function renderQuickSync(){
+    var st = sync.status || 'off';
+    if (!syncConfigured()) st = 'off';
+    els.qvSync.setAttribute('data-status', st);
+    els.qvSyncLabel.textContent = st === 'synced' ? 'Synced' : st === 'syncing' || st === 'pending' ? 'Saving…'
+      : st === 'disconnected' ? 'Tap to sync' : st === 'error' ? 'Sync issue' : 'This phone only';
+    els.qvSync.title = st === 'off' ? 'Changes are saved on this phone. Set up Google Drive sync in the full app to share them.' : '';
+  }
+  /* −1 / +1. Each tap saves immediately and syncs right after, so you can pocket the phone. */
+  function quickAdjust(item, delta, rowEl){
+    var before = JSON.parse(JSON.stringify(item)), copy = JSON.parse(JSON.stringify(item));
+    var q = Math.max(0, qtyOf(item) + delta);
+    copy.quantity = q;
+    if (q === 0) copy.usedAt = localDateStr(); else delete copy.usedAt;
+    return idbPut('items', copy).then(function(){
+      replaceItemInState(copy);
+      if (quick.open){
+        var keepScroll = els.qvBody.scrollTop;
+        renderQuick(); els.qvBody.scrollTop = keepScroll;
+        var again = els.qvBody.querySelector('.qv-row[data-item-id="' + copy.id + '"]');
+        if (again){ again.classList.remove('bump'); void again.offsetWidth; again.classList.add('bump'); }
+      }
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch(e){}
+      renderStats();
+      var msg = delta < 0 ? (q === 0 ? copy.name + ' — used up' : copy.name + ': ' + q + ' left') : copy.name + ': ' + q + ' left';
+      toastAction(msg, 'Undo', function(){
+        idbPut('items', before).then(function(){ replaceItemInState(before); renderQuick(); renderStats(); });
+      });
+      if (getToken()) scheduleSync(700);
+    }).catch(function(err){ console.error(err); toast('Could not save that', 'error'); });
+  }
+  function toastAction(msg, label, fn){
+    var el = document.createElement('div');
+    el.className = 'toast';
+    var span = document.createElement('span'); span.textContent = msg; el.appendChild(span);
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'toast-action'; b.textContent = label;
+    b.addEventListener('click', function(){ fn(); el.remove(); });
+    el.appendChild(b);
+    /* only the latest undo is offered */
+    [].forEach.call(els.toastContainer.querySelectorAll('.toast'), function(t){ if (t.querySelector('.toast-action')) t.remove(); });
+    els.toastContainer.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 250); }, 5000);
+  }
+  function quickFromHash(){
+    var m = /^#quick(?:=([^&]*))?/.exec(location.hash || '');
+    if (!m) return false;
+    var id = '';
+    try { id = decodeURIComponent(m[1] || ''); } catch(e){}
+    openQuick(id || null);
+    return true;
+  }
+  function bindQuick(){
+    els.quickOpenBtn.addEventListener('click', function(){ openQuick(state.selectedRoomId || null); });
+    els.qvBack.addEventListener('click', function(){
+      if (quick.query){ quick.query = ''; els.qvSearch.value = ''; renderQuick(); return; }
+      if (quick.roomId){ openQuick(null); return; }
+      closeQuick();
+    });
+    els.qvFullApp.addEventListener('click', closeQuick);
+    els.qvSync.addEventListener('click', function(){
+      if (!syncConfigured()){ toast('Set up Google Drive sync in the full app to share changes between phones'); return; }
+      if (getToken()) syncNow('manual'); else connectDrive();
+    });
+    var deb = null;
+    els.qvSearch.addEventListener('input', function(){
+      clearTimeout(deb); deb = setTimeout(function(){ quick.query = els.qvSearch.value; renderQuick(); }, 120);
+    });
+    els.qvChips.addEventListener('click', function(e){
+      var c = e.target.closest('[data-storage]'); if (!c) return;
+      quick.storageId = c.getAttribute('data-storage'); renderQuick(); els.qvBody.scrollTop = 0;
+    });
+    els.qvBody.addEventListener('click', function(e){
+      var r = e.target.closest('[data-room]');
+      if (r){ openQuick(r.getAttribute('data-room')); return; }
+      var btn = e.target.closest('[data-qv]'); if (!btn) return;
+      var row = btn.closest('.qv-row'), item = state.items.find(function(i){ return i.id === row.getAttribute('data-item-id'); });
+      if (item) quickAdjust(item, btn.getAttribute('data-qv') === 'minus' ? -1 : 1, row);
+    });
+    window.addEventListener('hashchange', function(){ if (/^#quick/.test(location.hash)) quickFromHash(); });
+  }
+
+  /* ---- Quick add: from the same room sticker ----
+     Type a name, pick where it goes, tap Add. If that item already lives in the same spot
+     (say the milk you used up), it's restocked instead of duplicated. */
+  var quickAddWhere = {};   /* remembers the last storage used per room during this visit */
+  function quickAddSpots(room){
+    var all = quickRoomItems(room.id);
+    var stores = locationChildren(room.id).filter(function(st){ return st.name || all.some(function(i){ return i.locationId === st.id; }); })
+      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); });
+    return stores.map(function(st){ return {id: st.id, label: displayName(st)}; }).concat([{id: room.id, label: stores.length ? 'Loose in room' : displayName(room)}]);
+  }
+  function quickAddMatch(name, locationId){
+    var n = normText(name);
+    if (!n) return null;
+    return state.items.find(function(i){ return i.locationId === locationId && normText(i.name) === n; }) || null;
+  }
+  function openQuickAdd(){
+    var room = quick.roomId ? getLocation(quick.roomId) : null;
+    if (!room) return;
+    var spots = quickAddSpots(room);
+    els.qvAddTitle.textContent = 'Add to ' + displayName(room);
+    els.qvAddWhere.innerHTML = spots.map(function(sp){ return '<option value="' + sp.id + '">' + escapeHtml(sp.label) + '</option>'; }).join('');
+    var pick = (quick.storageId && quick.storageId !== '__room') ? quick.storageId : (quick.storageId === '__room' ? room.id : quickAddWhere[room.id]);
+    els.qvAddWhere.value = spots.some(function(sp){ return sp.id === pick; }) ? pick : spots[0].id;
+    var names = categoryNames();
+    els.qvAddCat.innerHTML = names.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('');
+    els.qvAddCat.value = lastUsedCategory && names.indexOf(lastUsedCategory) !== -1 ? lastUsedCategory : (names.indexOf(CATEGORY_FALLBACK) !== -1 ? CATEGORY_FALLBACK : names[0]);
+    delete els.qvAddCat.dataset.touched;
+    resetQuickAddFields();
+    els.qvAdd.hidden = false;
+    setTimeout(function(){ els.qvAddName.focus(); }, 30);
+  }
+  function resetQuickAddFields(){
+    els.qvAddName.value = ''; els.qvAddQty.value = 1; els.qvAddExp.value = ''; els.qvAddHint.textContent = '';
+    [].forEach.call(els.qvExpChips.querySelectorAll('button'), function(b){ b.classList.remove('active'); });
+    els.qvAddSave.textContent = 'Add';
+  }
+  function closeQuickAdd(){ els.qvAdd.hidden = true; els.qvAddName.blur(); }
+  function updateQuickAddHint(){
+    var m = quickAddMatch(els.qvAddName.value, els.qvAddWhere.value);
+    if (m){
+      els.qvAddHint.textContent = 'Already here (' + (m.usedAt ? 0 : qtyOf(m)) + ' left) — this will add to it' +
+        (m.expirationDate ? '. Set the new expiration date if it has one.' : '.');
+      els.qvAddSave.textContent = 'Restock';
+      if (!els.qvAddCat.dataset.touched && m.category && categoryNames().indexOf(m.category) !== -1) els.qvAddCat.value = m.category;
+    } else { els.qvAddHint.textContent = ''; els.qvAddSave.textContent = 'Add'; }
+  }
+  function submitQuickAdd(keepOpen){
+    var name = els.qvAddName.value.trim();
+    if (!name){ toast('Type what you’re adding', 'error'); els.qvAddName.focus(); return; }
+    var qv = parseInt(els.qvAddQty.value, 10), qty = isNaN(qv) || qv < 1 ? 1 : qv;
+    var where = els.qvAddWhere.value, category = els.qvAddCat.value, exp = els.qvAddExp.value || null;
+    var match = quickAddMatch(name, where), rec, msg;
+    if (match){
+      rec = JSON.parse(JSON.stringify(match));
+      var wasOut = !!rec.usedAt || qtyOf(match) === 0;
+      rec.quantity = (wasOut ? 0 : qtyOf(match)) + qty;
+      delete rec.usedAt;
+      /* a fresh one replaces the old date; if it had run out and no new date was given,
+         drop the old date so it doesn't trigger stale expiration reminders */
+      if (exp) rec.expirationDate = exp; else if (wasOut) rec.expirationDate = null;
+      msg = rec.name + ' restocked — ' + rec.quantity + ' now';
+    } else {
+      rec = {id: uid(), locationId: where, name: name, category: category, quantity: qty, value: null, subLocation: '',
+             purchaseDate: localDateStr(), expirationDate: exp, notes: '', photo: null, createdAt: Date.now()};
+      msg = name + (qty > 1 ? ' ×' + qty : '') + ' added';
+      lastUsedCategory = category;
+      ensureCategories([category]);
+    }
+    quickAddWhere[quick.roomId] = where;
+    idbPut('items', rec).then(function(){
+      replaceItemInState(rec);
+      renderQuick(); renderStats();
+      var row = els.qvBody.querySelector('.qv-row[data-item-id="' + rec.id + '"]');
+      if (row){ row.classList.add('bump'); row.scrollIntoView({block:'nearest'}); }
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch(e){}
+      toast(msg);
+      if (getToken()) scheduleSync(700);
+      if (keepOpen){ resetQuickAddFields(); els.qvAddName.focus(); } else closeQuickAdd();
+    }).catch(function(err){ console.error(err); toast('Could not save that', 'error'); });
+  }
+  function bindQuickAdd(){
+    els.qvAddBtn.addEventListener('click', openQuickAdd);
+    els.qvAddClose.addEventListener('click', closeQuickAdd);
+    els.qvAdd.addEventListener('click', function(e){ if (e.target === els.qvAdd) closeQuickAdd(); });
+    els.qvAddForm.addEventListener('submit', function(e){ e.preventDefault(); submitQuickAdd(false); });
+    els.qvAddNext.addEventListener('click', function(){ submitQuickAdd(true); });
+    els.qvAddName.addEventListener('input', updateQuickAddHint);
+    els.qvAddWhere.addEventListener('change', updateQuickAddHint);
+    els.qvAddCat.addEventListener('change', function(){ els.qvAddCat.dataset.touched = '1'; });
+    els.qvAddForm.addEventListener('click', function(e){
+      var st = e.target.closest('[data-step]');
+      if (st){ var v = (parseInt(els.qvAddQty.value, 10) || 1) + Number(st.getAttribute('data-step')); els.qvAddQty.value = Math.max(1, v); return; }
+      var chip = e.target.closest('[data-days]');
+      if (chip){
+        var d = Number(chip.getAttribute('data-days'));
+        [].forEach.call(els.qvExpChips.querySelectorAll('button'), function(b){ b.classList.toggle('active', b === chip && d > 0); });
+        if (!d){ els.qvAddExp.value = ''; return; }
+        var dt = new Date(); dt.setDate(dt.getDate() + d); els.qvAddExp.value = localDateStr(dt);
+      }
+    });
+    els.qvAddExp.addEventListener('input', function(){ [].forEach.call(els.qvExpChips.querySelectorAll('button'), function(b){ b.classList.remove('active'); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !els.qvAdd.hidden){ e.stopPropagation(); closeQuickAdd(); } }, true);
+  }
+
+  /* ======================= Room QR stickers ======================= */
+  function appBaseUrl(){ return location.origin + location.pathname; }
+  function roomQuickUrl(roomId){ return appBaseUrl() + '#quick=' + encodeURIComponent(roomId); }
+  function openQrStickers(){
+    var rooms = state.locations.filter(function(l){ return l.type === 'room' && l.name; }).sort(function(a, b){ return a.name.localeCompare(b.name); });
+    var hosted = /^https?:$/.test(location.protocol);
+    els.qrWarn.innerHTML = hosted ? '' : '<div class="sync-error">Open the app from its web address (https://…) before printing — stickers made from a file on this computer can’t be opened by a phone.</div>';
+    els.qrPrintBtn.disabled = !hosted || !rooms.length;
+    els.qrPick.innerHTML = rooms.length ? rooms.map(function(r){
+      return '<label><input type="checkbox" value="' + r.id + '" checked>' + QR.svg(roomQuickUrl(r.id)) + '<span>' + escapeHtml(r.name) + '</span></label>';
+    }).join('') : '<p class="rules-hint">Name your rooms first (Label mode), then come back here.</p>';
+    openModalEl(els.qrModalOverlay);
+  }
+  function printQrStickers(){
+    var ids = [].map.call(els.qrPick.querySelectorAll('input:checked'), function(i){ return i.value; });
+    if (!ids.length){ toast('Pick at least one room', 'error'); return; }
+    var inches = Number(els.qrSize.value) || 2;
+    els.printSheet.innerHTML = ids.map(function(id){
+      var r = getLocation(id); if (!r) return '';
+      return '<div class="sticker" style="width:' + (inches + 0.2) + 'in">' +
+        QR.svg(roomQuickUrl(id)).replace('<svg ', '<svg style="width:' + inches + 'in;height:' + inches + 'in" ') +
+        '<b style="font-size:' + Math.max(10, inches * 7) + 'pt">' + escapeHtml(r.name) + '</b>' +
+        '<span style="font-size:' + Math.max(6.5, inches * 3.6) + 'pt">Scan to use or add items</span></div>';
+    }).join('');
+    closeModal('qrModalOverlay');
+    setTimeout(function(){ window.print(); }, 50);
+  }
+  function bindQrStickers(){
+    els.qrStickersBtn.addEventListener('click', openQrStickers);
+    els.qrPrintBtn.addEventListener('click', printQrStickers);
+    els.qrAll.addEventListener('click', function(){ [].forEach.call(els.qrPick.querySelectorAll('input'), function(i){ i.checked = true; }); });
+    els.qrNone.addEventListener('click', function(){ [].forEach.call(els.qrPick.querySelectorAll('input'), function(i){ i.checked = false; }); });
+  }
+
+  /* ======================= Automatic restore on load =======================
+     When the page is served from a web address, it looks for these files next to index.html and
+     loads them without you doing anything:
+       - the-SHIT-backup.json : your latest backup (use the Backup button, then upload/replace the file)
+       - line-overlay.png     : the plot-lines image (only used if no overlay is loaded yet)
+     The backup is MERGED record-by-record (newest change wins), so it can never overwrite newer
+     edits made in this browser, and each backup file is only applied once.
+     Leave a name blank ('') to turn that file off. Missing files are ignored silently.
+     NOTE: files on a public host (e.g. free GitHub Pages) can be downloaded by anyone who knows
+     the address — keep them on a private host, or rely on Google Drive sync instead.            */
+  var AUTO_RESTORE_FILES = {backup: BACKUP_FILE_NAME, lineOverlay: 'line-overlay.png', floorPlan: ''};
+  function siteFile(name, kind){
+    if (!name || !/^https?:$/.test(location.protocol)) return Promise.resolve(null);
+    return fetch(name, {cache:'no-cache'}).then(function(r){
+      if (!r.ok) return null;
+      return kind === 'json' ? r.json() : r.blob();
+    }).catch(function(){ return null; });
+  }
+  function autoRestoreImage(key, name){
+    if (assetLoaded(state[key]) || (state[key] && state[key].removed)) return Promise.resolve(false);
+    return siteFile(name, 'blob').then(function(blob){
+      if (!blob || !/^image\//.test(blob.type || '')) return false;
+      return blobToDataUrl(blob).then(function(dataUrl){
+        var prev = state[key] || {};
+        return saveImageAssetLocal(key, {dataUrl: dataUrl, updatedAt: Date.now(), fileId: prev.fileId || null, needsUpload: true}).then(function(){ return true; });
+      });
+    });
+  }
+  function autoRestoreBackup(){
+    return siteFile(AUTO_RESTORE_FILES.backup, 'json').then(function(bk){
+      if (!bk || !Array.isArray(bk.items) || !Array.isArray(bk.locations)) return null;
+      var stamp = String(bk.exportedAt || '');
+      return idbGetAll('meta').then(function(meta){
+        var done = meta.find(function(m){ return m.key === 'autoRestoredFrom'; });
+        var images = restoreBackupExtras(bk, true);
+        if (stamp && done && done.value === stamp) return images.then(function(){ return null; });
+        return images.then(buildLocalDoc).then(function(localDoc){
+          var backupDoc = {locations: bk.locations, items: bk.items, tombstones: bk.tombstones || {},
+                           rules: bk.rules || [], rulesUpdatedAt: bk.rulesUpdatedAt || 0,
+                           categories: bk.categories || [], categoriesUpdatedAt: bk.categoriesUpdatedAt || 0,
+                           floorPlan: localDoc.floorPlan, lineOverlay: localDoc.lineOverlay};
+          var merged = mergeDocs(localDoc, backupDoc);
+          var changed = canonical(merged) !== canonical(localDoc);
+          var before = state.items.length;
+          return (changed ? applyDocToLocal(merged) : Promise.resolve()).then(function(){
+            return idbPutRaw('meta', {key:'autoRestoredFrom', value: stamp});
+          }).then(function(){
+            if (!changed) return null;
+            noteLocalChange();
+            var when = stamp ? new Date(stamp) : null;
+            toast('Loaded your backup' + (when && !isNaN(when) ? ' from ' + when.toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '') +
+                  (state.items.length !== before ? ' — ' + state.items.length + ' items' : ''));
+            return true;
+          });
+        });
+      });
+    });
+  }
+  function autoRestore(){
+    return autoRestoreBackup()
+      .then(function(){ return autoRestoreImage('lineOverlay', AUTO_RESTORE_FILES.lineOverlay); })
+      .then(function(){ return autoRestoreImage('floorPlan', AUTO_RESTORE_FILES.floorPlan); })
+      .then(function(){ showFloorPlan(); })
+      .catch(function(err){ console.error('Automatic restore skipped', err); });
+  }
+  /* Ask the browser not to clear this site's saved data when space runs low. */
+  function requestPersistentStorage(){
+    try {
+      if (navigator.storage && navigator.storage.persist){
+        navigator.storage.persisted().then(function(p){ if (!p) return navigator.storage.persist(); }).catch(function(){});
+      }
+    } catch(e){}
+  }
+  /* Called from the splash screen click: a click is the only moment a browser allows the Google
+     sign-in pop-up, so this reconnects Drive sync on every visit without a separate button press. */
+  window.__shitsOnEnter = function(){
+    try {
+      if (!syncConfigured() || location.protocol === 'file:' || getToken() || !lsGet(LS.connected)) return;
+      if (!(window.google && google.accounts && google.accounts.oauth2)) return;
+      connectDrive();
+    } catch(e){ console.error(e); }
+  };
+
   function init(){
     cacheEls();
+    requestPersistentStorage();
     /* Keep the side panel below the header so header controls stay clickable. */
     (function syncHeaderHeight(){
       var header = document.querySelector('.app-header');
@@ -6139,7 +7007,7 @@
       }
     })();
     bindStaticEvents();
-    els.patternDefs.innerHTML = buildPatternDefs() + buildFixturePatternDefs();
+    els.patternDefs.innerHTML = buildPatternDefs();
     bindLabelHover();
     bindInventoryView();
     bindPatternPicker();
@@ -6149,6 +7017,10 @@
     }).then(function(results){
       state.locations = mergeLocations(results[0] || []);
       state.items = results[1] || [];
+      /* Furniture was removed from the app: retire any saved pieces so they also leave backups and Drive. */
+      (results[0] || []).forEach(function(l){
+        if (!l.deleted && (l.type === 'fixture' || l.type === 'fixture-template')) idbPut('locations', {id: l.id, deleted: true}).catch(function(){});
+      });
       state.rules = results[2] || [];
       var meta = results[3] || [];
       var notifyEnabledRec = meta.find(function(m){ return m.key === 'notifyEnabled'; });
@@ -6163,6 +7035,16 @@
       state.rulesUpdatedAt = (rulesAtRec && rulesAtRec.value) || 0;
       state.floorPlan = (planRec && planRec.value) || null;
       state.lineOverlay = (linesRec && linesRec.value) || null;
+      var catsRec = meta.find(function(m){ return m.key === 'categories'; });
+      if (catsRec && Array.isArray(catsRec.value) && catsRec.value.length){ state.categories = catsRec.value; state.categoriesUpdatedAt = catsRec.updatedAt || 0; }
+      else {
+        /* first run with categories: start from the defaults plus anything your items already use */
+        state.categories = DEFAULT_CATEGORIES.map(function(c){ return {name: c.name, color: c.color}; });
+        (results[1] || []).forEach(function(it){
+          var n = String(it.category || '').trim();
+          if (n && !state.categories.some(function(c){ return c.name.toLowerCase() === n.toLowerCase(); })) state.categories.push({name: n, color: nextCategoryColor(state.categories)});
+        });
+      }
       if (!state.rules.some(function(r){ return r.category == null; })){
         var def = {id:newRuleId(), category:null, warnDays:DEFAULT_WARN_DAYS};
         state.rules.push(def);
@@ -6193,7 +7075,11 @@
         clearTimeout(fitTimer);
         fitTimer = setTimeout(fitViewToCanvas, 120);
       });
-      initSync();
+      /* Quick use: from a room sticker/link, or automatically on a phone */
+      var fullAppChosen = false;
+      try { fullAppChosen = sessionStorage.getItem('shits.fullApp') === '1'; } catch(e){}
+      if (!quickFromHash() && isPhoneLike() && !fullAppChosen) openQuick(null);
+      autoRestore().then(function(){ if (quick.open) renderQuick(); }).then(initSync);
     });
   }
 
@@ -6224,7 +7110,20 @@
      SPLASH SCREEN
      ========================================= */
 
+  let entered = false;
+  // Quick use (room stickers, phones) skips the splash entirely.
+  window.__shitsSkipSplash = function () {
+    if (entered) return;
+    entered = true;
+    splashScreen.remove();
+  };
   function enterApp() {
+    if (entered) return;
+    entered = true;
+
+    // Reconnect Google Drive sync while we still have the click (browsers only allow the
+    // sign-in pop-up during a click).
+    if (typeof window.__shitsOnEnter === "function") window.__shitsOnEnter();
 
     splashScreen.classList.add("hidden");
 
@@ -6882,8 +7781,10 @@ function createBird() {
       canvasSvg.createSVGPoint();
 
     svgPoint.x = tree.x;
+    /* perchOffset was never set on any tree, so this was NaN and the
+       landing bird's position CSS was thrown away. */
     svgPoint.y =
-      tree.y + tree.perchOffset;
+      tree.y + (tree.perchOffset || 0);
 
 
     const screenPoint =
@@ -7092,7 +7993,7 @@ function createBird() {
     createBird();
 
 
-    // 30% chance of a second bird
+    // 40% chance of a second bird
     if (Math.random() < 0.40) {
 
       setTimeout(() => {
@@ -7144,11 +8045,9 @@ function createBird() {
     );
 
 
-    // Occasional tree landing
-    setTimeout(
-      scheduleLandingBird,
-      45000 + Math.random() * 30000
-    );
+    // Occasional tree landing (scheduleLandingBird already waits 45–75 s itself;
+    // wrapping it in another 45–75 s timeout pushed the first landing out to ~2 min)
+    scheduleLandingBird();
   }
 
 </script>
