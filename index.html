@@ -2480,7 +2480,7 @@
       </div>
       <div class="modal-body">
         <div class="shop-safety"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
-          <span><b>This only fills your cart. It can never check out.</b> The app doesn't sign in to Amazon or Walmart and has no payment details. The buttons open the store with the items in your cart, and nothing is bought until one of you reviews the cart and places the order there yourself.</span></div>
+          <span><b>This only fills your cart. It can never check out.</b> The app doesn't sign in to Amazon or Walmart and has no payment details. Walmart's button puts the items in your Walmart cart; Amazon's opens each product page so you tap “Add to Cart” yourself (Amazon no longer allows outside apps to fill a cart). Nothing is bought until one of you reviews the cart and places the order there yourself.</span></div>
         <div class="shop-tabs" role="tablist">
           <button type="button" data-shop-tab="low" class="active" role="tab">Running low <span id="shopLowCount"></span></button>
           <button type="button" data-shop-tab="subs" role="tab">Subscriptions <span id="shopSubCount"></span></button>
@@ -7822,7 +7822,7 @@
         return '<label class="shop-row' + (cart ? ' off' : '') + '"><input type="checkbox" data-shop-pick="' + it.id + '"' + (checked ? ' checked' : '') + ' />' +
           '<div class="shop-main"><div class="shop-name">' + escapeHtml(it.name) + ' <span class="shop-meta">× ' + reorderQty(r) + '</span></div>' +
           '<div class="shop-meta">' + q + ' left · low at ' + reorderMin(r) + ' · ' + escapeHtml(locationPath(it)) + '</div>' +
-          '<div class="shop-stores">' + storeChips(r) + (cart ? '<span class="shop-incart">In cart since ' + escapeHtml(fmtDate(r.cartAt)) + '</span>' : '') + '</div></div></label>';
+          '<div class="shop-stores">' + storeChips(r) + (amazonAsin(r.amazon) ? '<button type="button" class="shop-store on" data-shop-amazon="' + it.id + '" style="cursor:pointer;background:none">Open on Amazon ↗</button>' : '') + (cart ? '<span class="shop-incart">In cart since ' + escapeHtml(fmtDate(r.cartAt)) + '</span>' : '') + '</div></div></label>';
       }).join('');
     }
     updateShopButtons();
@@ -7836,20 +7836,37 @@
     var a = picked.filter(function(it){ return amazonAsin(reorderOf(it).amazon); });
     var w = picked.filter(function(it){ return walmartId(reorderOf(it).walmart); });
     var ab = document.getElementById('shopAmazonBtn'), wb = document.getElementById('shopWalmartBtn');
-    ab.disabled = !a.length; ab.textContent = a.length ? 'Add ' + a.length + ' to Amazon cart' : 'Add to Amazon cart';
+    ab.disabled = !a.length;
+    ab.textContent = !a.length ? 'Open on Amazon' : a.length === 1 ? 'Open ' + a[0].name + ' on Amazon' : 'Open next on Amazon (' + a.length + ' to go)';
     wb.disabled = !w.length; wb.textContent = w.length ? 'Add ' + w.length + ' to Walmart cart' : 'Add to Walmart cart';
   }
   function cartUrl(store, items){
-    if (store === 'amazon'){
-      return 'https://www.amazon.com/gp/aws/cart/add.html?' + items.map(function(it, i){
-        var r = reorderOf(it); return 'ASIN.' + (i + 1) + '=' + encodeURIComponent(amazonAsin(r.amazon)) + '&Quantity.' + (i + 1) + '=' + reorderQty(r);
-      }).join('&');
-    }
     return 'https://affil.walmart.com/cart/addToCart?items=' + items.map(function(it){
       var r = reorderOf(it); return walmartId(r.walmart) + '|' + reorderQty(r);
     }).join(',');
   }
+  /* Amazon retired its add-to-cart links (they now land on an empty cart), so Amazon items open
+     one product page per click, with the quantity shown, and you tap "Add to Cart" there. */
+  function amazonProductUrl(it){ return 'https://www.amazon.com/dp/' + encodeURIComponent(amazonAsin(reorderOf(it).amazon)); }
+  function openAmazonOne(it){
+    var w = window.open(amazonProductUrl(it), '_blank');
+    if (!w){ toast('Your browser blocked the new tab. Allow pop-ups for this site and try again.', 'error'); return; }
+    try { w.opener = null; } catch(e){}
+    var before = reorderOf(it) ? JSON.parse(JSON.stringify(reorderOf(it))) : null;
+    saveReorder(it, {cartAt: localDateStr(), cartQty: it.usedAt ? 0 : qtyOf(it)}, true).then(function(){
+      renderShopLow();
+      toastAction('Opened ' + it.name + ' on Amazon: tap “Add to Cart” there (qty ' + reorderQty(reorderOf(it)) + ')', 'Not added', function(){
+        var cur = state.items.find(function(x){ return x.id === it.id; });
+        if (cur) saveReorder(cur, {cartAt: before && before.cartAt || null, cartQty: before && before.cartQty != null ? before.cartQty : null}, true).then(renderShopLow);
+      });
+    });
+  }
   function sendToCart(store){
+    if (store === 'amazon'){
+      var next = pickedItems().find(function(it){ return amazonAsin(reorderOf(it).amazon); });
+      if (next) openAmazonOne(next);
+      return;
+    }
     var picked = pickedItems().filter(function(it){ var r = reorderOf(it); return store === 'amazon' ? amazonAsin(r.amazon) : walmartId(r.walmart); });
     if (!picked.length) return;
     var units = picked.reduce(function(n, it){ return n + reorderQty(reorderOf(it)); }, 0);
@@ -7917,6 +7934,12 @@
       updateShopButtons();
     });
     document.getElementById('shopAmazonBtn').addEventListener('click', function(){ sendToCart('amazon'); });
+    document.getElementById('shopLowList').addEventListener('click', function(e){
+      var b = e.target.closest('[data-shop-amazon]'); if (!b) return;
+      e.preventDefault();
+      var it = state.items.find(function(x){ return x.id === b.getAttribute('data-shop-amazon'); });
+      if (it) openAmazonOne(it);
+    });
     document.getElementById('shopWalmartBtn').addEventListener('click', function(){ sendToCart('walmart'); });
     document.getElementById('shopSearch').addEventListener('input', function(e){ shop.query = e.target.value; renderShopSubs(); });
     var subs = document.getElementById('shopSubsList');
