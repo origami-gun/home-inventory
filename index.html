@@ -74,188 +74,111 @@
   }
 
 /* =========================================
-    SPLASH SCREEN
+    SPLASH SCREEN — navy night sky, the logo, a live glance at your inventory
     ========================================= */
-
-  #splash-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    /* Background of the splash screen */
-    background:
-      radial-gradient(
-        circle at center,
-        #172f68 0%,
-        #0b1c42 45%,
-        #040b1d 100%
-      );
-
-    cursor: pointer;
-
-    /* Starting state */
-    opacity: 1;
-    visibility: visible;
-
-    transition:
-      opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
-      visibility 0s linear 900ms;
-    transform: scale(1);
+  #splash-screen{
+    position:fixed; inset:0; z-index:99999; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 42%, #1c3a7d 0%, #172f68 22%, #0b1c42 55%, #040b1d 100%);
+    color:#fff; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    font-family:var(--font-body);
+    transition:opacity 700ms cubic-bezier(.22,1,.36,1), transform 700ms cubic-bezier(.22,1,.36,1), filter 700ms ease, visibility 0s linear 700ms;
   }
+  #splash-screen:focus{outline:none;}
+  .splash-stars{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .splash-aurora{position:absolute; left:50%; top:40%; width:min(900px,140vw); height:min(900px,140vw); transform:translate(-50%,-50%); pointer-events:none;
+    background:radial-gradient(closest-side, rgba(217,160,84,.20), rgba(217,160,84,.06) 45%, transparent 70%),
+               radial-gradient(closest-side at 62% 58%, rgba(88,142,255,.20), transparent 70%);
+    filter:blur(10px); animation:splashAurora 9s ease-in-out infinite alternate;}
+  .splash-vignette{position:absolute; inset:0; pointer-events:none; background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%);}
+  .splash-content{position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:24px 20px calc(24px + env(safe-area-inset-bottom)); max-width:720px; width:100%; user-select:none;}
 
+  .splash-logo-wrap{position:relative; animation:splashRise .9s cubic-bezier(.22,1,.36,1) both;}
+  .splash-logo{width:min(56vw, 420px); max-height:36vh; height:auto; display:block; object-fit:contain;
+    filter:drop-shadow(0 10px 30px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(217,160,84,.18));
+    animation:splashFloat 6s ease-in-out 1s infinite;}
+  .splash-wordmark{font-family:var(--font-display); font-weight:700; font-size:clamp(40px,9vw,76px); letter-spacing:.02em; line-height:1;
+    background:linear-gradient(180deg,#fff,#E8B979); -webkit-background-clip:text; background-clip:text; color:transparent; padding:10px 0;}
+  .splash-wordmark[hidden]{display:none;}
+  .splash-logo[hidden]{display:none;}
 
-  /* Contents are centered */
-  .splash-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  .splash-topprompt{margin-top:14px; font-family:var(--font-display); font-weight:700; font-size:clamp(17px,3.2vw,28px); letter-spacing:.03em;
+    color:rgba(226,230,240,.9); animation:splashRise .9s cubic-bezier(.22,1,.36,1) .25s both;}
+  .splash-greeting{margin-top:6px; font-size:14.5px; color:rgba(200,210,235,.72); animation:splashRise .9s cubic-bezier(.22,1,.36,1) .4s both; min-height:1.4em;}
 
-    text-align: center;
+  .splash-glance{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; width:min(560px,100%); margin-top:22px;
+    animation:splashRise .9s cubic-bezier(.22,1,.36,1) .55s both;}
+  .splash-stat{padding:12px 10px 11px; border-radius:14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); min-width:0;}
+  .splash-stat b{display:block; font-family:var(--font-display); font-size:26px; line-height:1.1; font-variant-numeric:tabular-nums; color:#fff;}
+  .splash-stat span{display:block; font-size:11.5px; color:rgba(200,210,235,.75); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .splash-stat.warn b{color:#F2C27A;} .splash-stat.bad b{color:#FF9A86;} .splash-stat.good b{color:#9ED8A9;}
+  .splash-stat.skeleton b{color:transparent; background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,.18),rgba(255,255,255,.08)); background-size:200% 100%;
+    border-radius:6px; animation:splashShimmer 1.2s linear infinite; width:46px; margin:0 auto;}
 
-    padding: 30px;
+  .splash-progress{width:min(320px,80%); margin-top:22px; animation:splashRise .9s cubic-bezier(.22,1,.36,1) .65s both;}
+  .splash-bar{height:4px; border-radius:4px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .splash-bar i{display:block; height:100%; width:8%; border-radius:4px; background:linear-gradient(90deg,#C17F3E,#F2C27A); box-shadow:0 0 12px rgba(242,194,122,.6);
+    transition:width .5s cubic-bezier(.22,1,.36,1);}
+  .splash-status{margin-top:8px; font-size:12.5px; color:rgba(200,210,235,.7); font-family:var(--font-mono); letter-spacing:.02em; min-height:1.3em;}
+  #splash-screen.ready .splash-progress{opacity:0; height:0; margin-top:0; overflow:hidden; transition:opacity .3s ease, height .3s ease .2s, margin .3s ease .2s;}
 
-    user-select: none;
+  .splash-enter{margin-top:22px; display:inline-flex; align-items:center; gap:12px; height:58px; padding:0 26px 0 20px; border-radius:999px; border:1px solid rgba(242,194,122,.55);
+    background:linear-gradient(180deg, rgba(217,160,84,.95), rgba(193,127,62,.95)); color:#fff; font-family:var(--font-display); font-weight:700;
+    font-size:clamp(17px,3vw,21px); letter-spacing:.01em; cursor:pointer; position:relative; overflow:hidden;
+    box-shadow:0 12px 30px rgba(193,127,62,.35), inset 0 1px 0 rgba(255,255,255,.35);
+    opacity:0; transform:translateY(8px) scale(.98); pointer-events:none; transition:opacity .45s ease, transform .45s cubic-bezier(.22,1,.36,1), box-shadow .2s ease;}
+  #splash-screen.ready .splash-enter{opacity:1; transform:none; pointer-events:auto;}
+  .splash-enter:hover{box-shadow:0 16px 38px rgba(193,127,62,.5), inset 0 1px 0 rgba(255,255,255,.35);}
+  .splash-enter:focus-visible{outline:none; box-shadow:0 0 0 4px rgba(242,194,122,.45), 0 12px 30px rgba(193,127,62,.35);}
+  .splash-enter::after{content:""; position:absolute; top:0; bottom:0; width:40%; left:-60%; background:linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent);
+    animation:splashShine 3.2s ease-in-out 1.2s infinite;}
+  .splash-poop{font-size:26px; display:inline-block; animation:splashClickBounce .7s ease-in-out infinite;}
+
+  .splash-actions{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:16px; opacity:0; transform:translateY(6px); transition:opacity .45s ease .12s, transform .45s ease .12s; pointer-events:none;}
+  #splash-screen.ready .splash-actions{opacity:1; transform:none; pointer-events:auto;}
+  .splash-action{display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 14px; border-radius:999px; border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06); color:rgba(235,240,250,.92); font-size:13.5px; font-weight:600; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .1s ease;}
+  .splash-action:hover{background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.3);}
+  .splash-action:active{transform:scale(.97);}
+  .splash-action:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(242,194,122,.45);}
+  .splash-action svg{width:17px; height:17px;} .splash-action svg *{stroke:currentColor; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .splash-action .pill{min-width:18px; height:18px; padding:0 5px; border-radius:999px; background:#D77C6C; color:#fff; font-size:11px; display:inline-flex; align-items:center; justify-content:center;}
+  .splash-action .pill[hidden]{display:none;}
+
+  .splash-hint{margin-top:14px; font-size:12px; color:rgba(200,210,235,.5); opacity:0; transition:opacity .6s ease .4s;}
+  #splash-screen.ready .splash-hint{opacity:1;}
+  .splash-hint kbd{font-family:var(--font-mono); font-size:11px; padding:1px 6px; border-radius:5px; border:1px solid rgba(255,255,255,.2); border-bottom-width:2px; color:rgba(235,240,250,.8);}
+  .splash-foot{position:absolute; left:0; right:0; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:2; display:flex; justify-content:center; align-items:center; gap:18px;
+    font-size:12px; color:rgba(200,210,235,.55); pointer-events:none;}
+  .splash-skip{display:inline-flex; align-items:center; gap:7px; cursor:pointer; pointer-events:auto; padding:6px 8px; border-radius:8px;}
+  .splash-skip:hover{color:rgba(235,240,250,.85);}
+  .splash-skip input{accent-color:#D9A054; width:15px; height:15px; margin:0;}
+
+  /* leaving: the view zooms through into the app */
+  #splash-screen.hidden{opacity:0; transform:scale(1.06); filter:blur(6px); visibility:hidden; pointer-events:none;}
+  #splash-screen.hidden .splash-logo-wrap{transform:scale(1.15); transition:transform 700ms cubic-bezier(.22,1,.36,1);}
+
+  @keyframes splashRise{from{opacity:0; transform:translateY(14px) scale(.97);} to{opacity:1; transform:none;}}
+  @keyframes splashFloat{0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);}}
+  @keyframes splashAurora{0%{transform:translate(-50%,-50%) scale(1) rotate(0deg); opacity:.85;} 100%{transform:translate(-52%,-48%) scale(1.12) rotate(8deg); opacity:1;}}
+  @keyframes splashShimmer{from{background-position:200% 0;} to{background-position:-200% 0;}}
+  @keyframes splashShine{0%{left:-60%;} 55%,100%{left:130%;}}
+  @keyframes splashClickBounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(4px);}}
+  /* old keyframe names kept in case anything else references them */
+  @keyframes splashLogoIn{from{opacity:0; transform:scale(.9);} to{opacity:1; transform:scale(1);}}
+
+  @media (max-width:560px){
+    .splash-logo{width:74vw; max-height:28vh;}
+    .splash-glance{gap:7px; margin-top:16px;}
+    .splash-stat{padding:10px 6px;} .splash-stat b{font-size:21px;} .splash-stat span{font-size:10.5px;}
+    .splash-actions{gap:6px;} .splash-action{height:36px; padding:0 11px; font-size:12.5px;}
+    .splash-hint{display:none;}
   }
-
-
-  /* Your logo */
-  .splash-logo {
-    width: min(65vw, 500px);
-    height: auto;
-
-    display: block;
-
-    object-fit: contain;
-
-    /* Slight entrance animation */
-    opacity: 1;
-    animation: splashLogoIn 1s ease forwards;
-  }
-
-
-  /* "Click anywhere to SHIT" */
-  .splash-prompt {
-    margin-top: 25px;
-
-    font-family: var(--font-display, sans-serif);
-    font-size: 24px;
-    font-weight: 600;
-
-    color: white;
-
-    letter-spacing: 0.02em;
-    
-    /* Slight entrance animation */
-    opacity: 0;
-    animation: splashLogoIn 1s ease forwards;
-    animation-delay: 1.2s;
-  }
-
-  /* "Surkan Home Inventory Tracking System™" */
-  .splash-topprompt {
-    margin-top: 25px;
-
-    font-family: var(--font-display, sans-serif);
-    font-size: 32px;
-    font-weight: 800;
-
-    color: rgb(204, 202, 202);
-
-    letter-spacing: 0.02em;
-    
-    /* Slight entrance animation */
-    opacity: 0;
-    animation: splashLogoIn 1s ease forwards;
-    animation-delay: 0.8s;
-  }  
-
-  /* Finger indicator */
-  .splash-click-icon {
-    margin-top: 12px;
-
-    font-size: 28px;
-
-    animation: splashClickBounce 0.6s ease-in-out infinite;
-  }
-
-
-  /* -----------------------------------------
-    Animations
-    ----------------------------------------- */
-
-  @keyframes splashLogoIn {
-
-    from {
-      opacity: 0;
-      transform: scale(0.90);
-    }
-
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-  }
-
-
-  @keyframes splashPromptPulse {
-
-    0%,
-    100% {
-      opacity: 0.65;
-    }
-
-    50% {
-      opacity: 1;
-    }
-
-  }
-
-
-  @keyframes splashClickBounce {
-
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(5px);
-    }
-
-  }
-
-  /* -----------------------------------------
-    Splash screen disappears
-    ----------------------------------------- */
-
-  #splash-screen.hidden {
-    opacity: 0;
-    transform: scale(0.985);
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  /* -----------------------------------------
-    Mobile adjustment
-    ----------------------------------------- */
-
-  @media (max-width: 520px) {
-
-    .splash-logo {
-      width: 80vw;
-    }
-
-    .splash-prompt {
-      font-size: 19px;
-    }
-
+  @media (max-height:640px){ .splash-logo{max-height:24vh;} .splash-glance{margin-top:12px;} .splash-enter{margin-top:14px;} }
+  @media (prefers-reduced-motion:reduce){
+    #splash-screen *, #splash-screen{animation:none !important; transition-duration:.01ms !important;}
+    .splash-enter,.splash-actions,.splash-hint{transition:none !important;}
   }
 
   @media (prefers-color-scheme:dark){
@@ -747,182 +670,60 @@
   }
 
   /*
-    Stronger, layered breeze.
-    The whole crown sways a little while each
-    individual frond moves independently.
+    Constant, gentle breeze.
+    A steady wind from the west: each crown leans slightly downwind and rocks
+    softly, and every frond flutters on its own slow rhythm. Rotation is around the
+    crown's center (the tree's origin), so fronds pivot from their base like real ones.
+    The shadows are drawn from the moving fronds, so they sway in step automatically.
+    Negative delays start every tree and frond mid-motion, so nothing moves in lockstep
+    and there's no visible "start" when the map appears.
   */
-  .palm-fronds {
-    transform-box: fill-box;
-    transform-origin: 0 0;
-    animation:
-      palmCrownBreeze
-      7.8s
-      ease-in-out
-      infinite alternate;
-    will-change: transform;
-  }
-
+  .palm-fronds,
   .palm-fronds > path {
-    transform-box: fill-box;
-    transform-origin: 0 50%;
+    transform-box: view-box;
+    transform-origin: 0 0;
     will-change: transform;
   }
+  .palm-fronds{ animation: palmCrownBreeze 7.4s ease-in-out infinite alternate; }
 
-  /* Each frond has a different speed and phase. */
-  .palm-fronds > path:nth-child(1) {
-    animation: palmFrond1 4.2s ease-in-out infinite alternate;
-  }
+  .palm-fronds > path:nth-child(1)  { animation: palmFrondA 3.9s ease-in-out -1.2s infinite alternate; }
+  .palm-fronds > path:nth-child(2)  { animation: palmFrondB 4.6s ease-in-out -3.1s infinite alternate; }
+  .palm-fronds > path:nth-child(3)  { animation: palmFrondC 4.2s ease-in-out -0.6s infinite alternate; }
+  .palm-fronds > path:nth-child(4)  { animation: palmFrondA 5.1s ease-in-out -2.4s infinite alternate; }
+  .palm-fronds > path:nth-child(5)  { animation: palmFrondB 4.4s ease-in-out -1.8s infinite alternate; }
+  .palm-fronds > path:nth-child(6)  { animation: palmFrondC 5.4s ease-in-out -4.0s infinite alternate; }
+  .palm-fronds > path:nth-child(7)  { animation: palmFrondA 4.8s ease-in-out -0.9s infinite alternate; }
+  .palm-fronds > path:nth-child(8)  { animation: palmFrondB 3.8s ease-in-out -2.7s infinite alternate; }
+  .palm-fronds > path:nth-child(9)  { animation: palmFrondC 5.0s ease-in-out -3.5s infinite alternate; }
+  .palm-fronds > path:nth-child(10) { animation: palmFrondA 4.3s ease-in-out -1.5s infinite alternate; }
+  .palm-fronds > path:nth-child(11) { animation: palmFrondB 5.2s ease-in-out -0.3s infinite alternate; }
+  .palm-fronds > path:nth-child(12) { animation: palmFrondC 4.7s ease-in-out -2.1s infinite alternate; }
 
-  .palm-fronds > path:nth-child(2) {
-    animation: palmFrond2 5.1s ease-in-out infinite alternate;
-  }
+  /* each tree is at a different point in the sway */
+  .palm-tree:nth-of-type(1) .palm-fronds{ animation-delay:-0.8s; }
+  .palm-tree:nth-of-type(2) .palm-fronds{ animation-delay:-3.9s; animation-duration:8.1s; }
+  .palm-tree:nth-of-type(3) .palm-fronds{ animation-delay:-2.2s; animation-duration:6.9s; }
+  .palm-tree:nth-of-type(4) .palm-fronds{ animation-delay:-5.6s; animation-duration:7.8s; }
+  .palm-tree:nth-of-type(5) .palm-fronds{ animation-delay:-1.4s; animation-duration:7.1s; }
+  .palm-tree:nth-of-type(6) .palm-fronds{ animation-delay:-4.7s; animation-duration:8.4s; }
 
-  .palm-fronds > path:nth-child(3) {
-    animation: palmFrond3 4.6s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(4) {
-    animation: palmFrond4 5.8s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(5) {
-    animation: palmFrond5 4.9s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(6) {
-    animation: palmFrond6 6.2s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(7) {
-    animation: palmFrond7 5.3s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(8) {
-    animation: palmFrond8 4.4s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(9) {
-    animation: palmFrond9 5.9s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(10) {
-    animation: palmFrond10 4.8s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(11) {
-    animation: palmFrond11 5.5s ease-in-out infinite alternate;
-  }
-
-  .palm-fronds > path:nth-child(12) {
-    animation: palmFrond12 6.0s ease-in-out infinite alternate;
-  }
-
-  /* -----------------------------------------
-     Whole crown
-     ----------------------------------------- */
-
+  /* crown: leans a touch downwind (east) and rocks gently back and forth */
   @keyframes palmCrownBreeze {
-    0% {
-      transform:
-        rotate(-3deg)
-        translate(-2px, 1px);
-    }
-
-    45% {
-      transform:
-        rotate(1deg)
-        translate(1px, -1px);
-    }
-
-    100% {
-      transform:
-        rotate(4deg)
-        translate(3px, 1px);
-    }
+    0%   { transform: rotate(-0.6deg) translate(0.4px, 0); }
+    100% { transform: rotate(2.0deg)  translate(1.2px, 0.3px); }
   }
-
-  /* -----------------------------------------
-     Individual fronds — deliberately more visible
-     ----------------------------------------- */
-
-  @keyframes palmFrond1 {
-    0%   { transform: rotate(-2deg) translate(-2px, 1px); }
-    50%  { transform: rotate(0deg) translate(1px, -2px); }
-    100% { transform: rotate(3deg) translate(4px, 1px); }
+  /* fronds: small, soft flutters */
+  @keyframes palmFrondA {
+    0%   { transform: rotate(-1.4deg); }
+    100% { transform: rotate(2.2deg); }
   }
-
-  @keyframes palmFrond2 {
-    0%   { transform: rotate(4deg) translate(1px, -1px); }
-    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
-    100% { transform: rotate(-3deg) translate(-4px, 0); }
+  @keyframes palmFrondB {
+    0%   { transform: rotate(1.8deg); }
+    100% { transform: rotate(-1.2deg); }
   }
-
-  @keyframes palmFrond3 {
-    0%   { transform: rotate(-5deg) translate(-2px, 1px); }
-    50%  { transform: rotate(1deg) translate(1px, -2px); }
-    100% { transform: rotate(3deg) translate(4px, 1px); }
-  }
-
-  @keyframes palmFrond4 {
-    0%   { transform: rotate(4deg) translate(1px, -1px); }
-    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
-    100% { transform: rotate(-3deg) translate(-4px, 0); }
-  }
-
-  @keyframes palmFrond5 {
-    0%   { transform: rotate(-3deg) translate(-2px, 1px); }
-    50%  { transform: rotate(0deg) translate(1px, -2px); }
-    100% { transform: rotate(2deg) translate(4px, 1px); }
-  }
-
-  @keyframes palmFrond6 {
-    0%   { transform: rotate(3deg) translate(1px, -1px); }
-    50%  { transform: rotate(-2deg) translate(-1px, 2px); }
-    100% { transform: rotate(-1deg) translate(-4px, 0); }
-  }
-
-  @keyframes palmFrond7 {
-    0%   { transform: rotate(-3deg) translate(-2px, 1px); }
-    50%  { transform: rotate(1deg) translate(1px, -2px); }
-    100% { transform: rotate(3deg) translate(4px, 1px); }
-  }
-
-  @keyframes palmFrond8 {
-    0%   { transform: rotate(4deg) translate(1px, -1px); }
-    50%  { transform: rotate(1deg) translate(-1px, 2px); }
-    100% { transform: rotate(-2deg) translate(-4px, 0); }
-  }
-
-  @keyframes palmFrond9 {
-    0%   { transform: rotate(-3deg) translate(-2px, 1px); }
-    50%  { transform: rotate(1deg) translate(1px, -2px); }
-    100% { transform: rotate(4deg) translate(4px, 1px); }
-  }
-
-  @keyframes palmFrond10 {
-    0%   { transform: rotate(3deg) translate(1px, -1px); }
-    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
-    100% { transform: rotate(-4deg) translate(-4px, 0); }
-  }
-
-  @keyframes palmFrond11 {
-    0%   { transform: rotate(-4deg) translate(-2px, 1px); }
-    50%  { transform: rotate(1deg) translate(1px, -2px); }
-    100% { transform: rotate(3deg) translate(4px, 1px); }
-  }
-
-  @keyframes palmFrond12 {
-    0%   { transform: rotate(2deg) translate(1px, -1px); }
-    50%  { transform: rotate(-1deg) translate(-1px, 2px); }
-    100% { transform: rotate(-4deg) translate(-4px, 0); }
-  }
-
-  /* Respect reduced-motion preference. */
-  @media (prefers-reduced-motion: no-preference) {
-    .palm-fronds,
-    .palm-fronds > path {
-      animation: none !important;
-    }
+  @keyframes palmFrondC {
+    0%   { transform: rotate(-0.8deg) scale(1); }
+    100% { transform: rotate(1.6deg) scale(1.015); }
   }
 
   /* -----------------------------------------
@@ -966,8 +767,9 @@
     100% { opacity: 0; }
   }
 
+  /* The breeze is small and slow, so it keeps running even with "reduce motion" on
+     (Windows turns that on whenever "Animation effects" is off). */
   @media (prefers-reduced-motion: reduce) {
-    .palm-fronds,
     .landing-bird.rapid-flap {
       animation: none !important;
     }
@@ -1436,6 +1238,27 @@
   .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   .span-2{grid-column:1 / -1;}
 
+  /* ---------- Restock dialog ---------- */
+  #restockModalOverlay{z-index:1005;}
+  .restock-sub{margin:3px 0 0 !important; font-size:12.5px; color:var(--ink-soft);}
+  .restock-label{display:block; font-size:13px; font-weight:600; color:var(--ink); margin-bottom:8px;}
+  .restock-stepper{display:flex; height:58px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--paper-alt);}
+  .restock-stepper button{width:64px; border:none; background:none; color:var(--ink); font-size:26px; cursor:pointer; touch-action:manipulation;}
+  .restock-stepper button:hover{background:var(--sb-hover, rgba(0,0,0,.05));}
+  .restock-stepper input{flex:1; min-width:0; border:none; background:none; text-align:center; font-size:26px; font-weight:700; font-family:var(--font-display); color:var(--ink); -moz-appearance:textfield;}
+  .restock-stepper input::-webkit-inner-spin-button,.restock-stepper input::-webkit-outer-spin-button{-webkit-appearance:none; margin:0;}
+  .restock-stepper input:focus{outline:none;}
+  .restock-stepper:focus-within{border-color:var(--accent); box-shadow:var(--focus);}
+  .restock-presets{display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-top:10px;}
+  .restock-presets button{height:34px; border-radius:9px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-weight:600; font-family:var(--font-mono); cursor:pointer;}
+  .restock-presets button.active{border-color:var(--accent); background:var(--warn-bg); color:var(--accent-strong);}
+  .restock-result{margin:12px 0 0 !important; font-size:13.5px; color:var(--ink) !important;}
+  .restock-result b{font-family:var(--font-mono);}
+  .restock-more{margin-top:12px; border-top:1px solid var(--line); padding-top:10px;}
+  .restock-more summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--ink);}
+  .restock-more summary span{font-weight:400; color:var(--ink-soft);}
+  .restock-more input[type=date]{width:100%; height:40px; margin:10px 0 8px; padding:0 10px; border-radius:9px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink);}
+
   /* ---------- Toast ---------- */
   .toast-container{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:1100; max-width:calc(100vw - 24px); display:flex; flex-direction:column; gap:8px; align-items:center;}
   .toast{
@@ -1474,7 +1297,7 @@
   .qv-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:4px 12px 16px; display:flex; flex-direction:column; gap:8px;}
   .qv-row{display:flex; align-items:center; gap:12px; min-height:72px; padding:8px 8px 8px 14px; border-radius:14px; background:var(--panel-bg);
           border:1px solid var(--line); border-left:6px solid var(--cat, var(--line));}
-  .qv-row.used{opacity:.55;}
+  .qv-row.used .qv-info,.qv-row.used .qv-qty{opacity:.55;}   /* keep the Restock button at full strength */
   .qv-info{flex:1; min-width:0;}
   .qv-name{font-size:17px; font-weight:600; line-height:1.2; overflow-wrap:anywhere;}
   .qv-meta{font-size:12.5px; color:var(--ink-soft); margin-top:3px; display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center;}
@@ -1485,6 +1308,10 @@
           background:var(--accent); color:#fff; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
           transition:transform .08s ease, filter .12s ease;}
   .qv-btn:active{transform:scale(.93); filter:brightness(.9);}
+  .qv-btn.restock{width:58px; background:var(--paper-alt); color:var(--ink); border:1px solid var(--line); display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; gap:2px; font-size:15px;}
+  .qv-btn.restock .plus-sign{font-size:22px; font-weight:700; line-height:.9;}
+  .qv-btn.restock small{font-family:var(--font-body); font-size:10px; font-weight:600; letter-spacing:.02em; color:var(--ink-soft);}
+  .qv-btn.restock.wide{width:auto; min-width:96px; padding:0 14px; flex-direction:row; background:var(--good); color:#fff; border-color:transparent; font-size:16px;}
   .qv-btn.plus{background:var(--paper-alt); color:var(--ink); border:1px solid var(--line); font-size:19px;}
   .qv-row.bump{animation:qvBump .35s ease;}
   @keyframes qvBump{0%{background:color-mix(in srgb, var(--accent) 22%, var(--panel-bg));} 100%{background:var(--panel-bg);}}
@@ -1714,33 +1541,47 @@
      SPLASH SCREEN
      ================================ -->
 
-<div id="splash-screen" role="button" tabindex="0" aria-label="The S.H.I.T.S. - Surkan Home Inventory Tracking System">
+<div id="splash-screen" role="dialog" aria-modal="true" aria-labelledby="splashTitle" tabindex="-1">
+  <canvas class="splash-stars" id="splashStars" aria-hidden="true"></canvas>
+  <div class="splash-aurora" aria-hidden="true"></div>
+  <div class="splash-vignette" aria-hidden="true"></div>
 
   <div class="splash-content">
+    <div class="splash-logo-wrap">
+      <img src="https://drive.google.com/thumbnail?id=1y0o3MsWPKvxT63AUNw0pUV6f4oR9F6RM&sz=w1200" alt="The S.H.I.T.S. logo" class="splash-logo" id="splashLogo"
+           onerror="this.hidden=true; var w=document.getElementById('splashWordmark'); if (w) w.hidden=false;">
+      <div class="splash-wordmark" id="splashWordmark" hidden>The S.H.I.T.S.</div>
+    </div>
+    <h1 class="splash-topprompt" id="splashTitle">Surkan Home Inventory Tracking System™</h1>
+    <p class="splash-greeting" id="splashGreeting">&nbsp;</p>
 
-    <!-- Your logo -->
-    <img
-      src="https://drive.google.com/thumbnail?id=1y0o3MsWPKvxT63AUNw0pUV6f4oR9F6RM&sz=w1200"
-      alt="The S.H.I.T.S. logo"
-      class="splash-logo"
-    >
-
-    <!-- Click message -->
-    <div class="splash-prompt">
-      Click anywhere to shit
+    <div class="splash-glance" id="splashGlance" aria-live="polite">
+      <div class="splash-stat skeleton" id="splashStatItems"><b>&nbsp;</b><span>items on hand</span></div>
+      <div class="splash-stat skeleton" id="splashStatExp"><b>&nbsp;</b><span>expiring this week</span></div>
+      <div class="splash-stat skeleton" id="splashStatSync"><b>&nbsp;</b><span>last synced</span></div>
     </div>
 
-    <!-- Small visual indicator -->
-    <div class="splash-click-icon">
-     💩 
+    <div class="splash-progress" aria-hidden="true">
+      <div class="splash-bar"><i id="splashBar"></i></div>
+      <div class="splash-status" id="splashStatus">Unlocking the vault…</div>
     </div>
 
-    <div class="splash-topprompt">
-      Surkan Home Inventory Tracking System™
-    </div>
+    <button type="button" class="splash-enter" id="splashEnter" data-go="map">
+      <span class="splash-poop" aria-hidden="true">💩</span><span>Click anywhere to shit</span>
+    </button>
 
+    <div class="splash-actions" id="splashActions">
+      <button type="button" class="splash-action" data-go="inventory"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>Inventory</button>
+      <button type="button" class="splash-action" data-go="expiring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>Expiring<span class="pill" id="splashExpPill" hidden></span></button>
+      <button type="button" class="splash-action" data-go="quick"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><line x1="10" y1="18" x2="14" y2="18"/></svg>Quick use</button>
+      <button type="button" class="splash-action" data-go="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.3" y1="16.3" x2="21" y2="21"/></svg>Search</button>
+    </div>
+    <p class="splash-hint">Press <kbd>Enter</kbd> or any key to open the map</p>
   </div>
 
+  <div class="splash-foot">
+    <label class="splash-skip" title="Next time the app opens straight to the map as soon as your data has loaded"><input type="checkbox" id="splashSkip"> Skip this screen next time</label>
+  </div>
 </div>
 
 <div id="app">
@@ -1839,6 +1680,41 @@
 <radialGradient id="shrubG" cx="0.4" cy="0.38" r="0.65"><stop offset="0" stop-color="#6E9A52"/><stop offset="1" stop-color="#43683A"/></radialGradient>
 <linearGradient id="asphalt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A5E62"/><stop offset="1" stop-color="#63676B"/></linearGradient>
 <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.78"><stop offset="0.62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#1E3316" stop-opacity="0.15"/></radialGradient>
+<!-- Shadows. Sun from the upper left, so everything casts down and to the right.
+     Each filter builds its shadow from the shape it's applied to, every frame, so animated
+     palm fronds and their shadows always move together. -->
+<filter id="palmShadow" x="-35%" y="-35%" width="190%" height="190%" color-interpolation-filters="sRGB">
+  <!-- long, soft canopy shadow cast on the lawn -->
+  <feOffset in="SourceAlpha" dx="20" dy="24" result="farOff"/>
+  <feGaussianBlur in="farOff" stdDeviation="5.5" result="farBlur"/>
+  <feFlood flood-color="#0F2209" flood-opacity=".34"/>
+  <feComposite in2="farBlur" operator="in" result="far"/>
+  <!-- tight contact shadow that gives the fronds depth against each other -->
+  <feOffset in="SourceAlpha" dx="3" dy="4" result="nearOff"/>
+  <feGaussianBlur in="nearOff" stdDeviation="1.6" result="nearBlur"/>
+  <feFlood flood-color="#0F2209" flood-opacity=".30"/>
+  <feComposite in2="nearBlur" operator="in" result="near"/>
+  <feMerge><feMergeNode in="far"/><feMergeNode in="near"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+<filter id="wallShadow" x="-5%" y="-5%" width="112%" height="112%" color-interpolation-filters="sRGB">
+  <!-- house exterior / shed: soft ambient shadow plus a crisper offset shadow, like raised walls -->
+  <feOffset in="SourceAlpha" dx="8" dy="10" result="o1"/>
+  <feGaussianBlur in="o1" stdDeviation="4.5" result="b1"/>
+  <feFlood flood-color="#12200D" flood-opacity=".55"/>
+  <feComposite in2="b1" operator="in" result="s1"/>
+  <feOffset in="SourceAlpha" dx="2.5" dy="3" result="o2"/>
+  <feGaussianBlur in="o2" stdDeviation="1.2" result="b2"/>
+  <feFlood flood-color="#12200D" flood-opacity=".38"/>
+  <feComposite in2="b2" operator="in" result="s2"/>
+  <feMerge><feMergeNode in="s1"/><feMergeNode in="s2"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+<filter id="fenceShadow" x="-5%" y="-5%" width="112%" height="112%" color-interpolation-filters="sRGB">
+  <feOffset in="SourceAlpha" dx="3" dy="4" result="o"/>
+  <feGaussianBlur in="o" stdDeviation="2" result="b"/>
+  <feFlood flood-color="#12200D" flood-opacity=".35"/>
+  <feComposite in2="b" operator="in" result="s"/>
+  <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
 </defs>
 <rect x="-202" y="-130" width="1577" height="1060" rx="32" fill="#1F2A18" opacity="0.07"/>
 <rect x="-199" y="-125" width="1577" height="1060" rx="32" fill="#1F2A18" opacity="0.055"/>
@@ -1886,6 +1762,7 @@
 <circle cx="690.0" cy="-21.0" r="12.0" fill="url(#shrubG)" stroke="#3B5F31" stroke-width="1.1"/>
 <rect x="520" y="767" width="470" height="116" rx="9" fill="url(#paverPattern)"/>
 <rect x="520" y="767" width="470" height="116" rx="9" fill="none" stroke="#A48C6C" stroke-width="3"/>
+<g class="fence" filter="url(#fenceShadow)">
 <polyline points="18,420 -185,420 -185,902 1352,902 1352,440 1090,440" fill="none" stroke="#9E7D56" stroke-width="5" stroke-linejoin="round"/>
 <line x1="1022" y1="440" x2="1052" y2="440" stroke="#9E7D56" stroke-width="5"/>
 <rect x="-189.5" y="415.5" width="9" height="9" fill="#86653F"/>
@@ -1929,6 +1806,7 @@
 <rect x="1347.5" y="567.5" width="9" height="9" fill="#86653F"/>
 <rect x="1347.5" y="501.5" width="9" height="9" fill="#86653F"/>
 <rect x="1347.5" y="435.5" width="9" height="9" fill="#86653F"/>
+</g>
 <rect x="726" y="-78" width="14" height="10" rx="2" fill="#2F3A45"/><rect x="731" y="-68" width="4" height="8" fill="#7A6A55"/>
 <rect x="-205" y="-135" width="1577" height="1060" fill="url(#vignette)"/>
 </g>
@@ -1941,14 +1819,14 @@
         </g>
         <image id="floorPlanImage" x="-40" y="-40" width="1229" height="992" preserveAspectRatio="none" style="display:none"></image>
         <g id="patternsGroup"></g>
-        <image id="floorPlanInk" x="-40" y="-40" width="1229" height="992" preserveAspectRatio="none" style="display:none"></image>
-        <image id="floorPlanLines" x="10" y="-7" width="1180" height="936" preserveAspectRatio="none" style="display:none"></image>
+        <image id="floorPlanInk" x="-40" y="-40" width="1229" height="992" preserveAspectRatio="none" style="display:none" filter="url(#wallShadow)"></image>
+        <image id="floorPlanLines" x="10" y="-7" width="1180" height="936" preserveAspectRatio="none" style="display:none" filter="url(#wallShadow)"></image>
 
         <!-- Decorative palms: above floor-plan imagery so they remain visible -->
         <g id="palmTreesGroup" aria-hidden="true" style="pointer-events:none">
 
   <!-- TREE 1 -->
-  <g class="palm-tree" transform="translate(-100 55) scale(.98)">
+  <g class="palm-tree" filter="url(#palmShadow)" transform="translate(-100 55) scale(.98)">
     <!-- curved off-nadir trunk -->
     <g class="palm-trunk-view" transform="rotate(-13 0 0)">
       <path class="palm-trunk-ground-shadow"
@@ -1994,7 +1872,7 @@
   </g>
 
   <!-- TREE 2 -->
-  <g class="palm-tree" transform="translate(-100 610) scale(.98)">
+  <g class="palm-tree" filter="url(#palmShadow)" transform="translate(-100 610) scale(.98)">
     <!-- curved off-nadir trunk -->
     <g class="palm-trunk-view" transform="rotate(7 0 0)">
       <path class="palm-trunk-ground-shadow"
@@ -2040,7 +1918,7 @@
   </g>
 
   <!-- TREE 3 -->
-  <g class="palm-tree" transform="translate(-95 835) scale(.78)">
+  <g class="palm-tree" filter="url(#palmShadow)" transform="translate(-95 835) scale(.78)">
     <!-- curved off-nadir trunk -->
     <g class="palm-trunk-view" transform="rotate(-6 0 0)">
       <path class="palm-trunk-ground-shadow"
@@ -2086,7 +1964,7 @@
   </g>
 
   <!-- TREE 4 -->
-  <g class="palm-tree" transform="translate(1228 20) scale(1.05)">
+  <g class="palm-tree" filter="url(#palmShadow)" transform="translate(1228 20) scale(1.05)">
     <!-- curved off-nadir trunk -->
     <g class="palm-trunk-view" transform="rotate(12 0 0)">
       <path class="palm-trunk-ground-shadow"
@@ -2132,7 +2010,7 @@
   </g>
 
   <!-- TREE 5 -->
-  <g class="palm-tree" transform="translate(1262 262) scale(.90)">
+  <g class="palm-tree" filter="url(#palmShadow)" transform="translate(1262 262) scale(.90)">
     <!-- curved off-nadir trunk -->
     <g class="palm-trunk-view" transform="rotate(-10 0 0)">
       <path class="palm-trunk-ground-shadow"
@@ -2178,7 +2056,7 @@
   </g>
 
   <!-- TREE 6 -->
-  <g class="palm-tree" transform="translate(1255 790) scale(.98)">
+  <g class="palm-tree" filter="url(#palmShadow)" transform="translate(1255 790) scale(.98)">
     <!-- curved off-nadir trunk -->
     <g class="palm-trunk-view" transform="rotate(9 0 0)">
       <path class="palm-trunk-ground-shadow"
@@ -2431,6 +2309,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost danger" id="itemDeleteBtn" style="display:none">Delete item</button>
         <button type="button" class="btn btn-ghost" id="itemUsedBtn" style="display:none">Mark as used</button>
+        <button type="button" class="btn btn-ghost" id="itemRestockBtn" style="display:none">Restock…</button>
         <div class="spacer"></div>
         <button type="button" class="btn btn-ghost" data-close-modal="itemModalOverlay">Cancel</button>
         <button type="button" class="btn btn-primary" id="itemSaveBtn">Add item</button>
@@ -2449,6 +2328,46 @@
         <button type="button" class="btn btn-ghost" data-close-modal="confirmModalOverlay">Cancel</button>
         <button type="button" class="btn btn-primary" id="confirmBtn">Confirm</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Restock dialog -->
+  <div class="modal-overlay" id="restockModalOverlay">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="restockTitle">
+      <form id="restockForm" autocomplete="off">
+        <div class="modal-header">
+          <div><h2 id="restockTitle">Restock</h2><p class="restock-sub" id="restockSub"></p></div>
+          <button type="button" class="icon-btn" data-close-modal="restockModalOverlay" aria-label="Close">
+            <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="restock-label" for="restockQty">How many are you adding?</label>
+          <div class="restock-stepper">
+            <button type="button" data-rs-step="-1" aria-label="One less">−</button>
+            <input type="number" id="restockQty" inputmode="numeric" min="1" value="1" aria-label="Amount to restock" />
+            <button type="button" data-rs-step="1" aria-label="One more">+</button>
+          </div>
+          <div class="restock-presets" id="restockPresets">
+            <button type="button" data-rs-set="1">1</button><button type="button" data-rs-set="2">2</button><button type="button" data-rs-set="4">4</button>
+            <button type="button" data-rs-set="6">6</button><button type="button" data-rs-set="12">12</button><button type="button" data-rs-set="24">24</button>
+          </div>
+          <p class="restock-result" id="restockResult"></p>
+          <details class="restock-more" id="restockMore">
+            <summary>New expiration date <span>(optional)</span></summary>
+            <input type="date" id="restockExp" aria-label="New expiration date" />
+            <div class="qv-exp-chips" id="restockExpChips">
+              <button type="button" data-days="3">3 days</button><button type="button" data-days="7">1 week</button>
+              <button type="button" data-days="14">2 weeks</button><button type="button" data-days="30">1 month</button>
+            </div>
+          </details>
+        </div>
+        <div class="modal-footer">
+          <div class="spacer"></div>
+          <button type="button" class="btn btn-ghost" data-close-modal="restockModalOverlay">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="restockSaveBtn">Restock</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -2853,7 +2772,7 @@
       'roomSaveBtn','roomDeleteBtn','itemModalOverlay','itemModalTitle','itemVisualPreview',
       'quickView','qvAddBtn','qvAdd','qvAddForm','qvAddTitle','qvAddClose','qvAddName','qvAddHint','qvAddWhere','qvAddQty','qvAddCat','qvAddExp','qvExpChips','qvAddNext','qvAddSave','qvBack','qvTitle','qvSub','qvSync','qvSyncLabel','qvSearch','qvChips','qvBody','qvFullApp','quickOpenBtn',
       'qrModalOverlay','qrWarn','qrSize','qrAll','qrNone','qrPick','qrPrintBtn','printSheet','qrStickersBtn',
-      'itemUsedBtn','itemEditCategoriesBtn','invHideUsed','invLegend','invCategoriesBtn','catModalOverlay','catRows','catAddBtn','catSaveBtn',
+      'itemUsedBtn','itemRestockBtn','restockModalOverlay','restockForm','restockTitle','restockSub','restockQty','restockPresets','restockResult','restockMore','restockExp','restockExpChips','restockSaveBtn','itemEditCategoriesBtn','invHideUsed','invLegend','invCategoriesBtn','catModalOverlay','catRows','catAddBtn','catSaveBtn',
       'itemPhotoInput','itemPhotoRemoveBtn','itemNameInput','itemCategorySelect','itemCustomCategoryWrap',
       'itemCustomCategoryInput','itemQtyInput','itemValueInput','itemSubLocationInput','itemPurchaseInput',
       'itemExpiresInput','itemNotesInput','itemSaveBtn','itemDeleteBtn','confirmModalOverlay',
@@ -3846,6 +3765,7 @@
       (it.notes ? '<p class="inv-notes">' + highlightMatches(it.notes, pq) + '</p>' : '') +
       '<div class="inv-actions"><button type="button" class="btn btn-primary btn-sm" data-inv-action="map">Show on map</button>' +
       '<button type="button" class="btn btn-ghost btn-sm" data-inv-action="edit">Edit item</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-inv-action="restock">Restock\u2026</button>' +
       '<button type="button" class="btn btn-ghost btn-sm" data-inv-action="used">' + (it.usedAt ? 'Mark as not used' : 'Mark as used') + '</button></div></div>';
   }
   function renderInventoryView(){
@@ -3935,6 +3855,7 @@
         var a = act.getAttribute('data-inv-action');
         if (a === 'map') showItemOnMap(item);
         else if (a === 'used') setItemUsed(item, !item.usedAt);
+        else if (a === 'restock') openRestock(item);
         else openItemModal(item, item.locationId);
         return;
       }
@@ -4276,6 +4197,7 @@
     els.itemSaveBtn.textContent = item ? 'Save changes' : 'Add item';
     els.itemDeleteBtn.style.display = item ? 'inline-flex' : 'none';
     els.itemUsedBtn.style.display = item ? 'inline-flex' : 'none';
+    els.itemRestockBtn.style.display = item ? 'inline-flex' : 'none';
     els.itemUsedBtn.textContent = item && item.usedAt ? 'Mark as not used' : 'Mark as used';
     els.itemNameInput.value = item ? item.name : '';
     renderItemCategorySelect(item && item.category ? item.category : null);
@@ -5266,6 +5188,7 @@
     bindChrome();
     bindQuick();
     bindQuickAdd();
+    bindRestock();
     bindQrStickers();
     els.itemPhotoInput.addEventListener('change', function(e){
       var file = e.target.files[0];
@@ -5300,8 +5223,12 @@
     });
     document.addEventListener('keydown', function(e){
       if (e.key !== 'Escape') return;
-      var openModal = document.querySelector('.modal-overlay.open');
-      if (openModal){ closeModal(openModal.id); return; }
+      /* close the dialog on top (highest layer, then the one opened last in the page) */
+      var open = [].slice.call(document.querySelectorAll('.modal-overlay.open'));
+      if (open.length){
+        open.sort(function(a, b){ return ((parseInt(getComputedStyle(a).zIndex, 10) || 0) - (parseInt(getComputedStyle(b).zIndex, 10) || 0)) || (a.compareDocumentPosition(b) & 4 ? -1 : 1); });
+        closeModal(open[open.length - 1].id); return;
+      }
       if (els.sidePanel.classList.contains('open')) closePanel();
     });
 
@@ -7022,8 +6949,9 @@
           (where && quick.roomId && !quick.storageId ? '<span>' + escapeHtml(where) + '</span>' : '') +
           '<span>' + escapeHtml(it.category || CATEGORY_FALLBACK) + '</span>' + (used ? '<span class="badge badge-used">Used up</span>' : badge) + '</div></div>' +
       '<div class="qv-qty">' + q + '<small>left</small></div>' +
-      (used ? '<button type="button" class="qv-btn plus" data-qv="plus" aria-label="Add one ' + escapeHtml(it.name) + '">+1</button>'
-            : '<button type="button" class="qv-btn" data-qv="minus" aria-label="Used one ' + escapeHtml(it.name) + '">−1</button>') +
+      '<button type="button" class="qv-btn restock' + (used ? ' wide' : '') + '" data-qv="restock" aria-label="Restock ' + escapeHtml(it.name) + '">' +
+        (used ? 'Restock' : '<span class="plus-sign">+</span><small>Restock</small>') + '</button>' +
+      (used ? '' : '<button type="button" class="qv-btn" data-qv="minus" aria-label="Used one ' + escapeHtml(it.name) + '">−1</button>') +
     '</div>';
   }
   function renderQuick(){
@@ -7163,9 +7091,83 @@
       if (r){ openQuick(r.getAttribute('data-room')); return; }
       var btn = e.target.closest('[data-qv]'); if (!btn) return;
       var row = btn.closest('.qv-row'), item = state.items.find(function(i){ return i.id === row.getAttribute('data-item-id'); });
-      if (item) quickAdjust(item, btn.getAttribute('data-qv') === 'minus' ? -1 : 1, row);
+      if (!item) return;
+      var kind = btn.getAttribute('data-qv');
+      if (kind === 'restock') openRestock(item); else quickAdjust(item, kind === 'minus' ? -1 : 1, row);
     });
     window.addEventListener('hashchange', function(){ if (/^#quick/.test(location.hash)) quickFromHash(); });
+  }
+
+  /* ---- Restock: add a number of an item back into stock (default 1) ----
+     Used from the phone quick-use rows, the Inventory list and the item dialog.
+     A used-up item comes back into stock; if it had run out and no new date is given,
+     its old expiration date is cleared so it doesn't trigger stale reminders. */
+  var restockTarget = null;
+  function openRestock(item){
+    restockTarget = item;
+    var q = item.usedAt ? 0 : qtyOf(item);
+    els.restockTitle.textContent = 'Restock ' + item.name;
+    els.restockSub.textContent = locationPath(item) + ' · ' + q + ' on hand';
+    els.restockQty.value = 1;
+    els.restockExp.value = '';
+    els.restockMore.open = false;
+    [].forEach.call(els.restockExpChips.querySelectorAll('button'), function(b){ b.classList.remove('active'); });
+    updateRestockPreview();
+    openModalEl(els.restockModalOverlay);
+    setTimeout(function(){ els.restockQty.focus(); els.restockQty.select(); }, 40);
+  }
+  function restockAmount(){ var n = parseInt(els.restockQty.value, 10); return isNaN(n) || n < 1 ? 1 : Math.min(n, 9999); }
+  function updateRestockPreview(){
+    if (!restockTarget) return;
+    var n = restockAmount(), q = restockTarget.usedAt ? 0 : qtyOf(restockTarget);
+    els.restockResult.innerHTML = 'You’ll have <b>' + (q + n) + '</b> ' + escapeHtml(restockTarget.name) + (q ? ' (' + q + ' + ' + n + ')' : '') + '.';
+    [].forEach.call(els.restockPresets.querySelectorAll('[data-rs-set]'), function(b){ b.classList.toggle('active', Number(b.getAttribute('data-rs-set')) === n); });
+    els.restockSaveBtn.textContent = 'Restock ' + n;
+  }
+  function saveRestock(){
+    var item = restockTarget && state.items.find(function(i){ return i.id === restockTarget.id; });
+    if (!item){ closeModal('restockModalOverlay'); return; }
+    var n = restockAmount(), exp = els.restockExp.value || null;
+    var before = JSON.parse(JSON.stringify(item)), rec = JSON.parse(JSON.stringify(item));
+    var wasOut = !!rec.usedAt || qtyOf(item) === 0;
+    rec.quantity = (wasOut ? 0 : qtyOf(item)) + n;
+    delete rec.usedAt;
+    if (exp) rec.expirationDate = exp; else if (wasOut) rec.expirationDate = null;
+    rec.purchaseDate = localDateStr();
+    idbPut('items', rec).then(function(){
+      replaceItemInState(rec);
+      closeModal('restockModalOverlay');
+      if (els.itemModalOverlay.classList.contains('open') && editingItem && editingItem.id === rec.id) closeModal('itemModalOverlay');
+      renderCanvas(); renderStats(); refreshActivePanel(); if (inv.open) renderInventoryView();
+      if (quick.open){
+        var y = els.qvBody.scrollTop; renderQuick(); els.qvBody.scrollTop = y;
+        var row = els.qvBody.querySelector('.qv-row[data-item-id="' + rec.id + '"]');
+        if (row){ row.classList.remove('bump'); void row.offsetWidth; row.classList.add('bump'); }
+      }
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch(e){}
+      toastAction(rec.name + ' restocked — ' + rec.quantity + ' on hand', 'Undo', function(){
+        idbPut('items', before).then(function(){ replaceItemInState(before); renderCanvas(); renderStats(); refreshActivePanel(); if (inv.open) renderInventoryView(); if (quick.open) renderQuick(); });
+      });
+      if (getToken()) scheduleSync(700);
+      restockTarget = null;
+    }).catch(function(err){ console.error(err); toast('Could not restock that', 'error'); });
+  }
+  function bindRestock(){
+    els.restockForm.addEventListener('submit', function(e){ e.preventDefault(); saveRestock(); });
+    els.restockQty.addEventListener('input', updateRestockPreview);
+    els.restockForm.addEventListener('click', function(e){
+      var st = e.target.closest('[data-rs-step]');
+      if (st){ els.restockQty.value = Math.max(1, restockAmount() + Number(st.getAttribute('data-rs-step'))); updateRestockPreview(); return; }
+      var set = e.target.closest('[data-rs-set]');
+      if (set){ els.restockQty.value = set.getAttribute('data-rs-set'); updateRestockPreview(); return; }
+      var chip = e.target.closest('#restockExpChips [data-days]');
+      if (chip){
+        var d = new Date(); d.setDate(d.getDate() + Number(chip.getAttribute('data-days'))); els.restockExp.value = localDateStr(d);
+        [].forEach.call(els.restockExpChips.querySelectorAll('button'), function(b){ b.classList.toggle('active', b === chip); });
+      }
+    });
+    els.restockExp.addEventListener('input', function(){ [].forEach.call(els.restockExpChips.querySelectorAll('button'), function(b){ b.classList.remove('active'); }); });
+    els.itemRestockBtn.addEventListener('click', function(){ if (editingItem) openRestock(editingItem); });
   }
 
   /* ---- Quick add: from the same room sticker ----
@@ -7389,8 +7391,35 @@
     } catch(e){ console.error(e); }
   };
 
+  /* ---- splash screen hand-off ---- */
+  function splashSummary(){
+    var today = localDateStr(), week = localDateStr(new Date(Date.now() + 6 * 86400000));
+    var items = 0, expWeek = 0, expired = 0;
+    state.items.forEach(function(i){
+      if (i.usedAt || qtyOf(i) === 0) return;
+      items++;
+      if (!i.expirationDate) return;
+      if (i.expirationDate < today) expired++; else if (i.expirationDate <= week) expWeek++;
+    });
+    return {items: items, expiringWeek: expWeek, expired: expired, lastSync: Number(lsGet(LS.lastSync) || 0) || null,
+            syncState: !syncConfigured() ? 'off' : (getToken() ? 'connected' : 'disconnected')};
+  }
+  function splashUpdate(stage){
+    if (typeof window.__shitsSplashUpdate === 'function') try { window.__shitsSplashUpdate(stage, stage === 'loading' ? null : splashSummary()); } catch(e){ console.error(e); }
+  }
+  /* where the splash buttons lead */
+  window.__shitsGo = function(where){
+    try {
+      if (where === 'inventory') openInventoryView({query: ''});
+      else if (where === 'expiring') openInventoryView({query:'', expiring:true, room:'', sort:'expiring'});
+      else if (where === 'quick') openQuick(null);
+      else if (where === 'search') setTimeout(function(){ els.searchInput.focus(); }, 420);
+    } catch(e){ console.error(e); }
+  };
+
   function init(){
     cacheEls();
+    splashUpdate('loading');
     requestPersistentStorage();
     /* Keep the side panel below the header so header controls stay clickable. */
     (function syncHeaderHeight(){
@@ -7478,7 +7507,11 @@
       var fullAppChosen = false;
       try { fullAppChosen = sessionStorage.getItem('shits.fullApp') === '1'; } catch(e){}
       if (!quickFromHash() && isPhoneLike() && !fullAppChosen) openQuick(null);
-      autoRestore().then(function(){ if (quick.open) renderQuick(); }).then(initSync);
+      splashUpdate('restoring');
+      /* show the splash as ready once the latest backup is checked (or after 2.5 s, whichever is first) */
+      var restored = autoRestore().then(function(){ if (quick.open) renderQuick(); });
+      Promise.race([restored, new Promise(function(r){ setTimeout(r, 2500); })]).then(function(){ splashUpdate('ready'); });
+      restored.then(function(){ splashUpdate('update'); }).then(initSync);
     });
   }
 
@@ -7507,17 +7540,28 @@
 
   /* =========================================
      SPLASH SCREEN
+     - shows a live glance at your inventory while the app loads
+     - any click / tap / key enters (that click also reconnects Google Drive sync)
+     - shortcut buttons jump straight to Inventory, Expiring, Quick use or Search
+     - optional "skip this screen next time"
      ========================================= */
+  let entered = false, splashReady = false, pendingGo = null, starsStop = null;
+  const $s = (id) => document.getElementById(id);
 
-  let entered = false;
+  function lsGetSafe(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function lsSetSafe(k, v){ try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch(e){} }
+
   // Quick use (room stickers, phones) skips the splash entirely.
   window.__shitsSkipSplash = function () {
     if (entered) return;
     entered = true;
+    if (starsStop) starsStop();
     splashScreen.remove();
   };
-  function enterApp() {
+
+  function enterApp(go) {
     if (entered) return;
+    if (!splashReady){ pendingGo = go || 'map'; setStatus('Almost there…'); return; }   // enter as soon as data is loaded
     entered = true;
 
     // Reconnect Google Drive sync while we still have the click (browsers only allow the
@@ -7525,44 +7569,149 @@
     if (typeof window.__shitsOnEnter === "function") window.__shitsOnEnter();
 
     splashScreen.classList.add("hidden");
+    if (typeof window.__shitsGo === "function") window.__shitsGo(go || 'map');
 
     setTimeout(() => {
-
+      if (starsStop) starsStop();
       splashScreen.remove();
-
       // Start bird activity after splash is gone
       setTimeout(startBirds, 1500);
-
-    }, 950);
+    }, 720);
   }
 
+  /* ---- live content ---- */
+  function setStatus(text){ const el = $s('splashStatus'); if (el) el.textContent = text; }
+  function setProgress(pct){ const el = $s('splashBar'); if (el) el.style.width = Math.max(4, Math.min(100, pct)) + '%'; }
+  function greeting(){
+    const h = new Date().getHours();
+    const part = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Up late';
+    return part + ' — ' + new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+  }
+  function relTime(ts){
+    if (!ts) return null;
+    const m = Math.round((Date.now() - ts) / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return m + ' min ago';
+    const h = Math.round(m / 60);
+    if (h < 24) return h + ' hr ago';
+    const d = Math.round(h / 24);
+    return d === 1 ? 'yesterday' : d + ' days ago';
+  }
+  function setStat(id, value, label, tone){
+    const el = $s(id); if (!el) return;
+    el.classList.remove('skeleton', 'warn', 'bad', 'good');
+    if (tone) el.classList.add(tone);
+    el.querySelector('b').textContent = value;
+    if (label) el.querySelector('span').textContent = label;
+  }
+  /* called by the app: stage 'loading' | 'restoring' | 'ready', with a summary once data is in */
+  window.__shitsSplashUpdate = function (stage, sum) {
+    if (!document.body.contains(splashScreen)) return;
+    if (stage === 'loading'){ setProgress(35); setStatus('Opening your inventory…'); }
+    if (stage === 'restoring'){ setProgress(75); setStatus('Checking for your latest backup…'); }
+    if (sum){
+      setStat('splashStatItems', String(sum.items), sum.items === 1 ? 'item on hand' : 'items on hand');
+      const exp = sum.expiringWeek + sum.expired;
+      setStat('splashStatExp', String(exp), sum.expired ? (sum.expired + ' already expired') : 'expiring this week', sum.expired ? 'bad' : (exp ? 'warn' : 'good'));
+      const pill = $s('splashExpPill'); if (pill){ pill.hidden = !exp; pill.textContent = exp; }
+      if (sum.syncState === 'off') setStat('splashStatSync', '—', 'Drive sync off');
+      else setStat('splashStatSync', relTime(sum.lastSync) || 'never', sum.syncState === 'connected' ? 'last synced' : 'last synced · tap to reconnect');
+    }
+    if (stage === 'ready'){
+      setProgress(100); setStatus('Ready');
+      if (splashReady) return;
+      splashReady = true;
+      setTimeout(() => {
+        splashScreen.classList.add('ready');
+        if (pendingGo){ const g = pendingGo; pendingGo = null; enterApp(g); return; }
+        if (lsGetSafe('shits.skipSplash') === '1'){ setTimeout(() => enterApp('map'), 250); return; }
+        const btn = $s('splashEnter'); if (btn) try { btn.focus({preventScroll:true}); } catch(e){}
+      }, 320);
+    }
+  };
+  // Safety net: never leave anyone stuck on the splash if the app can't report in.
+  setTimeout(() => { if (!splashReady) window.__shitsSplashUpdate('ready'); }, 6000);
+
+  /* ---- starfield (paused when the tab is hidden, off for reduced-motion) ---- */
+  function startStars(){
+    const c = $s('splashStars'); if (!c || !c.getContext) return;
+    const ctx = c.getContext('2d');
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let w, h, dpr, stars = [], raf = 0, running = true;
+    function size(){
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.round(Math.min(220, w * h / 7000));
+      stars = Array.from({length:n}, () => ({x:Math.random()*w, y:Math.random()*h, r:Math.random()*1.3+.25, a:Math.random()*.6+.2,
+                                             t:Math.random()*Math.PI*2, s:Math.random()*.02+.004, vx:(Math.random()-.5)*.06, vy:-(Math.random()*.08+.01)}));
+    }
+    function draw(){
+      ctx.clearRect(0, 0, w, h);
+      for (const st of stars){
+        st.t += st.s; st.x += st.vx; st.y += st.vy;
+        if (st.y < -2){ st.y = h + 2; st.x = Math.random()*w; }
+        if (st.x < -2) st.x = w + 2; else if (st.x > w + 2) st.x = -2;
+        const a = st.a * (.55 + .45 * Math.sin(st.t));
+        ctx.globalAlpha = a; ctx.fillStyle = st.r > 1.2 ? '#F2DDB4' : '#DCE6FF';
+        ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if (running && !reduce) raf = requestAnimationFrame(draw);
+    }
+    size(); draw();
+    const onResize = () => { size(); if (reduce) draw(); };
+    const onVis = () => { if (document.hidden){ running = false; cancelAnimationFrame(raf); } else if (!running && !entered){ running = true; draw(); } };
+    window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', onVis);
+    starsStop = () => { running = false; cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); };
+  }
+
+  /* ---- wiring ---- */
+  (function(){
+    const g = $s('splashGreeting'); if (g) g.textContent = greeting();
+    const skip = $s('splashSkip');
+    if (skip){
+      skip.checked = lsGetSafe('shits.skipSplash') === '1';
+      skip.addEventListener('change', () => lsSetSafe('shits.skipSplash', skip.checked ? '1' : null));
+      skip.closest('label').addEventListener('click', (e) => e.stopPropagation());   // ticking the box doesn't enter
+    }
+    setProgress(12);
+    try { startStars(); } catch(e){ console.error(e); }
+    try { splashScreen.focus({preventScroll:true}); } catch(e){}
+  })();
 
   // Attach splash handlers FIRST.
   // This guarantees the splash still works even if
   // something goes wrong in the bird code below.
-
-  splashScreen.addEventListener("click", enterApp);
-
-  splashScreen.addEventListener("keydown", (event) => {
-
-    if (event.key === "Enter" || event.key === " ") {
-
-      event.preventDefault();
-
-      enterApp();
-
-    }
-
+  splashScreen.addEventListener("click", (event) => {
+    const b = event.target.closest('[data-go]');
+    enterApp(b ? b.getAttribute('data-go') : 'map');
   });
-
+  // Keys are caught before the app's own shortcuts (M, I, Q, F, /) while the splash is up.
+  document.addEventListener("keydown", (event) => {
+    if (entered || !document.body.contains(splashScreen)) return;
+    event.stopPropagation();
+    if (event.key === 'Tab' || event.key === 'Shift' || event.key === 'Control' || event.key === 'Alt' || event.key === 'Meta') return;
+    if (event.target && event.target.id === 'splashSkip') return;
+    if ((event.key === "Enter" || event.key === " ") && event.target.closest && event.target.closest('[data-go]')){
+      event.preventDefault(); enterApp(event.target.closest('[data-go]').getAttribute('data-go')); return;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    event.preventDefault();
+    enterApp('map');
+  }, true);
 
   /* =========================================
      CREATE BIRD
      ========================================= */
 
+/* Each chance for a bird to appear now succeeds 70% of the time (30% fewer birds). */
+const BIRD_CHANCE = 0.7;
+
 function createBird() {
 
   if (!birdsEnabled) return;
+  if (Math.random() >= BIRD_CHANCE) return;
 
   const bird = document.createElement("div");
 
@@ -8091,6 +8240,7 @@ function createBird() {
   function createLandingBird() {
 
     if (!birdLayer) return;
+    if (Math.random() >= BIRD_CHANCE) return;
 
     /*
       Don't create a landing bird outside View mode.
