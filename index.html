@@ -2626,8 +2626,8 @@
   ROOM_ICONS.entry = '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M12 3 V21"/><circle cx="9" cy="12" r="1"/><path d="M15 8 L18 12 L15 16"/>';
   ROOM_ICONS.mudroom = '<rect x="4" y="3" width="16" height="18" rx="1"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><path d="M7 18 H9 M12 18 H14 M17 18 H19"/>';
   ROOM_ICONS.media = '<rect x="2" y="5" width="20" height="13" rx="1"/><polygon points="10,9 10,15 16,12"/><line x1="7" y1="21" x2="17" y2="21"/>';
-  /* Hallway, drawn like the floor plan: a long corridor with a runner rug and doors opening off each side */
-  ROOM_ICONS.hallway = '<path d="M2 8 H7 M12 8 H22 M2 16 H12 M17 16 H22"/><path d="M7 8 V3"/><path d="M7 3 A5 5 0 0 1 12 8"/><path d="M17 16 V21"/><path d="M17 21 A5 5 0 0 1 12 16"/><rect x="4" y="10.6" width="16" height="2.8" rx="1.4"/>';
+  /* Hallway: looking down a corridor — floor and ceiling lines run to the far wall, with a door on each side */
+  ROOM_ICONS.hallway = '<path d="M2 2 L9 8 H15 L22 2 M2 22 L9 16 H15 L22 22"/><path d="M9 8 V16 M15 8 V16"/><path d="M4.5 7.5 L6.5 9.2 V16.8 L4.5 18.5 Z"/><path d="M19.5 7.5 L17.5 9.2 V16.8 L19.5 18.5 Z"/>';
   ROOM_ICONS.nursery = '<rect x="3" y="10" width="18" height="8" rx="1"/><rect x="3" y="6" width="5" height="5" rx="1"/><circle cx="17" cy="6" r="3"/><line x1="17" y1="3" x2="17" y2="9"/><line x1="14" y1="6" x2="20" y2="6"/>';
   ROOM_ICONS.guest = ROOM_ICONS.bedroom;
   ROOM_TYPES.push(
@@ -2821,6 +2821,7 @@
   };
 
   var workingLocation = null;
+  var roomIconAuto = false;
   var selectedRoomIconType = ROOM_TYPES[0].key;
   var selectedStorageIconType = STORAGE_TYPES[0].key;
   var editingItem = null;
@@ -3319,7 +3320,7 @@
   function locationMarkup(loc){
     var isRoom = loc.type === 'room';
     var bbox = polygonBBox(loc.points);
-    var icon = isRoom ? (ROOM_ICONS[loc.iconKey] || ROOM_ICONS.other) : (STORAGE_ICONS[loc.iconKey] || STORAGE_ICONS.other);
+    var icon = isRoom ? (ROOM_ICONS[roomIconKey(loc)] || ROOM_ICONS.other) : (STORAGE_ICONS[loc.iconKey] || STORAGE_ICONS.other);
     var roomSelected = state.selectedRoomId === loc.id;
     var storageSelected = state.selectedStorageId === loc.id;
     var shapeSelected = state.mode === 'shape' && state.selectedShapeId === loc.id;
@@ -4192,7 +4193,8 @@
   function openLabelModal(loc){
     workingLocation = {id:loc.id, type:loc.type, name:loc.name, iconKey:loc.iconKey, parentId:loc.parentId,
                        pattern: loc.pattern || null, patternOpacity: loc.patternOpacity != null ? loc.patternOpacity : 0.9};
-    selectedRoomIconType = loc.type === 'room' ? (loc.iconKey || ROOM_TYPES[0].key) : ROOM_TYPES[0].key;
+    selectedRoomIconType = loc.type === 'room' ? (loc.iconKey && loc.iconKey !== 'other' ? loc.iconKey : (guessRoomIcon(loc.name) || loc.iconKey || ROOM_TYPES[0].key)) : ROOM_TYPES[0].key;
+    roomIconAuto = loc.type === 'room' && (!loc.iconKey || loc.iconKey === 'other');
     selectedStorageIconType = loc.type === 'storage' ? (loc.iconKey || STORAGE_TYPES[0].key) : STORAGE_TYPES[0].key;
     els.roomModalTitle.textContent = loc.name ? 'Edit "' + loc.name + '"' : 'Name this space';
     els.roomNameInput.value = loc.name || '';
@@ -5238,12 +5240,18 @@
         }
       } else {
         selectedRoomIconType = key;
+        roomIconAuto = false;                       /* you picked one: stop guessing from the name */
         if (!els.roomNameInput.value.trim()){
           var rt = ROOM_TYPES.find(function(t){ return t.key === key; });
           if (rt) els.roomNameInput.value = rt.label;
         }
       }
       renderRoomTypeGrid(workingLocation.type);
+    });
+    els.roomNameInput.addEventListener('input', function(){
+      if (!workingLocation || workingLocation.type !== 'room' || !roomIconAuto) return;
+      var g = guessRoomIcon(els.roomNameInput.value);
+      if (g && g !== selectedRoomIconType){ selectedRoomIconType = g; renderRoomTypeGrid('room'); }
     });
     els.roomSaveBtn.addEventListener('click', saveLocation);
     els.roomDeleteBtn.addEventListener('click', resetLocationLabel);
@@ -6395,6 +6403,29 @@
     if (!(bb.h > 60 && bb.w > 50)) return null;
     var c = shapeCenter(loc.points), z = Math.max(1, currentZoom), s = ICON_BOX / z;
     return {x: c.x - s/2, y: c.y - s/2, w: s, h: s, cx: c.x, cy: c.y};
+  }
+  /* Rooms left on the generic "Other" icon get one matching their name ("Hall" -> hallway,
+     "Hall Bath" -> bathroom). Order matters: more specific words are checked first. */
+  var ROOM_NAME_ICONS = [
+    [/\b(bath|bathroom|restroom|powder|wc|toilet|shower)\b/, 'bathroom'],
+    [/\b(kitchen|kitchenette)\b/, 'kitchen'], [/\bpantry\b/, 'pantry'], [/\b(laundry|utility)\b/, 'laundry'],
+    [/\bgarage\b/, 'garage'], [/\b(nursery|baby)\b/, 'nursery'], [/\bguest\b/, 'guest'],
+    [/\b(bed|bedroom|bedrm|master|primary|bunk|kids?)\b/, 'bedroom'], [/\b(office|study|den|library)\b/, 'office'],
+    [/\b(closet|wardrobe|walk ?in)\b/, 'closet'], [/\bmud/, 'mudroom'], [/\b(entry|entryway|foyer|vestibule)\b/, 'entry'],
+    [/\b(hall|halls|hallway|corridor|passage|landing)\b/, 'hallway'], [/\bdining\b/, 'dining'],
+    [/\b(media|theater|theatre|tv|game|games)\b/, 'media'], [/\b(living|family|great|lounge|sitting|front)\b/, 'living'],
+    [/\b(shed|workshop)\b/, 'shed'], [/\b(basement|attic|cellar|storage)\b/, 'basement'],
+    [/\b(deck|patio|porch|balcony|yard|lanai)\b/, 'deck']
+  ];
+  function guessRoomIcon(name){
+    var n = String(name || '').toLowerCase().replace(/[^a-z ]+/g, ' ');
+    for (var i = 0; i < ROOM_NAME_ICONS.length; i++) if (ROOM_NAME_ICONS[i][0].test(n)) return ROOM_NAME_ICONS[i][1];
+    return null;
+  }
+  function roomIconKey(loc){
+    var k = loc.iconKey;
+    if (!k || k === 'other' || !ROOM_ICONS[k]) return guessRoomIcon(loc.name) || 'other';
+    return k;
   }
   var LABEL_OFFSETS = (function(){
     var o = [];
