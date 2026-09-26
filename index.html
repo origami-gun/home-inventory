@@ -24,6 +24,7 @@
 <!-- Lucide icons (ISC license) — pinned version so an update can't change or remove icons.
      If this fails to load (offline, opened without internet), the app falls back to its built-in icons. -->
 <script src="https://cdn.jsdelivr.net/npm/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async id="gisScript"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   /* ---------- Tokens ---------- */
@@ -1715,6 +1716,40 @@
   .scan-exp .qv-in{flex:1; min-width:0; width:auto;}
   .scan-read{flex:0 0 auto; height:48px; padding:0 10px; border-radius:12px; border:1px solid var(--accent); background:var(--warn-bg); color:var(--accent-strong); font-weight:700; font-size:13.5px; cursor:pointer; white-space:nowrap;}
   .scan-row .scan-exp{flex:0 1 250px;}
+
+  /* ---------- phone screen: quick nav ---------- */
+  .qv-nav{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 12px 0;}
+  .qv-nav button{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; height:62px; border-radius:14px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-size:13px; font-weight:700; cursor:pointer; touch-action:manipulation;}
+  .qv-nav button:active{transform:scale(.97); background:var(--paper-alt);}
+  .qv-nav svg{width:22px; height:22px;}
+  .qv-nav svg *{stroke:currentColor; stroke-width:1.9; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .qn-n{position:absolute; top:6px; right:8px; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--paper-alt); color:var(--ink-soft); font-size:11px; display:flex; align-items:center; justify-content:center;}
+  .qn-n.warn{background:var(--bad); color:#fff;}
+  .qn-n:empty{display:none;}
+  /* ---------- inventory / expiring on phones ---------- */
+  .inv-filters-btn{display:none;}
+  .expiring-banner.hide-in-exp{display:none !important;}
+  @media (max-width:640px){
+    .inv-inner{padding:14px 12px 70px;}
+    .inv-head{align-items:center; margin-bottom:4px;}
+    .inv-head h2{font-size:22px;}
+    .inv-toolbar{gap:8px; padding:8px 0 10px;}
+    .inv-search{flex:1 1 auto; min-width:0;}
+    .inv-search input{font-size:16px; height:44px;}
+    .inv-filters-btn{display:flex; align-items:center; gap:6px; height:44px; padding:0 12px; border-radius:10px; border:1px solid var(--line); background:var(--panel-bg); color:var(--ink); font-weight:600; font-size:14px; flex:0 0 auto; cursor:pointer;}
+    .inv-filters-btn svg{width:17px; height:17px;} .inv-filters-btn svg *{stroke:currentColor; stroke-width:1.9; fill:none; stroke-linejoin:round;}
+    .inv-filters-btn b{min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:var(--accent); color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center;}
+    .inv-filters-btn b:empty{display:none;}
+    .inv-toolbar > select, .inv-toolbar > .inv-check, .inv-toolbar > #invCategoriesBtn{display:none;}
+    .inv-toolbar.filters-open > select{display:block; flex:1 1 calc(50% - 4px); max-width:none; height:44px; font-size:15px;}
+    .inv-toolbar.filters-open > .inv-check{display:flex; flex:1 1 calc(50% - 4px); height:40px; font-size:14px;}
+    .inv-toolbar.filters-open > .inv-check input{width:20px; height:20px;}
+    .inv-toolbar.filters-open > #invCategoriesBtn{display:inline-flex;}
+    .inv-toolbar.filters-open .inv-filters-btn{border-color:var(--accent); color:var(--accent-strong);}
+    .cat-legend{display:none;}
+  }
+  #plumberModalOverlay .modal-footer{justify-content:center;}
+  #plumbSendBtn{min-width:240px;}
 </style>
 </head>
 <body>
@@ -2303,11 +2338,12 @@
           <div><h2>Inventory</h2><p class="inv-summary" id="invSummary"></p></div>
           <button type="button" class="btn btn-ghost btn-sm" id="invCloseBtn">Back to map</button>
         </div>
-        <div class="inv-toolbar">
+        <div class="inv-toolbar" id="invToolbar">
           <div class="inv-search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.3" y1="16.3" x2="21" y2="21"/></svg>
             <input type="search" id="invSearch" placeholder="Search items, rooms, storage, notes…" aria-label="Search inventory" autocomplete="off" />
           </div>
+          <button type="button" class="inv-filters-btn" id="invFiltersBtn" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>Filters<b id="invFiltersN"></b></button>
           <select id="invRoom" aria-label="Filter by room"></select>
           <select id="invCategory" aria-label="Filter by category"></select>
           <select id="invSort" aria-label="Sort">
@@ -2594,9 +2630,7 @@
         <label class="shop-toggle" style="margin-top:10px; font-weight:400"><input type="checkbox" id="plumbDevice" checked /> Include device details (helps fix bugs)</label>
       </div>
       <div class="modal-footer plumb-foot">
-        <button type="button" class="btn btn-ghost" id="plumbGmailBtn">Send with Gmail</button>
-        <button type="button" class="btn btn-primary" id="plumbMailBtn">Open email app</button>
-        <button type="button" class="btn btn-primary" id="plumbSendBtn" hidden>🪠 Send to the plumber</button>
+        <button type="button" class="btn btn-primary" id="plumbSendBtn">🪠 Send to the plumber</button>
       </div>
     </div>
   </div>
@@ -2690,9 +2724,13 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15,5 8,12 15,19"/></svg>
       </button>
       <div class="qv-title"><h2 id="qvTitle">Quick use</h2><p id="qvSub"></p></div>
-      <button type="button" class="qv-cart" id="qvShopBtn" aria-label="Shopping list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21.5 8H6.1"/></svg><span class="qv-cart-n" id="qvShopCount" hidden></span></button>
       <button type="button" class="qv-sync" id="qvSync" data-status="off"><span class="sync-dot"></span><span id="qvSyncLabel">Sync</span></button>
     </div>
+    <nav class="qv-nav" aria-label="Go to">
+      <button type="button" data-qnav="inventory"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg><span>Inventory</span><b class="qn-n" id="qnInvN"></b></button>
+      <button type="button" data-qnav="expiring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg><span>Expiring</span><b class="qn-n warn" id="qnExpN"></b></button>
+      <button type="button" data-qnav="shopping"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21.5 8H6.1"/></svg><span>Shopping</span><b class="qn-n warn" id="qvShopCount"></b></button>
+    </nav>
     <div class="qv-search"><input type="search" id="qvSearch" placeholder="Find an item…" autocomplete="off" aria-label="Find an item" /></div>
     <div class="qv-chips" id="qvChips" role="tablist" aria-label="Storage in this room"></div>
     <div class="qv-chips bins" id="qvBinChips" role="tablist" aria-label="Bins in this storage"></div>
@@ -3103,7 +3141,7 @@
       'confirmMessage','confirmBtn','toastContainer','notifyBtn','bellDot','notifyModalOverlay',
       'notifyPermissionSection','ruleRows','addRuleBtn','rulesSaveBtn',
       'syncChip','syncLabel','syncModalOverlay','syncBody','floorPlanInput','fullscreenBtn','floorPlanImage','floorPlanPlaceholder',
-      'labelsGroup','patternDefs','patternsGroup','floorPlanInk','floorPlanLines','lineOverlayInput','invOpenBtn','invView','invSummary','invCloseBtn','invSearch','invRoom','invCategory','invSort','invExpiring','invList',
+      'labelsGroup','patternDefs','patternsGroup','floorPlanInk','floorPlanLines','lineOverlayInput','invOpenBtn','invView','invToolbar','invSummary','invCloseBtn','invSearch','invRoom','invCategory','invSort','invExpiring','invList',
       'patternPicker','patternStrength','patternStrengthOut','patternStrengthRow'];
     ids.forEach(function(id){ els[id] = document.getElementById(id); });
   }
@@ -3904,6 +3942,9 @@
     var expiring = state.items.filter(function(i){ return getItemExpiryStatus(i) !== null; });
     var activeCount = state.items.filter(function(i){ return !i.usedAt && qtyOf(i) > 0; }).length;
     if (els.navInvCount) els.navInvCount.textContent = activeCount ? activeCount : '';
+    var qi = document.getElementById('qnInvN'), qe = document.getElementById('qnExpN');
+    if (qi) qi.textContent = activeCount || '';
+    if (qe) qe.textContent = expiring.length ? (expiring.length > 99 ? '99+' : expiring.length) : '';
     if (els.navExpCount){ els.navExpCount.hidden = !expiring.length; els.navExpCount.textContent = expiring.length > 99 ? '99+' : expiring.length; }
     if (expiring.length && !bannerDismissed){
       els.expiringBanner.style.display = 'flex';
@@ -4136,12 +4177,19 @@
     if (opts.focusId){
       var row = els.invList.querySelector('.inv-row[data-item-id="' + opts.focusId + '"]');
       if (row) row.scrollIntoView({block:'center'});
-    } else {
+    } else if (!isTouchUI()){
       setTimeout(function(){ els.invSearch.focus(); }, 0);
+    } else {
+      try { document.activeElement && document.activeElement.blur(); } catch(e){}
+      els.invView.scrollTop = 0;
     }
+    els.invToolbar.classList.remove('filters-open');
+    els.invCloseBtn.textContent = inv.fromQuick ? '‹ Back' : 'Back to map';
   }
+  function isTouchUI(){ try { return window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(hover: none)').matches; } catch(e){ return false; } }
   function closeInventoryView(){
     inv.open = false;
+    els.expiringBanner.classList.remove('hide-in-exp');
     els.invView.classList.remove('open'); els.invView.setAttribute('aria-hidden', 'true');
     updateChrome();
   }
@@ -4202,6 +4250,11 @@
   function renderInventoryView(){
     if (!inv.open) return;
     renderInvFilters();
+    var head = els.invView.querySelector('.inv-head h2');
+    if (head) head.textContent = els.invExpiring.checked ? 'Expiring soon' : 'Inventory';
+    els.expiringBanner.classList.toggle('hide-in-exp', els.invExpiring.checked);
+    var nf = (els.invRoom.value ? 1 : 0) + (els.invCategory.value ? 1 : 0) + (els.invExpiring.checked ? 1 : 0) + (els.invHideUsed.checked ? 1 : 0);
+    var fb = document.getElementById('invFiltersN'); if (fb) fb.textContent = nf ? nf : '';
     var q = els.invSearch.value.trim(), pq = prepareQuery(q);
     var roomF = els.invRoom.value, catF = els.invCategory.value, expOnly = els.invExpiring.checked, hideUsed = els.invHideUsed.checked, sort = els.invSort.value;
     var rows = state.items.map(function(it){ return {item: it, score: pq.tokens.length ? itemSearchScore(it, pq) : 1}; })
@@ -4260,7 +4313,15 @@
     els.invOpenBtn.addEventListener('click', function(){
       if (inv.open) closeInventoryView(); else openInventoryView({query: els.searchInput.value});
     });
-    els.invCloseBtn.addEventListener('click', closeInventoryView);
+    document.getElementById('invFiltersBtn').addEventListener('click', function(){
+      var open = els.invToolbar.classList.toggle('filters-open');
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    els.invCloseBtn.addEventListener('click', function(){
+      var back = inv.fromQuick; inv.fromQuick = null;
+      closeInventoryView();
+      if (back) openQuick(back === '__list' ? null : back);
+    });
     var debounce = null;
     els.invSearch.addEventListener('input', function(){
       els.searchInput.value = els.invSearch.value;
@@ -6222,7 +6283,16 @@
     opts = opts || {};
     opts.headers = opts.headers || {};
     opts.headers.Authorization = 'Bearer ' + tok.access_token;
-    return fetch(url, opts).then(function(res){
+    var attempt = function(n){
+      return fetch(url, opts).catch(function(e){
+        if (n > 0) return new Promise(function(r){ setTimeout(r, 1500); }).then(function(){ return attempt(n - 1); });
+        throw e;
+      }).then(function(res){
+        if ((res.status >= 500 || res.status === 429) && n > 0) return new Promise(function(r){ setTimeout(r, 2000); }).then(function(){ return attempt(n - 1); });
+        return res;
+      });
+    };
+    return attempt(2).then(function(res){
       if (res.status === 401){ lsSet(LS.token, null); throw {code:'auth'}; }
       if (res.status === 404) throw {code:'notfound'};
       if (!res.ok){
@@ -6526,7 +6596,7 @@
     }).catch(function(err){
       var code = err && err.code;
       if (code === 'changed'){ sync.queued = true; return; }
-      if (code === 'auth'){ setSyncStatus('disconnected'); return; }
+      if (code === 'auth'){ setSyncStatus('disconnected'); if (quick.open && reason !== 'startup') toast('Google Drive needs a quick reconnect: tap Sync'); return; }
       if (code === 'scope'){
         sync.lastError = 'Google Drive access wasn\u2019t granted. Reconnect and allow access to the files this app creates.';
         lsSet(LS.token, null); setSyncStatus('disconnected'); return;
@@ -6538,8 +6608,11 @@
         sync.lastError = 'Sync ran into a problem' + (err && err.status ? ' (' + err.status + ')' : '') + '. Your changes are safe here and it will retry.';
       }
       setSyncStatus('error');
+      sync.retries = (sync.retries || 0) + 1;
+      if (sync.retries <= 5){ sync.queued = false; scheduleSync([3000, 8000, 20000, 45000, 90000][sync.retries - 1]); }
     }).then(function(){
       sync.busy = false;
+      if (sync.status === 'synced' || sync.status === 'pending') sync.retries = 0;
       if (sync.queued){ sync.queued = false; scheduleSync(400); }
     });
   }
@@ -6561,6 +6634,15 @@
   function loadGis(){
     if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
     if (sync.gisPromise) return sync.gisPromise;
+    var pre = document.getElementById('gisScript');
+    if (pre){
+      sync.gisPromise = new Promise(function(resolve, reject){
+        var done = function(){ if (window.google && google.accounts && google.accounts.oauth2) resolve(); else reject(new Error('gis-load')); };
+        pre.addEventListener('load', done); pre.addEventListener('error', function(){ sync.gisPromise = null; pre.remove(); reject(new Error('gis-load')); });
+        setTimeout(function(){ if (window.google && google.accounts && google.accounts.oauth2) resolve(); }, 0);
+      });
+      return sync.gisPromise;
+    }
     sync.gisPromise = new Promise(function(resolve, reject){
       var s = document.createElement('script');
       s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
@@ -6589,13 +6671,17 @@
   function connectDrive(){
     if (!syncConfigured()) return;
     if (!(window.google && google.accounts && google.accounts.oauth2)){
-      sync.lastError = 'Google sign-in is still loading \u2014 try again in a moment.';
-      renderSyncDialog();
-      loadGis().then(function(){ sync.lastError = ''; renderSyncDialog(); },
-                     function(){ sync.lastError = 'Couldn\u2019t load Google sign-in. Check your internet connection.'; renderSyncDialog(); });
+      sync.lastError = 'Getting Google sign-in ready\u2026';
+      renderSyncDialog(); setSyncStatus('syncing');
+      loadGis().then(function(){
+        sync.lastError = ''; renderSyncDialog(); setSyncStatus(currentSyncStatus());
+        toast('Google sign-in is ready \u2014 tap Sync again to finish connecting');
+      }, function(){ sync.lastError = 'Couldn\u2019t load Google sign-in. Check your internet connection.'; setSyncStatus('disconnected'); renderSyncDialog(); });
       return;
     }
     sync.lastError = ''; sync.connecting = true; renderSyncDialog();
+    clearTimeout(sync.connectTimer);
+    sync.connectTimer = setTimeout(function(){ if (sync.connecting){ sync.connecting = false; renderSyncDialog(); } }, 90000);
     getTokenClient().requestAccessToken({prompt: lsGet(LS.connected) ? '' : 'consent'});
   }
   function onTokenResponse(resp){
@@ -6815,10 +6901,11 @@
     });
     setSyncStatus(currentSyncStatus());
     if (syncConfigured() && location.protocol !== 'file:') loadGis().catch(function(){});
-    if (getToken()) syncNow('startup');
+    if (getToken()) setTimeout(function(){ syncNow('startup'); }, 600);
     setInterval(pollRemote, 30000);
-    document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') pollRemote(); });
-    window.addEventListener('online', function(){ syncNow('online'); });
+    document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') setTimeout(pollRemote, 1200); });
+    window.addEventListener('pageshow', function(e){ if (e.persisted) setTimeout(pollRemote, 1200); });
+    window.addEventListener('online', function(){ sync.retries = 0; setTimeout(function(){ syncNow('online'); }, 1000); });
   }
 
   /* ======================= Map labels =======================
@@ -7692,7 +7779,13 @@
     els.qvFullApp.addEventListener('click', closeQuick);
     els.qvSync.addEventListener('click', function(){
       if (!syncConfigured()){ toast('Set up Google Drive sync in the full app to share changes between phones'); return; }
-      if (getToken()) syncNow('manual'); else connectDrive();
+      if (getToken()){
+        sync.retries = 0;
+        syncNow('manual').then(function(){
+          if (sync.status === 'synced') toast('Synced \u2713');
+          else if (sync.status === 'error') toast(sync.lastError || 'Sync hit a snag \u2014 retrying automatically', 'error');
+        });
+      } else connectDrive();
     });
     var deb = null;
     els.qvSearch.addEventListener('input', function(){
@@ -8604,7 +8697,7 @@
   var DEVELOPER_EMAIL = 'wjsurkan@gmail.com';
   /* Automatic sending: paste the web-app URL of the "S.H.I.T.S. plumber" Apps Script here
      (see the-SHIT-plumber.gs). Leave empty to fall back to opening an email. */
-  var FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycby5l9Tuf_hf83Jl2BfuABSxnp2uOAHfZ91sh_0mi3_Px2YFWssIVSXlSgwQ4uQoyksyBA/exec';
+  var FEEDBACK_URL = '';
   var FEEDBACK_KEY = 'shits-plumber-2026';
   function plumberAuto(){ return /^https:\/\/script\.google\.com\/macros\/s\//.test(FEEDBACK_URL); }
   function postFeedback(payload){
@@ -8622,10 +8715,6 @@
     postFeedback(item).then(function(){ setPlumberQueue(plumberQueue().slice(1)); toast('🪠 Your saved note reached the plumber'); flushPlumberQueue(); }, function(){});
   }
   function openPlumber(){
-    var auto = plumberAuto();
-    document.getElementById('plumbSendBtn').hidden = !auto;
-    document.getElementById('plumbMailBtn').hidden = auto;
-    document.getElementById('plumbGmailBtn').hidden = auto;
     openModalEl(document.getElementById('plumberModalOverlay'));
     setTimeout(function(){ document.getElementById('plumbText').focus(); }, 60);
   }
@@ -8660,8 +8749,8 @@
           closeModal('plumberModalOverlay'); document.getElementById('plumbText').value = '';
           toast('No connection. The note is saved and will send automatically when you’re back online.');
         } else {
-          toast('The plumber’s line is busy. Use your email app instead.', 'error');
-          document.getElementById('plumbMailBtn').hidden = false; document.getElementById('plumbGmailBtn').hidden = false;
+          toast('The plumber’s line is busy. Opening your email app instead.', 'error');
+          sendPlumber('mail');
         }
       }).then(function(){ btn.disabled = false; btn.textContent = '🪠 Send to the plumber'; });
       return;
@@ -8682,9 +8771,8 @@
       var b = e.target.closest('[data-kind]'); if (!b) return;
       [].forEach.call(this.querySelectorAll('[data-kind]'), function(x){ x.classList.toggle('active', x === b); x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
     });
-    document.getElementById('plumbMailBtn').addEventListener('click', function(){ sendPlumber('mail'); });
-    document.getElementById('plumbGmailBtn').addEventListener('click', function(){ sendPlumber('gmail'); });
-    document.getElementById('plumbSendBtn').addEventListener('click', function(){ sendPlumber('auto'); });
+    /* sends by itself once FEEDBACK_URL is set; until then it opens a pre-filled email */
+    document.getElementById('plumbSendBtn').addEventListener('click', function(){ sendPlumber(plumberAuto() ? 'auto' : 'mail'); });
     window.addEventListener('online', flushPlumberQueue);
     setTimeout(flushPlumberQueue, 4000);
   }
@@ -8730,7 +8818,7 @@
     var b = document.getElementById('navShopCount'); if (!b) return;
     var n = lowItems().filter(function(it){ return !inCart(it); }).length;
     b.hidden = !n; b.textContent = n > 99 ? '99+' : n;
-    var q = document.getElementById('qvShopCount'); if (q){ q.hidden = !n; q.textContent = n > 99 ? '99+' : n; }
+    var q = document.getElementById('qvShopCount'); if (q) q.textContent = n ? (n > 99 ? '99+' : n) : '';
   }
   function saveReorder(it, patch, quiet){
     var copy = JSON.parse(JSON.stringify(it));
@@ -9081,7 +9169,15 @@
     bindPatternPicker();
     bindShopping();
     bindPlumber();
-    document.getElementById('qvShopBtn').addEventListener('click', function(){ openShopping(); });
+    document.querySelector('.qv-nav').addEventListener('click', function(e){
+      var b = e.target.closest('[data-qnav]'); if (!b) return;
+      var where = b.getAttribute('data-qnav');
+      if (where === 'shopping'){ openShopping(); return; }
+      inv.fromQuick = quick.roomId || '__list';
+      closeQuick();
+      if (where === 'expiring') openInventoryView({query:'', expiring:true, room:'', sort:'expiring'});
+      else openInventoryView({query:'', expiring:false, room:'', sort:'name'});
+    });
     document.getElementById('itemBarcodeUnlink').addEventListener('click', function(){
       itemBarcodeUnlinked = true; document.getElementById('itemBarcodeRow').hidden = true;
       toast('Barcode will be unlinked when you save');
