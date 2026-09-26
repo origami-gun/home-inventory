@@ -1613,6 +1613,50 @@
   .item-reorder summary{cursor:pointer; font-size:13px; font-weight:600;}
   .item-reorder summary span{font-weight:400; color:var(--ink-soft);}
   #shopModalOverlay{z-index:1004;}
+
+  /* ---------- Barcode scanner (phones) ---------- */
+  .qv-actions{display:flex; gap:8px; margin:0 12px 4px; flex:0 0 auto;}
+  .qv-actions .qv-addbtn{margin:0; flex:1 1 0; min-width:0;}
+  .qv-actions:not(:has(> :not([hidden]))){display:none;}
+  .qv-scanbtn{flex:1 1 0; min-width:0; height:56px; border-radius:14px; border:none; background:var(--accent); color:#fff; font-size:17px; font-weight:700; font-family:var(--font-display); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; touch-action:manipulation;}
+  .qv-scanbtn[hidden]{display:none;}
+  .qv-scanbtn svg{width:22px; height:22px;}
+  .qv-scanbtn svg *{stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round;}
+  .scan-view{position:fixed; inset:0; z-index:700; background:#000; display:flex; flex-direction:column; color:#fff;}
+  .scan-view[hidden]{display:none;}
+  .scan-view video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+  .scan-top{position:relative; z-index:2; display:flex; align-items:center; gap:10px; padding:calc(12px + env(safe-area-inset-top)) 12px 12px; background:linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,0));}
+  .scan-top .scan-status{flex:1; font-size:15px; font-weight:600; text-shadow:0 1px 3px rgba(0,0,0,.6);}
+  .scan-x{width:44px; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.35); background:rgba(0,0,0,.35); color:#fff; font-size:24px; line-height:1; cursor:pointer;}
+  .scan-frame{position:absolute; z-index:1; left:50%; top:42%; width:min(82vw, 420px); height:min(30vh, 220px); transform:translate(-50%,-50%); border-radius:16px; box-shadow:0 0 0 200vmax rgba(0,0,0,.38); border:2px solid rgba(255,255,255,.85); overflow:hidden; pointer-events:none;}
+  .scan-line{position:absolute; left:6%; right:6%; top:50%; height:2px; background:var(--accent); box-shadow:0 0 12px var(--accent); animation:scanline 1.8s ease-in-out infinite alternate;}
+  @keyframes scanline{from{top:12%} to{top:88%}}
+  @media (prefers-reduced-motion: reduce){ .scan-line{animation:none;} }
+  .scan-view.paused .scan-line{animation-play-state:paused; opacity:.3;}
+  .scan-bottom{position:absolute; z-index:2; left:0; right:0; bottom:0; padding:12px 12px calc(16px + env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:10px; background:linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.6));}
+  .scan-bottom button{height:44px; padding:0 16px; border-radius:999px; border:1px solid rgba(255,255,255,.4); background:rgba(0,0,0,.4); color:#fff; font-size:14px; font-weight:600; cursor:pointer;}
+  .scan-card{position:absolute; z-index:3; left:0; right:0; bottom:0; max-height:82vh; overflow-y:auto; background:var(--panel-bg); color:var(--ink); border-radius:20px 20px 0 0; padding:16px 14px calc(16px + env(safe-area-inset-bottom)); box-shadow:0 -8px 30px rgba(0,0,0,.35); display:flex; flex-direction:column; gap:10px;}
+  .scan-card[hidden]{display:none;}
+  .scan-head{display:flex; gap:12px; align-items:center;}
+  .scan-thumb{width:64px; height:64px; border-radius:12px; object-fit:cover; background:var(--paper-alt); border:1px solid var(--line); flex:0 0 auto;}
+  .scan-thumb.ph{display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:11px;}
+  .scan-title{font-family:var(--font-display); font-size:19px; font-weight:700; line-height:1.2;}
+  .scan-sub{font-size:13px; color:var(--ink-soft); margin-top:2px;}
+  .scan-big{font-size:15px;}
+  .scan-big b{font-family:var(--font-mono); font-size:18px; color:var(--good);}
+  .scan-note{font-size:12.5px; color:var(--ink-soft);}
+  .scan-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .scan-row > span{font-size:13.5px; font-weight:600;}
+  .scan-actions{display:flex; gap:8px; margin-top:4px;}
+  .scan-actions .btn{flex:1; height:50px; font-size:15.5px; border-radius:12px;}
+  .scan-choice{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); cursor:pointer; font-size:15px; font-weight:600;}
+  .scan-choice span{font-weight:400; font-size:12.5px; color:var(--ink-soft);}
+  .scan-spin{width:22px; height:22px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--accent); animation:scanspin .8s linear infinite; flex:0 0 auto;}
+  @keyframes scanspin{to{transform:rotate(360deg)}}
+  .scan-card .qv-stepper{width:160px;}
+  .scan-card .qv-stepper input{width:100%; min-width:0; border:none; background:none; text-align:center; font-size:18px; font-weight:700; color:var(--ink);}
+  .scan-photo-opt{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft);}
+  .scan-photo-opt input{width:18px; height:18px; accent-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -2392,6 +2436,7 @@
           <label class="field"><span>Purchased</span><input type="date" id="itemPurchaseInput" /></label>
           <label class="field"><span>Expires / best-by</span><input type="date" id="itemExpiresInput" /></label>
           <label class="field span-2"><span>Notes</span><textarea id="itemNotesInput" rows="3" maxlength="500" placeholder="Anything worth remembering about this item"></textarea></label>
+          <div class="field span-2" id="itemBarcodeRow" hidden><span>Barcode</span><div style="display:flex; gap:10px; align-items:center"><code id="itemBarcodeText"></code><button type="button" class="link-btn small-link" id="itemBarcodeUnlink">Unlink</button></div></div>
           <details class="item-reorder span-2" id="itemReorderBox">
             <summary>Restock subscription <span id="itemReorderSummary">(off)</span></summary>
             <label class="shop-toggle" style="margin-top:10px"><input type="checkbox" id="itemReorderOn" /> Put this on the shopping list when it runs low</label>
@@ -2563,7 +2608,10 @@
     <div class="qv-chips" id="qvChips" role="tablist" aria-label="Storage in this room"></div>
     <div class="qv-chips bins" id="qvBinChips" role="tablist" aria-label="Bins in this storage"></div>
     <div class="qv-body" id="qvBody"></div>
-    <button type="button" class="qv-addbtn" id="qvAddBtn" hidden>+ Add item</button>
+    <div class="qv-actions">
+      <button type="button" class="qv-scanbtn" id="qvScanBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg>Scan</button>
+      <button type="button" class="qv-addbtn" id="qvAddBtn" hidden>+ Add item</button>
+    </div>
     <button type="button" class="qv-fullapp" id="qvFullApp">Open the full map</button>
     <div class="qv-add" id="qvAdd" hidden>
       <form class="qv-add-panel" id="qvAddForm" autocomplete="off">
@@ -2588,6 +2636,18 @@
           <button type="submit" class="btn btn-primary" id="qvAddSave">Add</button>
         </div>
       </form>
+    </div>
+    <div class="scan-view" id="scanView" hidden aria-label="Barcode scanner">
+      <video id="scanVideo" playsinline muted autoplay></video>
+      <div class="scan-frame" aria-hidden="true"><div class="scan-line"></div></div>
+      <div class="scan-top">
+        <button type="button" class="scan-x" id="scanClose" aria-label="Close scanner">×</button>
+        <span class="scan-status" id="scanStatus" role="status">Starting camera…</span>
+      </div>
+      <div class="scan-bottom">
+        <button type="button" id="scanTypeBtn">Type the number</button>
+      </div>
+      <div class="scan-card" id="scanCard" hidden></div>
     </div>
   </section>
 
@@ -4530,6 +4590,9 @@
     els.itemExpiresInput.value = item ? (item.expirationDate || '') : '';
     els.itemNotesInput.value = item ? (item.notes || '') : '';
     fillItemReorder(item);
+    itemBarcodeUnlinked = false;
+    document.getElementById('itemBarcodeRow').hidden = !(item && item.barcode);
+    document.getElementById('itemBarcodeText').textContent = item && item.barcode ? item.barcode : '';
     currentPhotoDataUrl = item ? (item.photo || null) : null;
     renderVisualPreview();
     openModalEl(els.itemModalOverlay);
@@ -4565,6 +4628,7 @@
       var copy = JSON.parse(JSON.stringify(editingItem));
       Object.keys(payload).forEach(function(k){ copy[k] = payload[k]; });
       delete copy.iconKey; delete copy.iconColor;               /* item icons were retired */
+      if (itemBarcodeUnlinked){ delete copy.barcode; delete copy.scanUnits; }
       if (qty > 0 && qtyOf(editingItem) === 0) delete copy.usedAt;   /* restocked */
       if (qty === 0 && !copy.usedAt) copy.usedAt = localDateStr();   /* none left = used up */
       idbPut('items', copy).then(function(){
@@ -5575,6 +5639,7 @@
     bindChrome();
     bindQuick();
     bindQuickAdd();
+    bindScanner();
     bindRestock();
     bindQrStickers();
     els.itemPhotoInput.addEventListener('change', function(e){
@@ -7754,6 +7819,472 @@
   }
 
 
+  /* ======================= Barcode scanning (phones) =======================
+     Quick use > Scan. Point the phone camera at a product barcode:
+       - an item you've scanned before is restocked right away (by its "units per scan": milk 1, eggs 12);
+       - a new barcode is looked up in the free Open Food Facts databases for its name and photo,
+         matched to an item you already have if the name fits, or added as a new item.
+     Expiration: store barcodes (UPC/EAN) don't carry dates. The date is filled in when the code is a
+     GS1 code that does (some DataMatrix / DataBar codes), otherwise estimated from the shelf life the
+     item had last time, otherwise left for you to set.
+     Uses the browser's built-in BarcodeDetector (Android Chrome); on iPhone it loads the ZXing
+     scanner library the first time you scan. */
+  var ZXING_URL = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+  var SCAN_FORMATS = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','data_matrix','qr_code'];
+  var PRODUCT_DBS = ['world.openfoodfacts.org','world.openproductsfacts.org','world.openbeautyfacts.org','world.openpetfoodfacts.org'];
+  var scan = {open:false, stream:null, detector:null, zx:null, timer:0, paused:false, last:'', lastAt:0, ctx:null, token:0};
+  var itemBarcodeUnlinked = false;
+  function scanEl(id){ return document.getElementById(id); }
+  function scanSupported(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false; }
+  function scanOnThisDevice(){
+    try { return scanSupported() && window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(hover: none)').matches; } catch(e){ return false; }
+  }
+  function updateScanButton(){ var b = scanEl('qvScanBtn'); if (b) b.hidden = !scanOnThisDevice(); }
+  function scanStatus(t){ scanEl('scanStatus').textContent = t; }
+
+  /* ---- barcode text → product code ---- */
+  function expandUpcE(c){
+    if (!/^[01]\d{7}$/.test(c)) return c;
+    var d = c.slice(1, 7), m = d[5], mid;
+    if (m <= '2') mid = d.slice(0, 2) + m + '0000' + d.slice(2, 5);
+    else if (m === '3') mid = d.slice(0, 3) + '00000' + d.slice(3, 5);
+    else if (m === '4') mid = d.slice(0, 4) + '00000' + d[4];
+    else mid = d.slice(0, 5) + '0000' + m;
+    return c[0] + mid + c[7];
+  }
+  function parseGs1(raw){
+    var t = String(raw || '').replace(/^\]([A-Za-z]\d)/, ''), ai = {}, res = {};
+    if (/\(\d{2,4}\)/.test(t)){
+      var re = /\((\d{2,4})\)([^(]*)/g, m;
+      while ((m = re.exec(t))) ai[m[1]] = m[2].replace(/\x1d/g, '');
+    } else if (/^01\d{14}/.test(t)){
+      var FIX = {'00':18,'01':14,'02':14,'11':6,'12':6,'13':6,'15':6,'16':6,'17':6,'20':2}, i = 0, guard = 0;
+      while (i < t.length && guard++ < 25){
+        if (t[i] === '\x1d'){ i++; continue; }
+        var two = t.substr(i, 2);
+        if (FIX[two]){ ai[two] = t.substr(i + 2, FIX[two]); i += 2 + FIX[two]; continue; }
+        if (/^3[1-6]\d\d/.test(t.substr(i, 4))){ ai[t.substr(i, 4)] = t.substr(i + 4, 6); i += 10; continue; }
+        var len = /^(24|25|39|40|41|42|70|71|72|80|81)/.test(two) ? (/^(41|80|81)/.test(two) ? 4 : 3) : 2;
+        var end = t.indexOf('\x1d', i + len); if (end === -1) end = t.length;
+        ai[t.substr(i, len)] = t.slice(i + len, end); i = end;
+      }
+    }
+    if (ai['01']) res.gtin = ai['01'];
+    var ed = ai['17'] || ai['15'] || ai['16'] || ai['12'];
+    if (ed && /^\d{6}$/.test(ed)){
+      var y = 2000 + (+ed.slice(0, 2)), mo = +ed.slice(2, 4), da = +ed.slice(4, 6);
+      if (mo >= 1 && mo <= 12){
+        if (da === 0) da = new Date(y, mo, 0).getDate();     /* "00" = end of month */
+        res.exp = y + '-' + pad2(mo) + '-' + pad2(da);
+      }
+    }
+    return res;
+  }
+  function normBarcode(text, format){
+    var raw = String(text || '').trim(), gs1 = parseGs1(raw), d = gs1.gtin || '';
+    if (!d){
+      var digits = raw.replace(/\s+/g, '');
+      if (/^\d{6,14}$/.test(digits)) d = digits;
+    }
+    if (format === 'upc_e' || (d.length === 8 && /^[01]/.test(d) && format !== 'ean_8')) d = format === 'upc_e' ? expandUpcE(d.length === 7 ? '0' + d : d) : d;
+    if (d.length === 12) d = '0' + d;                                   /* UPC-A → EAN-13 */
+    if (d.length === 14 && d[0] === '0') d = d.slice(1);                /* GTIN-14 → EAN-13 */
+    return {code: /^\d{8,14}$/.test(d) ? d : '', gs1: gs1, raw: raw};
+  }
+
+  /* ---- product database lookup (Open Food Facts family: free, no key, CORS-enabled) ---- */
+  var PRODUCT_FIELDS = 'product_name,product_name_en,generic_name,brands,quantity,product_quantity,product_quantity_unit,image_front_url,image_front_small_url,categories_tags';
+  function fetchJson(url, ms){
+    var ctl = window.AbortController ? new AbortController() : null, t = setTimeout(function(){ if (ctl) ctl.abort(); }, ms || 8000);
+    return fetch(url, ctl ? {signal: ctl.signal} : {}).then(function(r){ clearTimeout(t); return r.ok ? r.json() : null; }, function(){ clearTimeout(t); return null; });
+  }
+  function lookupProduct(code){
+    var codes = [code]; if (code.length === 13 && code[0] === '0') codes.push(code.slice(1));
+    var i = 0;
+    function next(){
+      if (i >= PRODUCT_DBS.length) return Promise.resolve(null);
+      var host = PRODUCT_DBS[i++];
+      return fetchJson('https://' + host + '/api/v2/product/' + encodeURIComponent(code) + '.json?fields=' + PRODUCT_FIELDS).then(function(j){
+        if (j && j.status === 1 && j.product) return shapeProduct(j.product, host);
+        if (i === 1 && codes[1]) return fetchJson('https://' + host + '/api/v2/product/' + codes[1] + '.json?fields=' + PRODUCT_FIELDS)
+          .then(function(j2){ return j2 && j2.status === 1 && j2.product ? shapeProduct(j2.product, host) : next(); });
+        return next();
+      });
+    }
+    return next();
+  }
+  function shapeProduct(p, host){
+    var name = String(p.product_name_en || p.product_name || p.generic_name || '').replace(/\s+/g, ' ').trim();
+    var brand = String(p.brands || '').split(',')[0].trim();
+    if (!name) return null;
+    return {name: name.length > 80 ? name.slice(0, 80) : name, brand: brand, size: String(p.quantity || '').trim(),
+            units: unitsFromProduct(p), image: p.image_front_url || p.image_front_small_url || '',
+            tags: p.categories_tags || [], food: /food/.test(host)};
+  }
+  /* How many units one scan adds: a dozen eggs = 12, a 6-pack = 6, a gallon of milk = 1. */
+  function unitsFromProduct(p){
+    var clampU = function(n){ n = Math.round(n); return n >= 1 && n <= 200 ? n : 1; };
+    var txt = (String(p.quantity || '') + ' ' + String(p.product_name_en || p.product_name || '')).toLowerCase(), m;
+    if ((m = /(\d+(?:\.\d+)?)\s*dozen/.exec(txt))) return clampU(+m[1] * 12);
+    if (/\bdozen\b/.test(txt)) return 12;
+    if ((m = /\b(\d{1,3})\s*[x×]\s*\d/.exec(txt))) return clampU(+m[1]);
+    if ((m = /\b(\d{1,3})\s*-?\s*(?:ct|count|pk|pack|pcs?|pieces?|eggs?|rolls?|bars?|cans?|bottles?|pods?|packets?|pouches?|cups?|units?|sticks?|boxes|bags)\b/.exec(txt))) return clampU(+m[1]);
+    var unit = String(p.product_quantity_unit || '').toLowerCase(), q = +p.product_quantity;
+    if (q && /^(pcs?|units?|pieces?|ct|count|eggs?)$/.test(unit)) return clampU(q);
+    if (q && !unit && /en:eggs/.test((p.categories_tags || []).join(' '))) return clampU(q);
+    return 1;
+  }
+  function guessCategory(prod){
+    var tags = (prod && prod.tags || []).join(' ');
+    var pick = function(list){ for (var i = 0; i < list.length; i++){ var c = findCategory(list[i]); if (c) return c.name; } return null; };
+    if (/en:(eggs|dairies|milks|cheeses|yogurts|meats|poultry|fishes|seafood|fresh|breads|fruits|vegetables|salads|refrigerated)/.test(tags)) return pick(['Perishable', 'Pantry & Food', 'Pantry']);
+    if (prod && prod.food) return pick(['Pantry & Food', 'Pantry', 'Food']);
+    if (prod) return pick(['Household', 'Cleaning Supplies', 'Cleaning']);
+    return null;
+  }
+  function productPhoto(prod){
+    if (!prod || !prod.image) return Promise.resolve(null);
+    return fetch(prod.image).then(function(r){ return r.ok ? r.blob() : null; })
+      .then(function(b){ return b ? fileToCompressedDataURL(b, 600, 0.8) : null; })
+      .catch(function(){ return null; });
+  }
+
+  /* ---- matching scans to your items ---- */
+  function itemsWithBarcode(code){
+    return state.items.filter(function(i){ return !i.deleted && i.barcode === code; }).sort(function(a, b){
+      var ra = quick.roomId && itemPlace(a).room && itemPlace(a).room.id === quick.roomId ? 0 : 1;
+      var rb = quick.roomId && itemPlace(b).room && itemPlace(b).room.id === quick.roomId ? 0 : 1;
+      return ra - rb || (b.updatedAt || 0) - (a.updatedAt || 0);
+    });
+  }
+  function nameMatches(name){
+    var pn = normText(name); if (!pn) return [];
+    var words = ' ' + pn + ' ';
+    return state.items.filter(function(i){ return !i.deleted && !i.barcode; }).map(function(i){
+      var n = normText(i.name); if (!n) return null;
+      var score = n === pn ? 3 : (words.indexOf(' ' + n + ' ') !== -1 ? 2 : (n.indexOf(pn) !== -1 ? 1 : 0));
+      return score ? {i: i, s: score} : null;
+    }).filter(Boolean).sort(function(a, b){ return b.s - a.s || String(a.i.name).length - String(b.i.name).length; })
+      .slice(0, 4).map(function(x){ return x.i; });
+  }
+  function shelfLifeOf(it){
+    var d = Number(it.shelfLifeDays);
+    if (d > 0 && d < 3650) return d;
+    if (it.expirationDate && it.purchaseDate){
+      var g = Math.round((new Date(it.expirationDate) - new Date(it.purchaseDate)) / 86400000);
+      if (g > 0 && g < 3650) return g;
+    }
+    return 0;
+  }
+  function addDaysStr(n){ var d = new Date(); d.setDate(d.getDate() + n); return localDateStr(d); }
+  function daysFromToday(s){ return Math.round((new Date(s) - new Date(localDateStr())) / 86400000); }
+  function scanSave(rec){
+    return idbPut('items', rec).then(function(){
+      replaceItemInState(rec);
+      renderCanvas(); renderStats(); refreshActivePanel(); if (inv.open) renderInventoryView(); if (quick.open) renderQuick();
+      if (getToken()) scheduleSync(700);
+      return rec;
+    });
+  }
+  function scanRestock(item, units, exp, extra){
+    var before = JSON.parse(JSON.stringify(item)), rec = JSON.parse(JSON.stringify(item));
+    var wasOut = !!rec.usedAt || qtyOf(item) === 0;
+    rec.quantity = (wasOut ? 0 : qtyOf(item)) + units;
+    delete rec.usedAt;
+    if (exp) rec.expirationDate = exp; else if (wasOut) rec.expirationDate = null;
+    rec.purchaseDate = localDateStr();
+    rec.scanUnits = units;
+    Object.keys(extra || {}).forEach(function(k){ if (extra[k] != null) rec[k] = extra[k]; });
+    return scanSave(rec).then(function(){ return {rec: rec, before: before}; });
+  }
+  function allSpots(){
+    var out = [];
+    state.locations.filter(function(l){ return l.type === 'room' && !l.deleted && l.name; })
+      .sort(function(a, b){ return displayName(a).localeCompare(displayName(b)); })
+      .forEach(function(room){
+        quickAddSpots(room).forEach(function(sp){
+          out.push({id: sp.id, room: room.id, label: sp.id === room.id ? displayName(room) + (sp.label === 'Loose in room' ? ' (loose)' : '') : displayName(room) + ' › ' + sp.label});
+        });
+      });
+    return out;
+  }
+  function defaultSpot(spots){
+    var want = null;
+    if (quick.roomId) want = (quick.binId && quick.binId !== '__storage') ? quick.binId : (quick.storageId && quick.storageId !== '__room') ? quick.storageId : quickAddWhere[quick.roomId];
+    if (!want){ try { want = localStorage.getItem('shits.scanWhere'); } catch(e){} }
+    if (want && spots.some(function(s){ return s.id === want; })) return want;
+    if (quick.roomId){ var r = spots.find(function(s){ return s.room === quick.roomId; }); if (r) return r.id; }
+    return spots.length ? spots[0].id : '';
+  }
+
+  /* ---- camera ---- */
+  function openScanner(){
+    if (!scanSupported()){ toast('Scanning needs a phone camera and the app opened from its https address', 'error'); return; }
+    scan.open = true; scan.paused = false; scan.last = ''; scan.ctx = null;
+    scanEl('scanView').hidden = false; scanEl('scanCard').hidden = true; scanEl('scanView').classList.remove('paused');
+    scanStatus('Starting camera…');
+    var token = ++scan.token;
+    var native = ('BarcodeDetector' in window) ? Promise.resolve().then(function(){ return window.BarcodeDetector.getSupportedFormats(); }).then(function(fmts){
+      var use = SCAN_FORMATS.filter(function(f){ return fmts.indexOf(f) !== -1; });
+      if (use.indexOf('ean_13') === -1) return null;
+      return new window.BarcodeDetector({formats: use});
+    }).catch(function(){ return null; }) : Promise.resolve(null);
+    native.then(function(det){
+      if (!scan.open || token !== scan.token) return;
+      if (!det){ startZxing(token); return; }
+      scan.detector = det;
+      navigator.mediaDevices.getUserMedia({audio: false, video: {facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720}}})
+        .then(function(stream){
+          if (!scan.open || token !== scan.token){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+          scan.stream = stream; var v = scanEl('scanVideo'); v.srcObject = stream;
+          return v.play().then(function(){ scanStatus('Point at a barcode'); nativeLoop(token); });
+        }).catch(cameraError);
+    });
+  }
+  function nativeLoop(token){
+    if (!scan.open || token !== scan.token) return;
+    scan.timer = setTimeout(function(){
+      var v = scanEl('scanVideo');
+      if (!scan.open || token !== scan.token) return;
+      if (scan.paused || v.readyState < 2){ nativeLoop(token); return; }
+      scan.detector.detect(v).then(function(codes){
+        if (codes && codes.length) onScanned(codes[0].rawValue, codes[0].format);
+      }).catch(function(){}).then(function(){ nativeLoop(token); });
+    }, 140);
+  }
+  function loadZxing(){
+    if (window.ZXing && window.ZXing.BrowserMultiFormatReader) return Promise.resolve(window.ZXing);
+    return new Promise(function(resolve, reject){
+      var s = document.createElement('script'); s.src = ZXING_URL; s.async = true;
+      s.onload = function(){ window.ZXing && window.ZXing.BrowserMultiFormatReader ? resolve(window.ZXing) : reject(new Error('zxing')); };
+      s.onerror = function(){ reject(new Error('zxing')); };
+      document.head.appendChild(s);
+    });
+  }
+  function startZxing(token){
+    scanStatus('Loading the scanner…');
+    loadZxing().then(function(Z){
+      if (!scan.open || token !== scan.token) return;
+      var F = Z.BarcodeFormat, hints = new Map();
+      hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.ITF, F.DATA_MATRIX, F.QR_CODE]);
+      hints.set(Z.DecodeHintType.TRY_HARDER, true);
+      scan.zx = new Z.BrowserMultiFormatReader(hints, 200);
+      return scan.zx.decodeFromConstraints({audio: false, video: {facingMode: {ideal: 'environment'}}}, scanEl('scanVideo'), function(result){
+        if (result && !scan.paused && scan.open) onScanned(result.getText(), String(F[result.getBarcodeFormat()] || '').toLowerCase());
+      }).then(function(){ if (scan.open) scanStatus('Point at a barcode'); });
+    }).catch(function(err){
+      if (err && err.message === 'zxing') showScanCard('<div class="scan-title">Scanner didn’t load</div><p class="scan-note">It needs an internet connection the first time. You can still type the barcode number.</p>' +
+        '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="close">Close</button><button type="button" class="btn btn-primary" data-scan-act="type">Type the number</button></div>');
+      else cameraError(err);
+    });
+  }
+  function stopCamera(){
+    clearTimeout(scan.timer);
+    if (scan.zx){ try { scan.zx.reset(); } catch(e){} scan.zx = null; }
+    if (scan.stream){ scan.stream.getTracks().forEach(function(t){ t.stop(); }); scan.stream = null; }
+    var v = scanEl('scanVideo'); if (v){ try { v.pause(); } catch(e){} v.srcObject = null; }
+  }
+  function closeScanner(){
+    scan.open = false; scan.token++; stopCamera();
+    scanEl('scanView').hidden = true; scanEl('scanCard').hidden = true; scanEl('scanCard').innerHTML = '';
+  }
+  function cameraError(err){
+    var name = err && err.name;
+    var msg = name === 'NotAllowedError' ? 'Camera access is blocked for this site. Allow the camera in your browser’s site settings, then tap Scan again.'
+            : name === 'NotFoundError' || name === 'OverconstrainedError' ? 'No camera was found on this device.'
+            : name === 'NotReadableError' ? 'Another app is using the camera. Close it and try again.'
+            : 'Couldn’t start the camera.';
+    scanStatus('Camera unavailable');
+    showScanCard('<div class="scan-title">Camera unavailable</div><p class="scan-note">' + escapeHtml(msg) + '</p>' +
+      '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="close">Close</button><button type="button" class="btn btn-primary" data-scan-act="type">Type the number</button></div>');
+  }
+  function showScanCard(html){
+    scan.paused = true; scanEl('scanView').classList.add('paused');
+    var c = scanEl('scanCard'); c.innerHTML = html; c.hidden = false; c.scrollTop = 0;
+    [].forEach.call(c.querySelectorAll('input[type=date]'), bindWeekAheadDefault);
+  }
+  function resumeScan(){
+    scan.ctx = null; scanEl('scanCard').hidden = true; scanEl('scanCard').innerHTML = '';
+    scan.paused = false; scan.last = ''; scanEl('scanView').classList.remove('paused');
+    scanStatus('Point at a barcode');
+    if (scan.open && !scan.stream && !scan.zx) openScanner();
+  }
+
+  /* ---- a code was read ---- */
+  function onScanned(text, format){
+    var now = Date.now();
+    if (scan.paused || (text === scan.last && now - scan.lastAt < 2500)) return;
+    scan.last = text; scan.lastAt = now;
+    var roomQr = /#quick=([^&\s#]+)/.exec(text);
+    if (roomQr){ closeScanner(); openQuick(decodeURIComponent(roomQr[1])); return; }
+    var n = normBarcode(text, format);
+    if (!n.code){ scanStatus('That isn’t a product barcode. Try another.'); return; }
+    if (navigator.vibrate) try { navigator.vibrate(40); } catch(e){}
+    handleCode(n);
+  }
+  function thumb(src){ return src ? '<img class="scan-thumb" src="' + escapeHtml(src) + '" alt="" />' : '<div class="scan-thumb ph">No photo</div>'; }
+  function handleCode(n){
+    scan.ctx = {code: n.code, gs1: n.gs1};
+    var known = itemsWithBarcode(n.code)[0];
+    if (known){ restockKnown(known, null); return; }
+    showScanCard('<div class="scan-head"><div class="scan-spin"></div><div><div class="scan-title">Looking it up…</div><div class="scan-sub">Barcode ' + escapeHtml(n.code) + '</div></div></div>');
+    var ctx = scan.ctx;
+    lookupProduct(n.code).then(function(prod){
+      if (scan.ctx !== ctx) return;
+      ctx.product = prod;
+      var matches = prod ? nameMatches(prod.name) : [];
+      if (matches.length) showChoices(matches); else showNewForm();
+    });
+  }
+  function restockKnown(item, prod){
+    var ctx = scan.ctx, units = Number(item.scanUnits) || (prod && prod.units) || 1;
+    var exp = ctx.gs1.exp || null, expSrc = exp ? 'barcode' : '';
+    if (!exp){ var life = shelfLifeOf(item); if (life){ exp = addDaysStr(life); expSrc = 'estimate'; } }
+    var extra = {barcode: ctx.code};
+    if (ctx.gs1.exp && daysFromToday(ctx.gs1.exp) > 0) extra.shelfLifeDays = daysFromToday(ctx.gs1.exp);
+    scanRestock(item, units, exp, extra).then(function(r){
+      ctx.rec = r.rec; ctx.before = r.before; ctx.units = units; ctx.expSrc = expSrc;
+      renderRestockedCard();
+      if (navigator.vibrate) try { navigator.vibrate([20, 40, 20]); } catch(e){}
+      /* no photo yet? fetch the product's picture in the background */
+      if (!r.rec.photo){
+        (prod ? Promise.resolve(prod) : lookupProduct(ctx.code)).then(productPhoto).then(function(photo){
+          var cur = photo && state.items.find(function(x){ return x.id === r.rec.id; });
+          if (!cur || cur.photo) return;
+          var withPhoto = JSON.parse(JSON.stringify(cur)); withPhoto.photo = photo;
+          scanSave(withPhoto).then(function(){ if (scan.ctx === ctx){ ctx.rec = withPhoto; renderRestockedCard(); } });
+        });
+      }
+    }).catch(function(err){ console.error(err); toast('Could not save that', 'error'); resumeScan(); });
+  }
+  function renderRestockedCard(){
+    var ctx = scan.ctx, rec = ctx.rec;
+    var note = ctx.expSrc === 'barcode' ? 'Date read from the barcode.' : ctx.expSrc === 'estimate' ? 'Estimated from its shelf life last time. Change it if the package says otherwise.' : 'Barcodes don’t include dates. Add one if it has one.';
+    showScanCard('<div class="scan-head">' + thumb(rec.photo) + '<div><div class="scan-title">' + escapeHtml(rec.name) + '</div><div class="scan-sub">' + escapeHtml(locationPath(rec)) + '</div></div></div>' +
+      '<div class="scan-big">Restocked <b>+' + ctx.units + '</b> → <b>' + qtyOf(rec) + '</b> on hand</div>' +
+      '<div class="scan-row"><span>Units per scan</span><span class="qv-stepper"><button type="button" data-scan-act="units" data-d="-1" aria-label="One less">−</button><input type="number" id="scanUnitsIn" inputmode="numeric" min="1" max="200" value="' + ctx.units + '" aria-label="Units per scan" /><button type="button" data-scan-act="units" data-d="1" aria-label="One more">+</button></span></div>' +
+      '<label class="scan-row"><span>Expires</span><input type="date" class="qv-in" id="scanExpIn" style="width:190px" value="' + escapeHtml(rec.expirationDate || '') + '" /></label>' +
+      '<p class="scan-note">' + note + ' Units per scan is remembered for this barcode.</p>' +
+      '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="undo">Undo</button><button type="button" class="btn btn-primary" data-scan-act="next">Scan next</button></div>');
+  }
+  function showChoices(matches){
+    var prod = scan.ctx.product;
+    showScanCard('<div class="scan-head">' + thumb(prod.image) + '<div><div class="scan-title">' + escapeHtml(prod.name) + '</div><div class="scan-sub">' + escapeHtml([prod.brand, prod.size].filter(Boolean).join(' · ')) + '</div></div></div>' +
+      '<p class="scan-note">Is this one of these? Pick it to restock it and remember this barcode.</p>' +
+      matches.map(function(it){
+        return '<button type="button" class="scan-choice" data-scan-act="pick" data-id="' + it.id + '">' + escapeHtml(it.name) + '<span>' + escapeHtml(locationPath(it)) + ' · ' + (it.usedAt ? 0 : qtyOf(it)) + ' on hand</span></button>';
+      }).join('') +
+      '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="next">Cancel</button><button type="button" class="btn btn-primary" data-scan-act="new">No, it’s new</button></div>');
+  }
+  function showNewForm(){
+    var ctx = scan.ctx, prod = ctx.product, spots = allSpots();
+    if (!spots.length){
+      showScanCard('<div class="scan-title">Add a room first</div><p class="scan-note">Name at least one room on the map in the full app, then scan again.</p><div class="scan-actions"><button type="button" class="btn btn-primary" data-scan-act="close">OK</button></div>');
+      return;
+    }
+    var names = categoryNames(), cat = guessCategory(prod) || (lastUsedCategory && names.indexOf(lastUsedCategory) !== -1 ? lastUsedCategory : (names.indexOf(CATEGORY_FALLBACK) !== -1 ? CATEGORY_FALLBACK : names[0]));
+    var where = defaultSpot(spots), units = prod ? prod.units : 1;
+    showScanCard('<div class="scan-head">' + thumb(prod && prod.image) + '<div><div class="scan-title">' + (prod ? 'New item' : 'Not in the product database') + '</div><div class="scan-sub">' +
+        (prod ? escapeHtml([prod.brand, prod.size].filter(Boolean).join(' · ') || ('Barcode ' + ctx.code)) : 'Type a name once and this barcode is remembered.') + '</div></div></div>' +
+      '<input type="text" class="qv-in" id="scanName" maxlength="80" placeholder="What is it? e.g. Milk" value="' + escapeHtml(prod ? prod.name : '') + '" aria-label="Item name" />' +
+      '<div class="qv-add-grid">' +
+        '<label class="span-2" style="grid-column:1/-1">Where<select id="scanWhere" class="qv-in">' + spots.map(function(sp){ return '<option value="' + sp.id + '"' + (sp.id === where ? ' selected' : '') + '>' + escapeHtml(sp.label) + '</option>'; }).join('') + '</select></label>' +
+        '<label>Category<select id="scanCat" class="qv-in">' + names.map(function(c){ return '<option' + (c === cat ? ' selected' : '') + '>' + escapeHtml(c) + '</option>'; }).join('') + '</select></label>' +
+        '<label>Units per scan<span class="qv-stepper"><button type="button" data-scan-act="nunits" data-d="-1" aria-label="One less">−</button><input type="number" id="scanNewUnits" inputmode="numeric" min="1" max="200" value="' + units + '" aria-label="Units" /><button type="button" data-scan-act="nunits" data-d="1" aria-label="One more">+</button></span></label>' +
+        '<label style="grid-column:1/-1">Expires<input type="date" id="scanNewExp" class="qv-in" value="' + escapeHtml(ctx.gs1.exp || '') + '" /></label>' +
+      '</div>' +
+      (prod && prod.image ? '<label class="scan-photo-opt"><input type="checkbox" id="scanUsePhoto" checked /> Use the product photo</label>' : '') +
+      '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="next">Cancel</button><button type="button" class="btn btn-primary" data-scan-act="add">Add item</button></div>');
+    if (!prod) setTimeout(function(){ var i = scanEl('scanName'); if (i) i.focus(); }, 60);
+  }
+  function addScannedItem(){
+    var ctx = scan.ctx, prod = ctx.product;
+    var name = scanEl('scanName').value.trim();
+    if (!name){ toast('Type what it is', 'error'); scanEl('scanName').focus(); return; }
+    var where = scanEl('scanWhere').value, category = scanEl('scanCat').value;
+    var units = Math.max(1, Math.min(200, parseInt(scanEl('scanNewUnits').value, 10) || 1));
+    var exp = scanEl('scanNewExp').value || null;
+    var usePhoto = scanEl('scanUsePhoto') && scanEl('scanUsePhoto').checked;
+    var btn = scanEl('scanCard').querySelector('[data-scan-act="add"]'); if (btn){ btn.disabled = true; btn.textContent = 'Adding…'; }
+    (usePhoto ? productPhoto(prod) : Promise.resolve(null)).then(function(photo){
+      var rec = {id: uid(), locationId: where, name: name, category: category, quantity: units, value: null, subLocation: '',
+                 purchaseDate: localDateStr(), expirationDate: exp, notes: prod ? [prod.brand, prod.size].filter(Boolean).join(' · ') : '',
+                 photo: photo, createdAt: Date.now(), barcode: ctx.code, scanUnits: units};
+      if (exp && daysFromToday(exp) > 0) rec.shelfLifeDays = daysFromToday(exp);
+      lastUsedCategory = category; ensureCategories([category]);
+      try { localStorage.setItem('shits.scanWhere', where); } catch(e){}
+      return scanSave(rec).then(function(){
+        toast(name + (units > 1 ? ' ×' + units : '') + ' added');
+        if (navigator.vibrate) try { navigator.vibrate([20, 40, 20]); } catch(e){}
+        resumeScan();
+      });
+    }).catch(function(err){ console.error(err); toast('Could not save that', 'error'); if (btn){ btn.disabled = false; btn.textContent = 'Add item'; } });
+  }
+  function showTypeCode(){
+    showScanCard('<div class="scan-title">Type the barcode number</div><p class="scan-note">The digits printed under the bars.</p>' +
+      '<input type="text" class="qv-in" id="scanTyped" inputmode="numeric" pattern="[0-9]*" maxlength="14" placeholder="e.g. 041250002406" />' +
+      '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="next">Cancel</button><button type="button" class="btn btn-primary" data-scan-act="lookup">Look up</button></div>');
+    setTimeout(function(){ var i = scanEl('scanTyped'); if (i) i.focus(); }, 60);
+  }
+  function bindScanner(){
+    updateScanButton();
+    scanEl('qvScanBtn').addEventListener('click', openScanner);
+    scanEl('scanClose').addEventListener('click', closeScanner);
+    scanEl('scanTypeBtn').addEventListener('click', showTypeCode);
+    document.addEventListener('visibilitychange', function(){ if (document.hidden && scan.open) closeScanner(); });
+    window.addEventListener('pagehide', function(){ if (scan.open) closeScanner(); });
+    var card = scanEl('scanCard');
+    card.addEventListener('change', function(e){
+      var ctx = scan.ctx; if (!ctx || !ctx.rec) return;
+      if (e.target.id === 'scanExpIn'){
+        var rec = JSON.parse(JSON.stringify(ctx.rec)), v = e.target.value || null;
+        rec.expirationDate = v;
+        if (v && daysFromToday(v) > 0) rec.shelfLifeDays = daysFromToday(v);
+        scanSave(rec).then(function(){ ctx.rec = rec; ctx.expSrc = v ? 'you' : ''; });
+      } else if (e.target.id === 'scanUnitsIn') setScanUnits(parseInt(e.target.value, 10));
+    });
+    card.addEventListener('keydown', function(e){
+      if (e.key !== 'Enter') return;
+      if (e.target.id === 'scanTyped'){ e.preventDefault(); card.querySelector('[data-scan-act="lookup"]').click(); }
+      if (e.target.id === 'scanName'){ e.preventDefault(); e.target.blur(); }
+    });
+    card.addEventListener('click', function(e){
+      var b = e.target.closest('[data-scan-act]'); if (!b) return;
+      var act = b.getAttribute('data-scan-act'), ctx = scan.ctx;
+      if (act === 'next'){ resumeScan(); return; }
+      if (act === 'close'){ closeScanner(); return; }
+      if (act === 'type'){ showTypeCode(); return; }
+      if (act === 'lookup'){
+        var n = normBarcode(scanEl('scanTyped').value.replace(/\D/g, ''), '');
+        if (!n.code){ toast('That doesn’t look like a barcode number', 'error'); return; }
+        handleCode(n); return;
+      }
+      if (act === 'units'){ setScanUnits((ctx && ctx.units || 1) + Number(b.getAttribute('data-d'))); return; }
+      if (act === 'nunits'){ var i = scanEl('scanNewUnits'); i.value = Math.max(1, Math.min(200, (parseInt(i.value, 10) || 1) + Number(b.getAttribute('data-d')))); return; }
+      if (act === 'undo' && ctx && ctx.before){
+        var before = ctx.before;
+        scanSave(before).then(function(){ toast(before.name + ': scan undone'); resumeScan(); });
+        return;
+      }
+      if (act === 'pick' && ctx){
+        var it = state.items.find(function(x){ return x.id === b.getAttribute('data-id'); });
+        if (it) restockKnown(it, ctx.product);
+        return;
+      }
+      if (act === 'new'){ showNewForm(); return; }
+      if (act === 'add'){ addScannedItem(); return; }
+    });
+  }
+  function setScanUnits(n){
+    var ctx = scan.ctx; if (!ctx || !ctx.rec) return;
+    n = Math.max(1, Math.min(200, n || 1));
+    if (n === ctx.units){ renderRestockedCard(); return; }
+    var rec = JSON.parse(JSON.stringify(ctx.rec));
+    rec.quantity = Math.max(0, qtyOf(rec) + (n - ctx.units));
+    rec.scanUnits = n;
+    scanSave(rec).then(function(){ ctx.rec = rec; ctx.units = n; renderRestockedCard(); });
+  }
+
   /* ======================= Shopping list / restock subscriptions =======================
      An item can be "subscribed": when its quantity drops to its low mark it shows up on the
      shopping list, with one button per store that opens the store's own add-to-cart page.
@@ -8144,6 +8675,10 @@
     bindInventoryView();
     bindPatternPicker();
     bindShopping();
+    document.getElementById('itemBarcodeUnlink').addEventListener('click', function(){
+      itemBarcodeUnlinked = true; document.getElementById('itemBarcodeRow').hidden = true;
+      toast('Barcode will be unlinked when you save');
+    });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ measureCache = {}; if (state.locations.length) renderCanvas(); });
     migrateLegacyDb().then(function(){
       return Promise.all([idbGetAll('locations'), idbGetAll('items'), idbGetAll('rules'), idbGetAll('meta')]);
