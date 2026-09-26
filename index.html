@@ -1657,6 +1657,47 @@
   .scan-card .qv-stepper input{width:100%; min-width:0; border:none; background:none; text-align:center; font-size:18px; font-weight:700; color:var(--ink);}
   .scan-photo-opt{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft);}
   .scan-photo-opt input{width:18px; height:18px; accent-color:var(--accent);}
+
+  /* ---------- Shopping page on phones + quick-use cart / plumber ---------- */
+  details.shop-safety{display:block; margin:0 0 12px;}
+  details.shop-safety summary{display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none; color:var(--ink);}
+  details.shop-safety summary::-webkit-details-marker{display:none;}
+  details.shop-safety summary::after{content:'How it works'; margin-left:auto; font-size:12px; color:var(--accent-strong); text-decoration:underline; white-space:nowrap;}
+  details.shop-safety[open] summary::after{content:'Hide';}
+  details.shop-safety p{margin:8px 0 0;}
+  #shopLowPane .shop-actions{margin:0 0 10px; position:sticky; top:-1px; z-index:2; background:var(--panel-bg); padding:4px 0 8px;}
+  .qv-cart{position:relative; width:44px; height:44px; border-radius:12px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); display:flex; align-items:center; justify-content:center; flex:0 0 auto; cursor:pointer;}
+  .qv-cart svg{width:22px; height:22px;}
+  .qv-cart svg *{stroke:currentColor; stroke-width:1.9; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .qv-cart-n{position:absolute; top:-5px; right:-5px; min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:var(--bad); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .qv-cart-n[hidden]{display:none;}
+  .qv-foot{display:flex; justify-content:center; gap:4px; flex-wrap:wrap; flex:0 0 auto; padding-bottom:env(safe-area-inset-bottom);}
+  .plumb-kinds{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .plumb-kinds button{height:38px; padding:0 12px; border-radius:999px; border:1px solid var(--line); background:var(--paper-alt); color:var(--ink); font-weight:600; cursor:pointer;}
+  .plumb-kinds button.active{border-color:var(--accent); background:var(--warn-bg); color:var(--accent-strong);}
+  #plumberModalOverlay{z-index:1006;}
+  @media (max-width:640px){
+    #shopModalOverlay, #plumberModalOverlay{padding:0; align-items:stretch;}
+    #shopModalOverlay .modal, #plumberModalOverlay .modal{max-width:none; max-height:none; height:100%; border-radius:0; border:none;}
+    #shopModalOverlay .modal-header, #plumberModalOverlay .modal-header{padding-top:calc(14px + env(safe-area-inset-top));}
+    #shopModalOverlay .modal-footer, #plumberModalOverlay .modal-footer{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+    #shopModalOverlay .modal-body{padding-top:0;}
+    #shopModalOverlay .modal-body, #plumberModalOverlay .modal-body{flex:1 1 auto; overflow-y:auto;}
+    .shop-tabs{position:sticky; top:0; z-index:3; background:var(--panel-bg); padding-top:8px;}
+    .shop-tabs button{flex:1; height:46px; font-size:15px;}
+    #shopLowPane .shop-actions{top:54px; flex-direction:column; gap:8px;}
+    .shop-actions .btn{flex:0 0 auto; width:100%; height:52px; font-size:16px; border-radius:12px;}
+    .shop-list{max-height:none; overflow:visible;}
+    .shop-row{padding:12px;}
+    .shop-row input[type=checkbox]{width:24px; height:24px;}
+    .shop-name{font-size:16px;}
+    .shop-store{font-size:12.5px; padding:5px 10px;}
+    .shop-toggle input{width:24px; height:24px;}
+    .shop-fields{grid-template-columns:1fr 1fr;}
+    .shop-fields input, .shop-search{font-size:16px; height:44px;}
+    .plumb-foot .btn{flex:1; height:50px;}
+    #plumbText{font-size:16px;}
+  }
 </style>
 </head>
 <body>
@@ -1737,6 +1778,7 @@
       <button type="button" class="sb-item" id="qrStickersBtn" title="Print QR stickers for your rooms"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v7h-4M14 21v-3"/></svg><span class="sb-text">QR stickers</span></button>
     </nav>
     <div class="sb-footer">
+      <button type="button" class="sb-item" id="plumberBtn" title="Send feedback to the developer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13v8M9 21h6"/><path d="M6 13h12a6 6 0 0 0-12 0z"/></svg><span class="sb-text">Call a Plumber!</span></button>
       <button type="button" class="sb-item" id="notifyBtn" title="Expiration reminders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><span class="sb-text">Reminders</span><span class="bell-dot" id="bellDot" style="display:none"></span></button>
       <div class="sb-theme" role="radiogroup" aria-label="Theme" id="themeSeg">
         <button type="button" data-theme-choice="auto" role="radio" title="Match my device">Auto</button>
@@ -2514,6 +2556,33 @@
     </div>
   </div>
 
+  <!-- Feedback modal ("Call a Plumber!") -->
+  <div class="modal-overlay" id="plumberModalOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="plumberModalTitle">
+      <div class="modal-header">
+        <h2 id="plumberModalTitle">🪠 Call a Plumber!</h2>
+        <button type="button" class="icon-btn" data-close-modal="plumberModalOverlay" aria-label="Close">
+          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="rules-hint">Something clogged, broken, or just an idea? Send it straight to the developer.</p>
+        <div class="plumb-kinds" id="plumbKinds" role="radiogroup" aria-label="Kind of feedback">
+          <button type="button" data-kind="Clog (something's broken)" class="active" role="radio" aria-checked="true">🚽 Clog</button>
+          <button type="button" data-kind="Idea" role="radio" aria-checked="false">💡 Idea</button>
+          <button type="button" data-kind="Question" role="radio" aria-checked="false">❓ Question</button>
+          <button type="button" data-kind="Kudos" role="radio" aria-checked="false">🎉 Kudos</button>
+        </div>
+        <label class="field"><span>What's going on?</span><textarea id="plumbText" rows="6" maxlength="1500" placeholder="e.g. When I scan eggs on my phone it adds 1 instead of 12…"></textarea></label>
+        <label class="shop-toggle" style="margin-top:10px; font-weight:400"><input type="checkbox" id="plumbDevice" checked /> Include device details (helps fix bugs)</label>
+      </div>
+      <div class="modal-footer plumb-foot">
+        <button type="button" class="btn btn-ghost" id="plumbGmailBtn">Send with Gmail</button>
+        <button type="button" class="btn btn-primary" id="plumbMailBtn">Open email app</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Shopping list modal -->
   <div class="modal-overlay" id="shopModalOverlay">
     <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
@@ -2524,19 +2593,20 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="shop-safety"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
-          <span><b>This only fills your cart. It can never check out.</b> The app doesn't sign in to Amazon or Walmart and has no payment details. Walmart's button puts the items in your Walmart cart; Amazon's opens each product page so you tap “Add to Cart” yourself (Amazon no longer allows outside apps to fill a cart). Nothing is bought until one of you reviews the cart and places the order there yourself.</span></div>
         <div class="shop-tabs" role="tablist">
           <button type="button" data-shop-tab="low" class="active" role="tab">Running low <span id="shopLowCount"></span></button>
           <button type="button" data-shop-tab="subs" role="tab">Subscriptions <span id="shopSubCount"></span></button>
         </div>
         <div id="shopLowPane">
-          <div class="shop-list" id="shopLowList"></div>
           <div class="shop-actions">
             <button type="button" class="btn btn-primary" id="shopAmazonBtn">Add to Amazon cart</button>
             <button type="button" class="btn btn-primary" id="shopWalmartBtn">Add to Walmart cart</button>
           </div>
-          <p class="rules-hint" style="margin:10px 0 0">Items you send to a cart are marked "In cart" for 2 weeks (or until you restock them) so they don't get added twice.</p>
+          <details class="shop-safety">
+            <summary><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><b>Only fills your cart. It can never check out.</b></summary>
+            <p>The app doesn't sign in to Amazon or Walmart and has no payment details. Walmart's button puts the checked items in your Walmart cart; Amazon's opens each product page so you tap “Add to Cart” there (Amazon no longer lets outside apps fill a cart). Nothing is bought until one of you reviews the cart and places the order. Items you send to a cart are marked “In cart” for 2 weeks (or until restocked) so they aren't added twice.</p>
+          </details>
+          <div class="shop-list" id="shopLowList"></div>
         </div>
         <div id="shopSubsPane" hidden>
           <input type="search" class="shop-search" id="shopSearch" placeholder="Find an item to subscribe…" />
@@ -2602,6 +2672,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15,5 8,12 15,19"/></svg>
       </button>
       <div class="qv-title"><h2 id="qvTitle">Quick use</h2><p id="qvSub"></p></div>
+      <button type="button" class="qv-cart" id="qvShopBtn" aria-label="Shopping list"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21.5 8H6.1"/></svg><span class="qv-cart-n" id="qvShopCount" hidden></span></button>
       <button type="button" class="qv-sync" id="qvSync" data-status="off"><span class="sync-dot"></span><span id="qvSyncLabel">Sync</span></button>
     </div>
     <div class="qv-search"><input type="search" id="qvSearch" placeholder="Find an item…" autocomplete="off" aria-label="Find an item" /></div>
@@ -2612,7 +2683,7 @@
       <button type="button" class="qv-scanbtn" id="qvScanBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg>Scan</button>
       <button type="button" class="qv-addbtn" id="qvAddBtn" hidden>+ Add item</button>
     </div>
-    <button type="button" class="qv-fullapp" id="qvFullApp">Open the full map</button>
+    <div class="qv-foot"><button type="button" class="qv-fullapp" id="qvFullApp">Open the full map</button><button type="button" class="qv-fullapp" id="qvPlumberBtn">🪠 Call a Plumber!</button></div>
     <div class="qv-add" id="qvAdd" hidden>
       <form class="qv-add-panel" id="qvAddForm" autocomplete="off">
         <div class="qv-add-head"><h3 id="qvAddTitle">Add to room</h3>
@@ -8285,6 +8356,50 @@
     scanSave(rec).then(function(){ ctx.rec = rec; ctx.units = n; renderRestockedCard(); });
   }
 
+  /* ======================= "Call a Plumber!" — feedback to the developer ======================= */
+  var DEVELOPER_EMAIL = 'wjsurkan@gmail.com';
+  function openPlumber(){
+    openModalEl(document.getElementById('plumberModalOverlay'));
+    setTimeout(function(){ document.getElementById('plumbText').focus(); }, 60);
+  }
+  function plumbMessage(){
+    var kindBtn = document.querySelector('#plumbKinds .active'), kind = kindBtn ? kindBtn.getAttribute('data-kind') : 'Feedback';
+    var text = document.getElementById('plumbText').value.trim();
+    var subject = 'The S.H.I.T.S. — ' + kind.replace(/ \(.*\)$/, '');
+    var body = text || '(write your message here)';
+    if (document.getElementById('plumbDevice').checked){
+      var ua = navigator.userAgent, device = /Android/i.test(ua) ? 'Android' : /iPhone|iPad/i.test(ua) ? 'iPhone/iPad' : /Windows/i.test(ua) ? 'Windows' : /Mac/i.test(ua) ? 'Mac' : 'Other';
+      var browser = /Firefox\//.test(ua) ? 'Firefox' : /Edg\//.test(ua) ? 'Edge' : /CriOS|Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Other';
+      body += '\n\n— — —\nKind: ' + kind + '\nScreen: ' + (quick.open ? 'Quick use' + (quick.roomId ? ' (' + displayName(getLocation(quick.roomId) || {}) + ')' : '') : (inv.open ? 'Inventory' : 'Map')) +
+        '\nDevice: ' + device + ' · ' + browser + ' · ' + window.innerWidth + '×' + window.innerHeight +
+        '\nItems: ' + state.items.filter(function(i){ return !i.deleted; }).length + ' · Sync: ' + (sync.status || 'off') +
+        '\nWhen: ' + new Date().toLocaleString();
+    }
+    return {subject: subject, body: body, empty: !text};
+  }
+  function sendPlumber(via){
+    var m = plumbMessage();
+    if (m.empty){ toast('Describe the clog first', 'error'); document.getElementById('plumbText').focus(); return; }
+    var url = via === 'gmail'
+      ? 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(DEVELOPER_EMAIL) + '&su=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body)
+      : 'mailto:' + DEVELOPER_EMAIL + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body);
+    if (via === 'gmail'){ var w = window.open(url, '_blank'); if (w) try { w.opener = null; } catch(e){} else location.href = url; }
+    else location.href = url;
+    closeModal('plumberModalOverlay');
+    toast('Plumber dispatched! Hit send in your email to finish.');
+    document.getElementById('plumbText').value = '';
+  }
+  function bindPlumber(){
+    document.getElementById('plumberBtn').addEventListener('click', openPlumber);
+    document.getElementById('qvPlumberBtn').addEventListener('click', openPlumber);
+    document.getElementById('plumbKinds').addEventListener('click', function(e){
+      var b = e.target.closest('[data-kind]'); if (!b) return;
+      [].forEach.call(this.querySelectorAll('[data-kind]'), function(x){ x.classList.toggle('active', x === b); x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
+    });
+    document.getElementById('plumbMailBtn').addEventListener('click', function(){ sendPlumber('mail'); });
+    document.getElementById('plumbGmailBtn').addEventListener('click', function(){ sendPlumber('gmail'); });
+  }
+
   /* ======================= Shopping list / restock subscriptions =======================
      An item can be "subscribed": when its quantity drops to its low mark it shows up on the
      shopping list, with one button per store that opens the store's own add-to-cart page.
@@ -8326,6 +8441,7 @@
     var b = document.getElementById('navShopCount'); if (!b) return;
     var n = lowItems().filter(function(it){ return !inCart(it); }).length;
     b.hidden = !n; b.textContent = n > 99 ? '99+' : n;
+    var q = document.getElementById('qvShopCount'); if (q){ q.hidden = !n; q.textContent = n > 99 ? '99+' : n; }
   }
   function saveReorder(it, patch, quiet){
     var copy = JSON.parse(JSON.stringify(it));
@@ -8675,6 +8791,8 @@
     bindInventoryView();
     bindPatternPicker();
     bindShopping();
+    bindPlumber();
+    document.getElementById('qvShopBtn').addEventListener('click', function(){ openShopping(); });
     document.getElementById('itemBarcodeUnlink').addEventListener('click', function(){
       itemBarcodeUnlinked = true; document.getElementById('itemBarcodeRow').hidden = true;
       toast('Barcode will be unlinked when you save');
