@@ -1698,6 +1698,23 @@
     .plumb-foot .btn{flex:1; height:50px;}
     #plumbText{font-size:16px;}
   }
+
+  .scan-side{position:absolute; z-index:2; right:12px; top:calc(76px + env(safe-area-inset-top)); display:flex; flex-direction:column; gap:10px;}
+  .scan-side button{width:48px; height:48px; border-radius:50%; border:1px solid rgba(255,255,255,.4); background:rgba(0,0,0,.45); color:#fff; font-size:17px; font-weight:700; cursor:pointer;}
+  .scan-side button[hidden]{display:none;}
+  .scan-side button.on{background:#fff; color:#000;}
+  .scan-tip{font-size:12px; opacity:.75; white-space:nowrap;}
+  .scan-bottom.date-only{display:none;}
+  .scan-view.date-mode .scan-bottom.date-only{display:flex;}
+  .scan-view.date-mode .scan-bottom.code-only{display:none;}
+  .scan-view.date-mode .scan-line{display:none;}
+  .scan-view.date-mode .scan-frame{border-color:var(--accent); border-style:dashed;}
+  .scan-bottom button.primary{background:var(--accent); border-color:var(--accent); min-width:150px; font-size:16px; height:52px;}
+  .scan-bottom button[disabled]{opacity:.6;}
+  .scan-exp{display:flex; gap:6px; align-items:center; min-width:0;}
+  .scan-exp .qv-in{flex:1; min-width:0; width:auto;}
+  .scan-read{flex:0 0 auto; height:48px; padding:0 10px; border-radius:12px; border:1px solid var(--accent); background:var(--warn-bg); color:var(--accent-strong); font-weight:700; font-size:13.5px; cursor:pointer; white-space:nowrap;}
+  .scan-row .scan-exp{flex:0 1 250px;}
 </style>
 </head>
 <body>
@@ -2579,6 +2596,7 @@
       <div class="modal-footer plumb-foot">
         <button type="button" class="btn btn-ghost" id="plumbGmailBtn">Send with Gmail</button>
         <button type="button" class="btn btn-primary" id="plumbMailBtn">Open email app</button>
+        <button type="button" class="btn btn-primary" id="plumbSendBtn" hidden>🪠 Send to the plumber</button>
       </div>
     </div>
   </div>
@@ -2714,9 +2732,19 @@
       <div class="scan-top">
         <button type="button" class="scan-x" id="scanClose" aria-label="Close scanner">×</button>
         <span class="scan-status" id="scanStatus" role="status">Starting camera…</span>
+        <span class="scan-tip">Tap to focus</span>
       </div>
-      <div class="scan-bottom">
+      <div class="scan-side">
+        <button type="button" id="scanZoomBtn" hidden aria-label="Zoom">2×</button>
+        <button type="button" id="scanTorchBtn" hidden aria-label="Flashlight">🔦</button>
+        <button type="button" id="scanCamBtn" hidden aria-label="Switch camera">🔄</button>
+      </div>
+      <div class="scan-bottom code-only">
         <button type="button" id="scanTypeBtn">Type the number</button>
+      </div>
+      <div class="scan-bottom date-only">
+        <button type="button" id="scanDateCancel">Cancel</button>
+        <button type="button" id="scanReadBtn" class="primary">Read date</button>
       </div>
       <div class="scan-card" id="scanCard" hidden></div>
     </div>
@@ -7898,12 +7926,15 @@
      Expiration: store barcodes (UPC/EAN) don't carry dates. The date is filled in when the code is a
      GS1 code that does (some DataMatrix / DataBar codes), otherwise estimated from the shelf life the
      item had last time, otherwise left for you to set.
-     Uses the browser's built-in BarcodeDetector (Android Chrome); on iPhone it loads the ZXing
-     scanner library the first time you scan. */
-  var ZXING_URL = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+     Reading: the ZXing-C++ WebAssembly decoder (loaded once from jsdelivr, then cached) on every phone,
+     plus the phone's own BarcodeDetector where there is one (Android Chrome), taking turns on each frame.
+     The camera asks for 1080p, continuous autofocus, 2x zoom and the main back lens, so you can hold the
+     phone far enough away for it to focus. Printed dates can be read with "Read date" (Tesseract OCR). */
+  var BD_PONYFILL_URL = 'https://cdn.jsdelivr.net/npm/barcode-detector@3.2.2/ponyfill/+esm';
+  var TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
   var SCAN_FORMATS = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','data_matrix','qr_code'];
   var PRODUCT_DBS = ['world.openfoodfacts.org','world.openproductsfacts.org','world.openbeautyfacts.org','world.openpetfoodfacts.org'];
-  var scan = {open:false, stream:null, detector:null, zx:null, timer:0, paused:false, last:'', lastAt:0, ctx:null, token:0};
+  var scan = {open:false, stream:null, track:null, detectors:null, turn:0, timer:0, paused:false, mode:'code', last:'', lastAt:0, pend:'', pendAt:0, ctx:null, token:0, zoom:1, torch:false, cams:[]};
   var itemBarcodeUnlinked = false;
   function scanEl(id){ return document.getElementById(id); }
   function scanSupported(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext !== false; }
@@ -7971,14 +8002,22 @@
   }
   function lookupProduct(code){
     var codes = [code]; if (code.length === 13 && code[0] === '0') codes.push(code.slice(1));
+    if (code.length === 8 && /^[01]/.test(code)){ var up = expandUpcE(code); if (up !== code) codes.push('0' + up); }
     var i = 0;
     function next(){
       if (i >= PRODUCT_DBS.length) return Promise.resolve(null);
       var host = PRODUCT_DBS[i++];
       return fetchJson('https://' + host + '/api/v2/product/' + encodeURIComponent(code) + '.json?fields=' + PRODUCT_FIELDS).then(function(j){
         if (j && j.status === 1 && j.product) return shapeProduct(j.product, host);
-        if (i === 1 && codes[1]) return fetchJson('https://' + host + '/api/v2/product/' + codes[1] + '.json?fields=' + PRODUCT_FIELDS)
-          .then(function(j2){ return j2 && j2.status === 1 && j2.product ? shapeProduct(j2.product, host) : next(); });
+        if (i === 1 && codes.length > 1){
+          var alt = codes.slice(1);
+          var tryAlt = function(){
+            if (!alt.length) return next();
+            return fetchJson('https://' + host + '/api/v2/product/' + alt.shift() + '.json?fields=' + PRODUCT_FIELDS)
+              .then(function(j2){ return j2 && j2.status === 1 && j2.product ? shapeProduct(j2.product, host) : tryAlt(); });
+          };
+          return tryAlt();
+        }
         return next();
       });
     }
@@ -8047,6 +8086,20 @@
     }
     return 0;
   }
+  /* Typical fridge life, used only when the item has no history and the barcode has no date. */
+  var SHELF_GUESS = [
+    [/en:eggs/, 28], [/en:(fresh-)?milks?|en:plant-based-milks|en:dairy-drinks/, 10], [/en:yogh?urts/, 14],
+    [/en:(hummus|dips|salsas|guacamole|fresh-sauces|pestos)/, 7], [/en:(fresh-cheeses|cream-cheeses|cottage)/, 10], [/en:cheeses/, 28],
+    [/en:butters?/, 60], [/en:(creams|sour-creams|whipped)/, 14], [/en:tofu/, 14], [/en:(poultry|chickens?)/, 2],
+    [/en:(meats|beef|pork|sausages|hams|bacon)/, 5], [/en:(fishes|seafood|smoked-salmon)/, 3], [/en:(salads|leafy|lettuce|spinach)/, 5],
+    [/en:(fresh-vegetables|vegetables)/, 7], [/en:(fresh-fruits|berries|fruits)/, 7], [/en:(breads|tortillas|bagels|baked-goods)/, 7],
+    [/en:(fresh-pasta|refrigerated-pasta|dumplings|gyoza)/, 14], [/en:(orange-juices|juices)/, 10], [/en:(frozen)/, 180]
+  ];
+  function shelfGuess(prod){
+    var tags = (prod && prod.tags || []).join(' ');
+    for (var i = 0; i < SHELF_GUESS.length; i++) if (SHELF_GUESS[i][0].test(tags)) return SHELF_GUESS[i][1];
+    return 0;
+  }
   function addDaysStr(n){ var d = new Date(); d.setDate(d.getDate() + n); return localDateStr(d); }
   function daysFromToday(s){ return Math.round((new Date(s) - new Date(localDateStr())) / 86400000); }
   function scanSave(rec){
@@ -8089,72 +8142,151 @@
   }
 
   /* ---- camera ---- */
-  function openScanner(){
-    if (!scanSupported()){ toast('Scanning needs a phone camera and the app opened from its https address', 'error'); return; }
-    scan.open = true; scan.paused = false; scan.last = ''; scan.ctx = null;
-    scanEl('scanView').hidden = false; scanEl('scanCard').hidden = true; scanEl('scanView').classList.remove('paused');
-    scanStatus('Starting camera…');
-    var token = ++scan.token;
-    var native = ('BarcodeDetector' in window) ? Promise.resolve().then(function(){ return window.BarcodeDetector.getSupportedFormats(); }).then(function(fmts){
-      var use = SCAN_FORMATS.filter(function(f){ return fmts.indexOf(f) !== -1; });
-      if (use.indexOf('ean_13') === -1) return null;
-      return new window.BarcodeDetector({formats: use});
+  function loadDetectors(){
+    if (scan.detectors) return Promise.resolve(scan.detectors);
+    var nat = ('BarcodeDetector' in window) ? Promise.resolve().then(function(){ return window.BarcodeDetector.getSupportedFormats(); }).then(function(f){
+      var use = SCAN_FORMATS.filter(function(x){ return f.indexOf(x) !== -1; });
+      return use.indexOf('ean_13') === -1 ? null : {name: 'native', d: new window.BarcodeDetector({formats: use})};
     }).catch(function(){ return null; }) : Promise.resolve(null);
-    native.then(function(det){
-      if (!scan.open || token !== scan.token) return;
-      if (!det){ startZxing(token); return; }
-      scan.detector = det;
-      navigator.mediaDevices.getUserMedia({audio: false, video: {facingMode: {ideal: 'environment'}, width: {ideal: 1280}, height: {ideal: 720}}})
-        .then(function(stream){
-          if (!scan.open || token !== scan.token){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
-          scan.stream = stream; var v = scanEl('scanVideo'); v.srcObject = stream;
-          return v.play().then(function(){ scanStatus('Point at a barcode'); nativeLoop(token); });
-        }).catch(cameraError);
+    var wasm = import(BD_PONYFILL_URL).then(function(m){ return {name: 'wasm', d: new m.BarcodeDetector({formats: SCAN_FORMATS})}; }).catch(function(){ return null; });
+    return Promise.all([wasm, nat]).then(function(list){
+      list = list.filter(Boolean);
+      if (list.length) scan.detectors = list;
+      return list;
     });
   }
-  function nativeLoop(token){
+  /* Pick the main back lens: ultra-wide / telephoto lenses can't focus up close. On iPhone the
+     "Dual Wide"/"Triple" virtual camera switches to macro by itself, so it's preferred there. */
+  function rankCamera(label){
+    var l = String(label || '').toLowerCase();
+    if (/front|user|face/.test(l)) return -1;
+    if (/triple|dual wide/.test(l)) return 90;
+    if (/ultra|tele|depth|infrared|macro/.test(l)) return 10;
+    var n = /camera2? (\d+)/.exec(l);
+    return 50 + (n ? Math.max(0, 20 - (+n[1])) : 0) + (/back|rear|environment/.test(l) ? 5 : 0);
+  }
+  function listBackCameras(){
+    return navigator.mediaDevices.enumerateDevices().then(function(devs){
+      return devs.filter(function(d){ return d.kind === 'videoinput' && rankCamera(d.label) >= 0; })
+        .sort(function(a, b){ return rankCamera(b.label) - rankCamera(a.label); });
+    }).catch(function(){ return []; });
+  }
+  function getStream(deviceId){
+    var v = {width: {ideal: 1920}, height: {ideal: 1080}};
+    if (deviceId) v.deviceId = {exact: deviceId}; else v.facingMode = {ideal: 'environment'};
+    return navigator.mediaDevices.getUserMedia({audio: false, video: v});
+  }
+  function openScanner(){
+    if (!scanSupported()){ toast('Scanning needs a phone camera and the app opened from its https address', 'error'); return; }
+    scan.open = true; scan.paused = false; scan.mode = 'code'; scan.last = ''; scan.pend = ''; scan.ctx = null;
+    scanEl('scanView').hidden = false; scanEl('scanCard').hidden = true; scanEl('scanView').classList.remove('paused', 'date-mode');
+    scanStatus('Starting camera…');
+    startCamera(null);
+  }
+  function startCamera(forceId){
+    var token = ++scan.token, saved = null;
+    try { saved = localStorage.getItem('shits.scanCam'); } catch(e){}
+    stopTracks();
+    loadDetectors().then(function(dets){
+      if (!scan.open || token !== scan.token) return;
+      if (!dets.length){
+        showScanCard('<div class="scan-title">Scanner didn’t load</div><p class="scan-note">It needs an internet connection the first time. You can still type the barcode number.</p>' +
+          '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="close">Close</button><button type="button" class="btn btn-primary" data-scan-act="type">Type the number</button></div>');
+        return;
+      }
+      return getStream(forceId || saved).catch(function(err){
+        if (!forceId && saved && err && (err.name === 'OverconstrainedError' || err.name === 'NotFoundError')){ try { localStorage.removeItem('shits.scanCam'); } catch(e){} return getStream(null); }
+        throw err;
+      }).then(function(stream){
+        if (!scan.open || token !== scan.token){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+        return attachStream(stream, token).then(function(){
+          if (forceId || saved) return;
+          /* first time: now that labels are visible, switch to the best lens if we didn't get it */
+          return listBackCameras().then(function(cams){
+            scan.cams = cams;
+            var cur = scan.track && scan.track.getSettings ? scan.track.getSettings().deviceId : '';
+            if (cams.length > 1 && cams[0].deviceId && cams[0].deviceId !== cur){
+              try { localStorage.setItem('shits.scanCam', cams[0].deviceId); } catch(e){}
+              startCamera(cams[0].deviceId);
+            }
+          });
+        });
+      }).catch(cameraError);
+    });
+  }
+  function attachStream(stream, token){
+    scan.stream = stream; scan.track = stream.getVideoTracks()[0];
+    var v = scanEl('scanVideo'); v.srcObject = stream;
+    return v.play().catch(function(){}).then(function(){
+      if (!scan.open || token !== scan.token) return;
+      tuneCamera();
+      scanStatus('Hold 6–10 in. away · fill the box');
+      scanLoop(token);
+      if (!scan.cams.length) listBackCameras().then(function(c){ scan.cams = c; updateCamButtons(); });
+    });
+  }
+  function camCaps(){ try { return scan.track && scan.track.getCapabilities ? scan.track.getCapabilities() : {}; } catch(e){ return {}; } }
+  function tuneCamera(){
+    var caps = camCaps(), adv = {};
+    if (caps.focusMode && caps.focusMode.indexOf('continuous') !== -1) adv.focusMode = 'continuous';
+    if (caps.zoom && caps.zoom.max >= 1.5){ scan.zoom = Math.min(2, caps.zoom.max); adv.zoom = scan.zoom; } else scan.zoom = 1;
+    if (Object.keys(adv).length) scan.track.applyConstraints({advanced: [adv]}).catch(function(){});
+    scan.torch = false;
+    updateCamButtons();
+  }
+  function updateCamButtons(){
+    var caps = camCaps();
+    scanEl('scanZoomBtn').hidden = !(caps.zoom && caps.zoom.max >= 1.5);
+    scanEl('scanZoomBtn').textContent = (scan.zoom > 1 ? scan.zoom : 1) + '×';
+    scanEl('scanTorchBtn').hidden = !caps.torch;
+    scanEl('scanTorchBtn').classList.toggle('on', scan.torch);
+    scanEl('scanCamBtn').hidden = scan.cams.length < 2;
+  }
+  function refocus(){
+    var caps = camCaps();
+    if (!scan.track || !caps.focusMode) return;
+    var modes = caps.focusMode;
+    if (modes.indexOf('single-shot') !== -1){
+      scan.track.applyConstraints({advanced: [{focusMode: 'single-shot'}]}).catch(function(){});
+      setTimeout(function(){ if (scan.track && modes.indexOf('continuous') !== -1) scan.track.applyConstraints({advanced: [{focusMode: 'continuous'}]}).catch(function(){}); }, 1500);
+    }
+  }
+  /* Each tick: crop the middle of the frame (where the box is) at full resolution and hand it to
+     one decoder; decoders take turns so both get a look. */
+  var scanCanvas = null;
+  function frameCrop(v, full){
+    var vw = v.videoWidth, vh = v.videoHeight; if (!vw || !vh) return null;
+    var cw = full ? vw : Math.round(vw * 0.9), ch = full ? vh : Math.round(vh * (vw > vh ? 0.6 : 0.4));
+    var sx = Math.round((vw - cw) / 2), sy = Math.round((vh - ch) / 2 - (full ? 0 : vh * 0.04));
+    sy = Math.max(0, Math.min(vh - ch, sy));
+    var scale = Math.min(1, 1600 / cw);
+    scanCanvas = scanCanvas || document.createElement('canvas');
+    scanCanvas.width = Math.round(cw * scale); scanCanvas.height = Math.round(ch * scale);
+    var ctx = scanCanvas.getContext('2d', {willReadFrequently: true});
+    ctx.drawImage(v, sx, sy, cw, ch, 0, 0, scanCanvas.width, scanCanvas.height);
+    return scanCanvas;
+  }
+  function scanLoop(token){
     if (!scan.open || token !== scan.token) return;
     scan.timer = setTimeout(function(){
       var v = scanEl('scanVideo');
       if (!scan.open || token !== scan.token) return;
-      if (scan.paused || v.readyState < 2){ nativeLoop(token); return; }
-      scan.detector.detect(v).then(function(codes){
-        if (codes && codes.length) onScanned(codes[0].rawValue, codes[0].format);
-      }).catch(function(){}).then(function(){ nativeLoop(token); });
-    }, 140);
+      if (scan.paused || scan.mode !== 'code' || v.readyState < 2 || !scan.detectors){ scanLoop(token); return; }
+      var det = scan.detectors[scan.turn % scan.detectors.length]; scan.turn++;
+      var src = det.name === 'native' ? v : frameCrop(v, scan.turn % 6 === 0);
+      if (!src){ scanLoop(token); return; }
+      det.d.detect(src).then(function(codes){
+        if (codes && codes.length && scan.open && !scan.paused && scan.mode === 'code') onScanned(codes[0].rawValue, codes[0].format);
+      }).catch(function(){}).then(function(){ scanLoop(token); });
+    }, 60);
   }
-  function loadZxing(){
-    if (window.ZXing && window.ZXing.BrowserMultiFormatReader) return Promise.resolve(window.ZXing);
-    return new Promise(function(resolve, reject){
-      var s = document.createElement('script'); s.src = ZXING_URL; s.async = true;
-      s.onload = function(){ window.ZXing && window.ZXing.BrowserMultiFormatReader ? resolve(window.ZXing) : reject(new Error('zxing')); };
-      s.onerror = function(){ reject(new Error('zxing')); };
-      document.head.appendChild(s);
-    });
-  }
-  function startZxing(token){
-    scanStatus('Loading the scanner…');
-    loadZxing().then(function(Z){
-      if (!scan.open || token !== scan.token) return;
-      var F = Z.BarcodeFormat, hints = new Map();
-      hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.ITF, F.DATA_MATRIX, F.QR_CODE]);
-      hints.set(Z.DecodeHintType.TRY_HARDER, true);
-      scan.zx = new Z.BrowserMultiFormatReader(hints, 200);
-      return scan.zx.decodeFromConstraints({audio: false, video: {facingMode: {ideal: 'environment'}}}, scanEl('scanVideo'), function(result){
-        if (result && !scan.paused && scan.open) onScanned(result.getText(), String(F[result.getBarcodeFormat()] || '').toLowerCase());
-      }).then(function(){ if (scan.open) scanStatus('Point at a barcode'); });
-    }).catch(function(err){
-      if (err && err.message === 'zxing') showScanCard('<div class="scan-title">Scanner didn’t load</div><p class="scan-note">It needs an internet connection the first time. You can still type the barcode number.</p>' +
-        '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="close">Close</button><button type="button" class="btn btn-primary" data-scan-act="type">Type the number</button></div>');
-      else cameraError(err);
-    });
-  }
-  function stopCamera(){
+  function stopTracks(){
     clearTimeout(scan.timer);
-    if (scan.zx){ try { scan.zx.reset(); } catch(e){} scan.zx = null; }
-    if (scan.stream){ scan.stream.getTracks().forEach(function(t){ t.stop(); }); scan.stream = null; }
+    if (scan.stream){ scan.stream.getTracks().forEach(function(t){ t.stop(); }); }
+    scan.stream = null; scan.track = null;
     var v = scanEl('scanVideo'); if (v){ try { v.pause(); } catch(e){} v.srcObject = null; }
   }
+  function stopCamera(){ stopTracks(); }
   function closeScanner(){
     scan.open = false; scan.token++; stopCamera();
     scanEl('scanView').hidden = true; scanEl('scanCard').hidden = true; scanEl('scanCard').innerHTML = '';
@@ -8176,21 +8308,106 @@
   }
   function resumeScan(){
     scan.ctx = null; scanEl('scanCard').hidden = true; scanEl('scanCard').innerHTML = '';
-    scan.paused = false; scan.last = ''; scanEl('scanView').classList.remove('paused');
-    scanStatus('Point at a barcode');
-    if (scan.open && !scan.stream && !scan.zx) openScanner();
+    scan.paused = false; scan.mode = 'code'; scan.last = ''; scan.pend = '';
+    scanEl('scanView').classList.remove('paused', 'date-mode');
+    scanStatus('Hold 6–10 in. away · fill the box');
+    if (scan.open && !scan.stream) startCamera(null);
+  }
+  var beepCtx = null;
+  function scanBeep(){
+    try {
+      beepCtx = beepCtx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = beepCtx.createOscillator(), g = beepCtx.createGain();
+      o.frequency.value = 1320; g.gain.value = 0.06; o.connect(g); g.connect(beepCtx.destination);
+      o.start(); o.stop(beepCtx.currentTime + 0.09);
+    } catch(e){}
+  }
+
+  /* ---- reading a printed date (Tesseract OCR, loaded on first use) ---- */
+  var ocrWorker = null;
+  function loadOcr(){
+    if (ocrWorker) return ocrWorker;
+    ocrWorker = new Promise(function(resolve, reject){
+      if (window.Tesseract) return resolve(window.Tesseract);
+      var sc = document.createElement('script'); sc.src = TESSERACT_URL; sc.async = true;
+      sc.onload = function(){ resolve(window.Tesseract); }; sc.onerror = reject; document.head.appendChild(sc);
+    }).then(function(T){ return T.createWorker('eng'); }).then(function(w){
+      return w.setParameters({tessedit_pageseg_mode: '6'}).then(function(){ return w; });
+    }).catch(function(e){ ocrWorker = null; throw e; });
+    return ocrWorker;
+  }
+  var MONTHS = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,SEPT:9,OCT:10,NOV:11,DEC:12};
+  function parseDateText(raw){
+    var t = String(raw || '').toUpperCase().replace(/[|\\]/g, '1');
+    /* fix look-alike letters inside number groups: O→0, I/L→1, S→5, B→8, Z→2 */
+    t = t.replace(/[0-9OILSBZ]{1,4}(?:[\/\-. ][0-9OILSBZ]{1,4}){1,2}/g, function(m){
+      return /\d/.test(m) ? m.replace(/O/g, '0').replace(/[IL]/g, '1').replace(/S/g, '5').replace(/B/g, '8').replace(/Z/g, '2') : m;
+    });
+    var today = new Date(localDateStr()), found = [];
+    var add = function(y, m, d, strength){
+      if (y < 100) y += 2000;
+      if (m < 1 || m > 12 || d < 1 || d > 31 || y < 2020 || y > 2045) return;
+      var dt = new Date(y, m - 1, d); if (dt.getMonth() !== m - 1) return;
+      var diff = (dt - today) / 86400000;
+      if (diff < -60 || diff > 365 * 4) return;
+      found.push({s: y + '-' + pad2(m) + '-' + pad2(d), w: strength - Math.abs(diff) / 2000});
+    };
+    var re, m, mo = '(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEPT?|OCT|NOV|DEC)[A-Z]*\\.?';
+    re = /\b(20\d\d)[\/\-.](\d{1,2})[\/\-.](\d{1,2})\b/g; while ((m = re.exec(t))) add(+m[1], +m[2], +m[3], 3);
+    re = /\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/g; while ((m = re.exec(t))) add(+m[3], +m[1], +m[2], 3);
+    re = new RegExp('\\b' + mo + '\\s*(\\d{1,2})[ ,.]*(\\d{2,4})?\\b', 'g');
+    while ((m = re.exec(t))){ var mm = MONTHS[m[1]]; if (m[3]) add(+m[3], mm, +m[2], 3); else { var y = today.getFullYear(); add(new Date(y, mm - 1, +m[2]) < today - 20 * 86400000 ? y + 1 : y, mm, +m[2], 2); } }
+    re = new RegExp('\\b(\\d{1,2})\\s*' + mo + '[ ,.]*(\\d{2,4})?\\b', 'g');
+    while ((m = re.exec(t))){ var m2 = MONTHS[m[2]]; if (m[3]) add(+m[3], m2, +m[1], 3); else { var y2 = today.getFullYear(); add(new Date(y2, m2 - 1, +m[1]) < today - 20 * 86400000 ? y2 + 1 : y2, m2, +m[1], 2); } }
+    re = /\b(\d{2})[\/\-.](\d{2})\b/g; while ((m = re.exec(t))){ if (+m[1] <= 12){ var y3 = today.getFullYear(); var d3 = new Date(y3, +m[1] - 1, +m[2]); add(d3 < today - 20 * 86400000 ? y3 + 1 : y3, +m[1], +m[2], 1); } }
+    re = /\b(\d{2})(\d{2})(\d{2})\b/g; while ((m = re.exec(t))) add(+m[3], +m[1], +m[2], 0.5);    /* MMDDYY run together */
+    if (/\b(BEST|USE|SELL|EXP|BB|BBE)/.test(t)) found.forEach(function(f){ f.w += 1; });
+    found.sort(function(a, b){ return b.w - a.w; });
+    return found.length ? found[0].s : null;
+  }
+  function startDateRead(inputId){
+    scan.mode = 'date'; scan.dateInput = inputId;
+    scanEl('scanCard').hidden = true; scanEl('scanView').classList.remove('paused'); scanEl('scanView').classList.add('date-mode');
+    scanStatus('Fill the box with the printed date, then tap Read');
+    loadOcr().catch(function(){});          /* warm up while you aim */
+  }
+  function endDateRead(){ scan.mode = 'code'; scanEl('scanView').classList.remove('date-mode'); scanEl('scanCard').hidden = false; scanEl('scanView').classList.add('paused'); }
+  function captureDate(){
+    var v = scanEl('scanVideo'), btn = scanEl('scanReadBtn');
+    var c = frameCrop(v, false); if (!c){ toast('Camera isn’t ready yet', 'error'); return; }
+    /* grayscale + contrast boost, 2x up-scale: helps with dot-printed dates */
+    var big = document.createElement('canvas'), k = Math.min(2, 2200 / c.width);
+    big.width = Math.round(c.width * k); big.height = Math.round(c.height * k);
+    var g = big.getContext('2d'); g.filter = 'grayscale(1) contrast(1.8)'; g.drawImage(c, 0, 0, big.width, big.height);
+    btn.disabled = true; btn.textContent = 'Reading…'; scanStatus('Reading the date…');
+    loadOcr().then(function(w){ return w.recognize(big); }).then(function(r){
+      var text = r && r.data ? r.data.text : '', date = parseDateText(text);
+      btn.disabled = false; btn.textContent = 'Read date';
+      if (!date){ scanStatus('Couldn’t find a date. Move closer, add light, try again'); toast('No date found — try again or type it in', 'error'); return; }
+      var inp = scanEl(scan.dateInput);
+      endDateRead();
+      if (inp){ inp.value = date; inp.dispatchEvent(new Event('change', {bubbles: true})); }
+      if (scan.ctx) scan.ctx.expSrc = 'ocr';
+      var note = scanEl('scanExpNote'); if (note) note.textContent = 'Read from the package: ' + fmtDate(date) + '. Check it’s right.';
+      scanBeep();
+    }).catch(function(err){
+      console.error(err); btn.disabled = false; btn.textContent = 'Read date';
+      toast('The date reader didn’t load. Check your connection.', 'error'); endDateRead();
+    });
   }
 
   /* ---- a code was read ---- */
   function onScanned(text, format){
     var now = Date.now();
     if (scan.paused || (text === scan.last && now - scan.lastAt < 2500)) return;
-    scan.last = text; scan.lastAt = now;
+    if ((format === 'ean_8' || format === 'upc_e') && !(scan.pend === text && now - scan.pendAt < 1500)){ scan.pend = text; scan.pendAt = now; return; }
+    scan.pend = ''; scan.last = text; scan.lastAt = now;
     var roomQr = /#quick=([^&\s#]+)/.exec(text);
     if (roomQr){ closeScanner(); openQuick(decodeURIComponent(roomQr[1])); return; }
     var n = normBarcode(text, format);
     if (!n.code){ scanStatus('That isn’t a product barcode. Try another.'); return; }
     if (navigator.vibrate) try { navigator.vibrate(40); } catch(e){}
+    scanBeep();
     handleCode(n);
   }
   function thumb(src){ return src ? '<img class="scan-thumb" src="' + escapeHtml(src) + '" alt="" />' : '<div class="scan-thumb ph">No photo</div>'; }
@@ -8211,6 +8428,7 @@
     var ctx = scan.ctx, units = Number(item.scanUnits) || (prod && prod.units) || 1;
     var exp = ctx.gs1.exp || null, expSrc = exp ? 'barcode' : '';
     if (!exp){ var life = shelfLifeOf(item); if (life){ exp = addDaysStr(life); expSrc = 'estimate'; } }
+    if (!exp && prod){ var g = shelfGuess(prod); if (g){ exp = addDaysStr(g); expSrc = 'guess'; } }
     var extra = {barcode: ctx.code};
     if (ctx.gs1.exp && daysFromToday(ctx.gs1.exp) > 0) extra.shelfLifeDays = daysFromToday(ctx.gs1.exp);
     scanRestock(item, units, exp, extra).then(function(r){
@@ -8230,12 +8448,14 @@
   }
   function renderRestockedCard(){
     var ctx = scan.ctx, rec = ctx.rec;
-    var note = ctx.expSrc === 'barcode' ? 'Date read from the barcode.' : ctx.expSrc === 'estimate' ? 'Estimated from its shelf life last time. Change it if the package says otherwise.' : 'Barcodes don’t include dates. Add one if it has one.';
+    var note = ctx.expSrc === 'barcode' ? 'Date read from the barcode.' : ctx.expSrc === 'estimate' ? 'Estimated from its shelf life last time. Tap Read date to use the package date.'
+             : ctx.expSrc === 'guess' ? 'A typical shelf life guess. Tap Read date to use the package date.' : ctx.expSrc === 'ocr' ? 'Read from the package. Check it’s right.'
+             : ctx.expSrc === 'you' ? 'Saved.' : 'Store barcodes don’t include dates. Tap Read date and point at the printed date.';
     showScanCard('<div class="scan-head">' + thumb(rec.photo) + '<div><div class="scan-title">' + escapeHtml(rec.name) + '</div><div class="scan-sub">' + escapeHtml(locationPath(rec)) + '</div></div></div>' +
       '<div class="scan-big">Restocked <b>+' + ctx.units + '</b> → <b>' + qtyOf(rec) + '</b> on hand</div>' +
       '<div class="scan-row"><span>Units per scan</span><span class="qv-stepper"><button type="button" data-scan-act="units" data-d="-1" aria-label="One less">−</button><input type="number" id="scanUnitsIn" inputmode="numeric" min="1" max="200" value="' + ctx.units + '" aria-label="Units per scan" /><button type="button" data-scan-act="units" data-d="1" aria-label="One more">+</button></span></div>' +
-      '<label class="scan-row"><span>Expires</span><input type="date" class="qv-in" id="scanExpIn" style="width:190px" value="' + escapeHtml(rec.expirationDate || '') + '" /></label>' +
-      '<p class="scan-note">' + note + ' Units per scan is remembered for this barcode.</p>' +
+      '<div class="scan-row"><span>Expires</span><span class="scan-exp"><input type="date" class="qv-in" id="scanExpIn" value="' + escapeHtml(rec.expirationDate || '') + '" aria-label="Expires" /><button type="button" class="scan-read" data-scan-act="readdate" data-for="scanExpIn">📷 Read date</button></span></div>' +
+      '<p class="scan-note" id="scanExpNote">' + note + '</p><p class="scan-note">Units per scan is remembered for this barcode.</p>' +
       '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="undo">Undo</button><button type="button" class="btn btn-primary" data-scan-act="next">Scan next</button></div>');
   }
   function showChoices(matches){
@@ -8255,6 +8475,7 @@
     }
     var names = categoryNames(), cat = guessCategory(prod) || (lastUsedCategory && names.indexOf(lastUsedCategory) !== -1 ? lastUsedCategory : (names.indexOf(CATEGORY_FALLBACK) !== -1 ? CATEGORY_FALLBACK : names[0]));
     var where = defaultSpot(spots), units = prod ? prod.units : 1;
+    var guess = ctx.gs1.exp ? 0 : shelfGuess(prod), newExp = ctx.gs1.exp || (guess ? addDaysStr(guess) : '');
     showScanCard('<div class="scan-head">' + thumb(prod && prod.image) + '<div><div class="scan-title">' + (prod ? 'New item' : 'Not in the product database') + '</div><div class="scan-sub">' +
         (prod ? escapeHtml([prod.brand, prod.size].filter(Boolean).join(' · ') || ('Barcode ' + ctx.code)) : 'Type a name once and this barcode is remembered.') + '</div></div></div>' +
       '<input type="text" class="qv-in" id="scanName" maxlength="80" placeholder="What is it? e.g. Milk" value="' + escapeHtml(prod ? prod.name : '') + '" aria-label="Item name" />' +
@@ -8262,8 +8483,9 @@
         '<label class="span-2" style="grid-column:1/-1">Where<select id="scanWhere" class="qv-in">' + spots.map(function(sp){ return '<option value="' + sp.id + '"' + (sp.id === where ? ' selected' : '') + '>' + escapeHtml(sp.label) + '</option>'; }).join('') + '</select></label>' +
         '<label>Category<select id="scanCat" class="qv-in">' + names.map(function(c){ return '<option' + (c === cat ? ' selected' : '') + '>' + escapeHtml(c) + '</option>'; }).join('') + '</select></label>' +
         '<label>Units per scan<span class="qv-stepper"><button type="button" data-scan-act="nunits" data-d="-1" aria-label="One less">−</button><input type="number" id="scanNewUnits" inputmode="numeric" min="1" max="200" value="' + units + '" aria-label="Units" /><button type="button" data-scan-act="nunits" data-d="1" aria-label="One more">+</button></span></label>' +
-        '<label style="grid-column:1/-1">Expires<input type="date" id="scanNewExp" class="qv-in" value="' + escapeHtml(ctx.gs1.exp || '') + '" /></label>' +
+        '<label style="grid-column:1/-1">Expires<span class="scan-exp"><input type="date" id="scanNewExp" class="qv-in" value="' + escapeHtml(newExp) + '" /><button type="button" class="scan-read" data-scan-act="readdate" data-for="scanNewExp">📷 Read date</button></span></label>' +
       '</div>' +
+      '<p class="scan-note" id="scanExpNote">' + (ctx.gs1.exp ? 'Date read from the barcode.' : newExp ? 'A typical shelf life guess (' + guess + ' days). Tap Read date to use the package date.' : 'Tap Read date and point at the printed “best by” date.') + '</p>' +
       (prod && prod.image ? '<label class="scan-photo-opt"><input type="checkbox" id="scanUsePhoto" checked /> Use the product photo</label>' : '') +
       '<div class="scan-actions"><button type="button" class="btn btn-ghost" data-scan-act="next">Cancel</button><button type="button" class="btn btn-primary" data-scan-act="add">Add item</button></div>');
     if (!prod) setTimeout(function(){ var i = scanEl('scanName'); if (i) i.focus(); }, 60);
@@ -8302,6 +8524,27 @@
     scanEl('qvScanBtn').addEventListener('click', openScanner);
     scanEl('scanClose').addEventListener('click', closeScanner);
     scanEl('scanTypeBtn').addEventListener('click', showTypeCode);
+    scanEl('scanReadBtn').addEventListener('click', captureDate);
+    scanEl('scanDateCancel').addEventListener('click', endDateRead);
+    scanEl('scanVideo').addEventListener('click', refocus);
+    scanEl('scanZoomBtn').addEventListener('click', function(){
+      var caps = camCaps(); if (!scan.track || !caps.zoom) return;
+      scan.zoom = scan.zoom > 1 ? Math.max(1, caps.zoom.min || 1) : Math.min(2, caps.zoom.max);
+      scan.track.applyConstraints({advanced: [{zoom: scan.zoom}]}).catch(function(){}); updateCamButtons();
+    });
+    scanEl('scanTorchBtn').addEventListener('click', function(){
+      if (!scan.track) return; scan.torch = !scan.torch;
+      scan.track.applyConstraints({advanced: [{torch: scan.torch}]}).catch(function(){}); updateCamButtons();
+    });
+    scanEl('scanCamBtn').addEventListener('click', function(){
+      if (scan.cams.length < 2) return;
+      var cur = scan.track && scan.track.getSettings ? scan.track.getSettings().deviceId : '';
+      var i = scan.cams.findIndex(function(c){ return c.deviceId === cur; });
+      var nextCam = scan.cams[(i + 1) % scan.cams.length];
+      try { localStorage.setItem('shits.scanCam', nextCam.deviceId); } catch(e){}
+      toast(nextCam.label || 'Switched camera');
+      startCamera(nextCam.deviceId);
+    });
     document.addEventListener('visibilitychange', function(){ if (document.hidden && scan.open) closeScanner(); });
     window.addEventListener('pagehide', function(){ if (scan.open) closeScanner(); });
     var card = scanEl('scanCard');
@@ -8311,7 +8554,7 @@
         var rec = JSON.parse(JSON.stringify(ctx.rec)), v = e.target.value || null;
         rec.expirationDate = v;
         if (v && daysFromToday(v) > 0) rec.shelfLifeDays = daysFromToday(v);
-        scanSave(rec).then(function(){ ctx.rec = rec; ctx.expSrc = v ? 'you' : ''; });
+        scanSave(rec).then(function(){ ctx.rec = rec; if (ctx.expSrc !== 'ocr') ctx.expSrc = v ? 'you' : ''; });
       } else if (e.target.id === 'scanUnitsIn') setScanUnits(parseInt(e.target.value, 10));
     });
     card.addEventListener('keydown', function(e){
@@ -8343,6 +8586,7 @@
         return;
       }
       if (act === 'new'){ showNewForm(); return; }
+      if (act === 'readdate'){ startDateRead(b.getAttribute('data-for')); return; }
       if (act === 'add'){ addScannedItem(); return; }
     });
   }
@@ -8358,7 +8602,30 @@
 
   /* ======================= "Call a Plumber!" — feedback to the developer ======================= */
   var DEVELOPER_EMAIL = 'wjsurkan@gmail.com';
+  /* Automatic sending: paste the web-app URL of the "S.H.I.T.S. plumber" Apps Script here
+     (see the-SHIT-plumber.gs). Leave empty to fall back to opening an email. */
+  var FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycby5l9Tuf_hf83Jl2BfuABSxnp2uOAHfZ91sh_0mi3_Px2YFWssIVSXlSgwQ4uQoyksyBA/exec';
+  var FEEDBACK_KEY = 'shits-plumber-2026';
+  function plumberAuto(){ return /^https:\/\/script\.google\.com\/macros\/s\//.test(FEEDBACK_URL); }
+  function postFeedback(payload){
+    return fetch(FEEDBACK_URL, {method: 'POST', body: JSON.stringify(payload)})     /* text/plain: no CORS preflight */
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (!j || !j.ok) throw new Error(j && j.error || 'failed'); return j; });
+  }
+  function plumberQueue(){ try { return JSON.parse(localStorage.getItem('shits.plumberQueue') || '[]'); } catch(e){ return []; } }
+  function setPlumberQueue(q){ try { if (q.length) localStorage.setItem('shits.plumberQueue', JSON.stringify(q.slice(-20))); else localStorage.removeItem('shits.plumberQueue'); } catch(e){} }
+  /* notes written while offline go out the next time the app is online */
+  function flushPlumberQueue(){
+    if (!plumberAuto() || !navigator.onLine) return;
+    var q = plumberQueue(); if (!q.length) return;
+    var item = q[0];
+    postFeedback(item).then(function(){ setPlumberQueue(plumberQueue().slice(1)); toast('🪠 Your saved note reached the plumber'); flushPlumberQueue(); }, function(){});
+  }
   function openPlumber(){
+    var auto = plumberAuto();
+    document.getElementById('plumbSendBtn').hidden = !auto;
+    document.getElementById('plumbMailBtn').hidden = auto;
+    document.getElementById('plumbGmailBtn').hidden = auto;
     openModalEl(document.getElementById('plumberModalOverlay'));
     setTimeout(function(){ document.getElementById('plumbText').focus(); }, 60);
   }
@@ -8380,6 +8647,25 @@
   function sendPlumber(via){
     var m = plumbMessage();
     if (m.empty){ toast('Describe the clog first', 'error'); document.getElementById('plumbText').focus(); return; }
+    if (via === 'auto'){
+      var btn = document.getElementById('plumbSendBtn'), parts = m.body.split('\n\n— — —\n');
+      var payload = {key: FEEDBACK_KEY, subject: m.subject, message: parts[0], details: parts[1] || '', page: location.href, website: ''};
+      btn.disabled = true; btn.textContent = 'Sending…';
+      postFeedback(payload).then(function(){
+        closeModal('plumberModalOverlay'); document.getElementById('plumbText').value = '';
+        toast('🪠 Plumber dispatched! Your note was sent.');
+      }, function(err){
+        if (!navigator.onLine || (err && err.name === 'TypeError')){
+          var q = plumberQueue(); q.push(payload); setPlumberQueue(q);
+          closeModal('plumberModalOverlay'); document.getElementById('plumbText').value = '';
+          toast('No connection. The note is saved and will send automatically when you’re back online.');
+        } else {
+          toast('The plumber’s line is busy. Use your email app instead.', 'error');
+          document.getElementById('plumbMailBtn').hidden = false; document.getElementById('plumbGmailBtn').hidden = false;
+        }
+      }).then(function(){ btn.disabled = false; btn.textContent = '🪠 Send to the plumber'; });
+      return;
+    }
     var url = via === 'gmail'
       ? 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(DEVELOPER_EMAIL) + '&su=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body)
       : 'mailto:' + DEVELOPER_EMAIL + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body);
@@ -8398,6 +8684,9 @@
     });
     document.getElementById('plumbMailBtn').addEventListener('click', function(){ sendPlumber('mail'); });
     document.getElementById('plumbGmailBtn').addEventListener('click', function(){ sendPlumber('gmail'); });
+    document.getElementById('plumbSendBtn').addEventListener('click', function(){ sendPlumber('auto'); });
+    window.addEventListener('online', flushPlumberQueue);
+    setTimeout(flushPlumberQueue, 4000);
   }
 
   /* ======================= Shopping list / restock subscriptions =======================
